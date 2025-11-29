@@ -1,2 +1,7 @@
-__pycache__/
+.mypy_cache
+.ruff_cache
+.venv
+bak/
 /meta.json
+__pycache__/
+node_modules

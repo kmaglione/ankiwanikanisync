@@ -1,36 +1,38 @@
-from anki.hooks import wrap
-from aqt.main import AnkiQt
+from typing import Any
 
-import aqt.sound as aqt_sound
-import aqt.browser.previewer as aqt_previewer
-import aqt.reviewer as aqt_reviewer
-import aqt.clayout as aqt_clayout
+import aqt.sound
+from anki.cards import Card
+from aqt import gui_hooks
+from aqt.browser.previewer import Previewer
+from aqt.clayout import CardLayout
+from aqt.reviewer import Reviewer
 
-
-def my_play_clicked_audio(pycmd, card, _old):
-    play, context, str_idx = pycmd.split(":")
-
-    if str_idx == "all":
-        if context == "q":
-            tags = card.question_av_tags()
-        else:
-            tags = card.answer_av_tags()
-
-        aqt_sound.av_player.play_tags(tags)
-    else:
-        return _old(pycmd, card)
+type PyCmdRes = tuple[bool, Any]
 
 
-def leave_marker(self, text, _old):
-    text = _old(self, text)
-    text = text.replace("__IS_PLAY_ALL_AVAILABLE__", "__YES_IT_IS__")
-    return text
+def pycmd_handler(result: PyCmdRes, pycmd: str, context: Any) -> PyCmdRes:
+    match pycmd.split(":"):
+        case ["play", ctx, "all"]:
+            card: Card | None = None
+            match context:
+                case CardLayout():
+                    card = context.rendered_card
+                case Previewer():
+                    card = context.card()
+                case Reviewer():
+                    card = context.card
+            if card:
+                tags = card.question_av_tags() if ctx == "q" else card.answer_av_tags()
+
+                aqt.sound.av_player.play_tags(tags)
+                return (True, None)
+    return result
+
+
+def leave_marker(html: str, card: Card, context: Any) -> str:
+    return html.replace("__IS_PLAY_ALL_AVAILABLE__", "__YES_IT_IS__")
 
 
 def install_play_all_audio():
-    aqt_sound.play_clicked_audio = wrap(aqt_sound.play_clicked_audio, my_play_clicked_audio, "around")
-    aqt_previewer.play_clicked_audio = aqt_sound.play_clicked_audio
-    aqt_reviewer.play_clicked_audio = aqt_sound.play_clicked_audio
-    aqt_clayout.play_clicked_audio = aqt_sound.play_clicked_audio    
-
-    AnkiQt.prepare_card_text_for_display = wrap(AnkiQt.prepare_card_text_for_display, leave_marker, "around")
+    gui_hooks.card_will_show.append(leave_marker)
+    gui_hooks.webview_did_receive_js_message.append(pycmd_handler)
