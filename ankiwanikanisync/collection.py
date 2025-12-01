@@ -276,7 +276,7 @@ class WKCollection(object):
         return guru_cnt / len(card_ids) if card_ids else 1
 
     @query_op
-    def update_current_level(self) -> None:
+    def update_current_level_op(self) -> None:
         """
         Updates the user's current level, based on the value of
         config.LEVEL_COMPLETE_RATIO. The config._current_level property will

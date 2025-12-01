@@ -3,8 +3,10 @@ from datetime import datetime, timedelta, timezone
 from aqt import mw
 from aqt.qt import QTimer
 
+# Note: We have an import cycle with the sync module
+from . import sync
 from .config import config
-from .utils import query_op
+from .promise import Promise
 
 
 class Timers:
@@ -34,25 +36,27 @@ class Timers:
         if remaining < 0 or time < now + timedelta(milliseconds=remaining):
             self.submit_reviews_timer.start(int((time - now).total_seconds() * 1000))
 
-    @query_op
-    def start_reviews_timer(self):
-        from .sync import SyncOp
-        time = SyncOp().get_next_assignment_available()
-        mw.taskman.run_on_main(lambda: self.submit_reviews_at(time))
+    @Promise.wrap
+    async def start_reviews_timer(self):
+        time = await sync.SyncOp().get_next_assignment_available_op()
+        self.submit_reviews_at(time)
 
     def submit_reviews_timeout(self):
-        from .sync import SyncOp
-        SyncOp().upstream_available_assignments(reviews=True, lessons=False)
+        sync.SyncOp().upstream_available_assignments_op(reviews=True, lessons=False)
         self.start_reviews_timer()
 
     def sync_due_timeout(self):
-        from .sync import SyncOp
+        sync.SyncOp().update_intervals()
 
-        SyncOp().update_intervals()
+    @Promise.wrap
+    async def submit_lessons_timeout(self):
+        timestamp = await sync.SyncOp().upstream_available_assignments_op(
+            reviews=False,
+            lessons=True,
+            updated_after=config._last_lessons_sync,
+        )
 
-    def submit_lessons_timeout(self):
-        from .sync import SyncOp
-        SyncOp().upstream_available_assignments(reviews=False, lessons=True)
+        config._last_lessons_sync = timestamp.isoformat()
 
 
 timers = Timers()

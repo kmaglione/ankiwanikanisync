@@ -1,13 +1,24 @@
 from datetime import datetime, timezone
 from functools import wraps
-from typing import Any, Callable, Final, Generator, Sequence, TypeVar, cast, overload
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Generator,
+    ParamSpec,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
-from anki.collection import OpChangesWithCount
 from aqt import mw
-from aqt.operations import CollectionOp, QueryOp
+from aqt.operations import CollectionOp, QueryOp, ResultWithChanges
 from aqt.utils import tooltip
 
-Q = TypeVar("Q", bound=Callable[..., Any])
+from .promise import Promise, ResFn
+
+QP = ParamSpec("QP")
+QR = TypeVar("QR")
 
 
 # When fetching objects from WaniKani by lists of IDs, break requests into
@@ -40,46 +51,60 @@ def maybe_chunked[T](
 @overload
 def query_op(
     *, with_progress: bool = False, without_collection=False
-) -> Callable[[Q], Q]: ...
+) -> Callable[[Callable[QP, QR]], Callable[QP, Promise[QR]]]: ...
 
 
 @overload
-def query_op(func: Q, /) -> Q: ...
+def query_op(func: Callable[QP, QR], /) -> Callable[QP, Promise[QR]]: ...
 
 
 def query_op(
-    func: Q | None = None, /, *, with_progress: bool = False, without_collection=False
+    func: Callable[..., Any] | None = None,
+    /,
+    *,
+    with_progress: bool = False,
+    without_collection=False,
 ):
-    def decorator(func: Q) -> Q:
+    def decorator(func: Callable[QP, QR], /) -> Callable[QP, Promise[QR]]:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            query_op = QueryOp(
-                parent=mw,
-                op=lambda _: func(*args, **kwargs),
-                success=lambda _: None,
-            )
-            if without_collection:
-                query_op.without_collection()
-            if with_progress:
-                query_op.with_progress()
-            query_op.run_in_background()
+            @Promise
+            def promise(resolve: ResFn, reject: ResFn):
+                query_op = QueryOp(
+                    parent=mw,
+                    op=lambda _: func(*args, **kwargs),
+                    success=resolve,
+                )
+                query_op.failure(reject)
+                if without_collection:
+                    query_op.without_collection()
+                if with_progress:
+                    query_op.with_progress()
+                query_op.run_in_background()
+            return promise
 
-        return cast(Q, wrapper)
+        return wrapper
 
     if func:
         return decorator(func)
     return decorator
 
 
-def collection_op[**P, T: OpChangesWithCount](
-    func: Callable[P, T],
-) -> Callable[P, None]:
+def collection_op(
+    func: Callable[QP, ResultWithChanges],
+) -> Callable[QP, Promise[ResultWithChanges]]:
     @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs):
-        CollectionOp(
-            mw,
-            lambda _: func(*args, **kwargs),
-        ).run_in_background()
+    def wrapper(*args: QP.args, **kwargs: QP.kwargs):
+        @Promise[ResultWithChanges]
+        def promise(resolve: ResFn[ResultWithChanges], reject: ResFn):
+            op = CollectionOp(
+                mw,
+                lambda _: func(*args, **kwargs),
+            )
+            op.success(resolve)
+            op.failure(reject)
+            op.run_in_background()
+        return promise
 
     return wrapper
 

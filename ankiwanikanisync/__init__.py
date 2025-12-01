@@ -90,7 +90,7 @@ class Hooks:
         if self.just_loaded:
             auto_sync()
         self.just_loaded = False
-        wk_col.update_current_level()
+        wk_col.update_current_level_op()
 
 
 init_tools_menu()

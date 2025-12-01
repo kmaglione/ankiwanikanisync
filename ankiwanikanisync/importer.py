@@ -16,13 +16,13 @@ from anki.importing.noteimp import UPDATE_MODE, ForeignNote, NoteImporter
 from anki.models import NotetypeDict
 from anki.notes import NoteId
 from aqt import mw
-from aqt.operations import QueryOp
 from aqt.operations.tag import remove_tags_from_notes
 from pyrate_limiter import Duration, Limiter, Rate
 from typing_extensions import TypedDict
 
 from .collection import FieldName, format_id, wk_col
 from .config import config
+from .promise import Promise
 from .utils import query_op, report_progress, show_tooltip
 from .wk_api import (
     WKAudio,
@@ -105,28 +105,30 @@ class AudioDownloader:
                     space_separated_tags=self.WK_AUDIO_INCOMPLETE_TAG,
                 ).run_in_background()
 
-    @query_op
-    def process_notes(self, notes: Mapping[NoteId, Sequence[WKAudio]]) -> None:
+    # Note: This operation can take a very long time, so it's important that
+    # it run in an op without access to the Anki collection so that it does
+    # not block other functionality. It only needs access to the network and
+    # the filesystem.
+    @query_op(without_collection=True)
+    def process_notes_op(self, notes: Mapping[NoteId, Sequence[WKAudio]]) -> None:
         for note_id, audios in notes.items():
             self.process_note(note_id, audios)
         self.flush()
 
-    def collect_notes_op(self, col: Collection) -> Mapping[NoteId, Sequence[WKAudio]]:
+    @query_op
+    def collect_notes_op(self) -> Mapping[NoteId, Sequence[WKAudio]]:
         query = SearchNode(tag=self.WK_AUDIO_INCOMPLETE_TAG)
         notes = {}
         for note_id in wk_col.find_notes(query):
-            note = wk_col.get_note(note_id)
-            data = json.loads(note["raw_data"])
+            data = json.loads(wk_col.get_note(note_id)["raw_data"])
             notes[note_id] = data["data"].get("pronunciation_audios", [])
 
         return notes
 
-    def collect_notes(self) -> None:
-        QueryOp(
-            parent=mw,
-            op=self.collect_notes_op,
-            success=self.process_notes,
-        ).run_in_background()
+    @Promise.wrap
+    async def process_notes(self) -> None:
+        notes = await self.collect_notes_op()
+        self.process_notes_op(notes)
 
 
 class KeiseiKanjiDataBase(TypedDict):
@@ -995,7 +997,7 @@ def assign_subdecks(col, deck_name: str) -> None:
 
 def ensure_audio():
     audio_downloader = AudioDownloader(wk_col.col)
-    audio_downloader.collect_notes()
+    audio_downloader.process_notes()
 
 
 def ensure_notes(
@@ -1026,6 +1028,6 @@ def ensure_notes(
     report_progress("Suspending locked subjects...", 100, 100)
     wk_col.update_suspended_cards()
 
-    mw.taskman.run_on_main(ensure_audio)
+    ensure_audio()
 
     return len(subjects) > 0

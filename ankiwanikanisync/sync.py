@@ -6,13 +6,12 @@ from typing import Literal, NamedTuple
 
 import requests.exceptions
 from anki.cards import Card
-from anki.collection import Collection, OpChangesWithCount, SearchNode
+from anki.collection import OpChangesWithCount, SearchNode
 from anki.consts import (
     CARD_TYPE_LRN,
     CARD_TYPE_NEW,
     CARD_TYPE_REV,
     QUEUE_TYPE_LRN,
-    QUEUE_TYPE_NEW,
     QUEUE_TYPE_REV,
 )
 from anki.notes import NoteId
@@ -28,6 +27,7 @@ from .collection import (
 )
 from .config import config
 from .importer import ensure_deck, ensure_notes, sort_new_cards
+from .promise import Promise
 from .timers import timers
 from .utils import (
     chunked,
@@ -40,10 +40,12 @@ from .utils import (
     wkparsetime,
 )
 from .wk_api import (
+    DateString,
     SubjectId,
     WKAssignment,
     WKAssignmentData,
     WKAssignmentsQuery,
+    WKAssignmentsResponse,
     WKReviewDataReview,
     WKStudyMaterialData,
     WKStudyMaterialsQuery,
@@ -231,12 +233,12 @@ class ReviewHandler:
         if self.was_guru != (card.nid, True) and note_is_guru(card.note()):
             wk_col.update_dependents(card.note())
             if int(card.note()["Level"]) == config._current_level:
-                wk_col.update_current_level()
+                wk_col.update_current_level_op()
 
         # If no cards for this card's note are currently due, attempt to sync
         # the review upstream.
         if not wk_col.find_notes(SearchNode(nid=card.nid), "is:due"):
-            SyncOp().upstream_review(card.note())
+            SyncOp().upstream_review_op(card.note())
 
 
 review_handler = ReviewHandler()
@@ -323,6 +325,20 @@ class SyncOp(object):
             result = wk.query("subjects", WKSubjectsQuery(ids=chunk))
             for subj in result["data"]:
                 self.subjects[subj["id"]] = subj
+
+    @query_op
+    def fetch_assignments_op(self, query: WKAssignmentsQuery) -> WKAssignmentsResponse:
+        """
+        Fetches assignments for the given query and pre-fetches any related
+        subjects.
+        """
+        resp = wk.query("assignments", query)
+
+        self.fetch_subjects(
+            assignment["data"]["subject_id"] for assignment in resp["data"]
+        )
+
+        return resp
 
     def maybe_sync_downstream(self, card: WKCard, assignment: Assignment) -> bool:
         """
@@ -414,7 +430,8 @@ class SyncOp(object):
                 changed = True
         return changed
 
-    def get_next_assignment_available(self) -> datetime:
+    @query_op
+    def get_next_assignment_available_op(self) -> datetime:
         """
         Returns the time when the next assignment will be available for review
         on WaniKani within the time period defined by
@@ -664,12 +681,12 @@ class SyncOp(object):
         # If submitting the review might have made the note Guru, check whether
         # any new lessons have been unlocked that we can submit reviews for.
         if might_guru:
-            mw.taskman.run_on_main(
-                lambda: self.upstream_available_assignments(lessons=True, reviews=False)
-            )
+            @mw.taskman.run_on_main
+            def runnable():
+                self.upstream_available_assignments_op(lessons=True, reviews=False)
 
     @query_op
-    def upstream_review(self, note: WKNote) -> None:
+    def upstream_review_op(self, note: WKNote) -> None:
         """
         Submits an upstream review to WaniKani for the given note if there
         is an assignment available for review.
@@ -680,17 +697,31 @@ class SyncOp(object):
         self.upstream_assignments(assignments, {subject_id: note})
 
     @query_op
-    def upstream_available_assignments(self, lessons=True, reviews=True) -> None:
+    def upstream_available_assignments_op(
+        self,
+        lessons=True,
+        reviews=True,
+        updated_after: DateString | None = None,
+    ) -> datetime:
         """
         Submits upstream reviews to WaniKani for any available assignments. If
         `lessons` is True, checks assignments which are available for lessons.
         If `reviews` is true, checks assignments which are available for
         review.
         """
-        def query(filter: WKAssignmentsQuery):
-            return wk.query("assignments", filter)["data"]
+        dates = [datetime.now(timezone.utc)]
 
-        assignments: list[WKAssignment] = []
+        def query(filter: WKAssignmentsQuery):
+            if updated_after:
+                filter["updated_after"] = updated_after
+            resp = wk.query("assignments", filter)
+
+            if resp["data_updated_at"]:
+                dates.append(datetime.fromisoformat(resp["data_updated_at"]))
+
+            return resp["data"]
+
+        assignments = list[WKAssignment]()
         if lessons:
             assignments.extend(query({"immediately_available_for_lessons": True}))
         if reviews:
@@ -701,8 +732,10 @@ class SyncOp(object):
         )
         self.upstream_assignments(assignments, notes)
 
+        return min(dates)
+
     @collection_op
-    def update_ivl_from_assignments(
+    def update_ivl_from_assignments_op(
         self, timestamp: str | None, assignments: Sequence[WKAssignment]
     ) -> OpChangesWithCount:
         """
@@ -745,8 +778,8 @@ class SyncOp(object):
         result.changes.card = True
         return result
 
-    @query_op
-    def update_intervals(self) -> None:
+    @Promise.wrap
+    async def update_intervals(self) -> None:
         """
         Updates the intervals of Notes based on the intervals and due dates of
         WaniKani assignments. See `maybe_sync_downstream` for details.
@@ -836,7 +869,7 @@ def do_sync() -> OpChangesWithCount:
         sort_new_cards(wk_col.col)
         result.changes.study_queues = True
 
-    mw.taskman.run_on_main(lambda: SyncOp().update_intervals())
+    SyncOp().update_intervals()
 
     config._last_subjects_sync = now
 
