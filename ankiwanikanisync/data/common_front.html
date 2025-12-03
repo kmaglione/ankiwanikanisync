@@ -1,0 +1,123 @@
+<span id="level">{{Level}}</span>
+<div id="question-display" lang="ja">
+    <a href="{{DocumentURL}}">{{Characters}}</a>
+</div>
+<div id="question-name"></div>
+<div id="input">
+    {{type:card_id}}
+</div>
+
+<!-- Kana input -->
+<script type="module">
+import wanakana from "./_wanakana.min.js";
+import { stripHTML, $ } from "./_wk3_util.js";
+
+let map = (iter, fn) => Iterator.from(iter).map(fn);
+
+let typeans = $("#typeans");
+
+let questionName = "{{Card_Type}}" === "Radical" ? "Name" : "{{Card}}";
+
+let questionNameDiv = $("#question-name");
+questionNameDiv.innerHTML = `{{Card_Type}} <b>${questionName}</b>`;
+
+switch ("{{Card}}") {
+  case "Meaning":
+    questionNameDiv.classList.add("meaning");
+    break;
+  case "Reading":
+    questionNameDiv.classList.add("reading");
+    typeans.setAttribute("lang", "ja");
+}
+
+let questionDisplayDiv = $("#question-display");
+switch ("{{Card_Type}}") {
+  case "Radical":
+    questionDisplayDiv.classList.add("radical");
+    break;
+  case "Kanji":
+    questionDisplayDiv.classList.add("kanji");
+    break;
+  case "Vocabulary":
+  case "Kana Vocabulary":
+    questionDisplayDiv.classList.add("vocabulary");
+}
+
+if (typeans && ["textarea", "input"].includes(typeans.localName)) {
+    if ("{{Card}}" == "Reading") {
+        wanakana.bind(typeans);
+    }
+
+    typeans.setAttribute("placeholder", "Your Response");
+    typeans.addEventListener("animationend", event => {
+        event.target.classList.remove("shake");
+    });
+
+    let meaningWhitelist = new Set(`{{Meaning_Whitelist}}`.split(", ").map(s => s.toLowerCase()));
+
+    let readingWhitelist = new Set(`{{Reading_Whitelist}}`.split(", ").map(stripHTML));
+
+    let readingAll = new Set(`{{Reading_Onyomi}}`.split(", ")
+                             .concat(`{{Reading_Kunyomi}}`.split(", "))
+                             .map(stripHTML));
+
+    let readingWarning = readingAll.difference(readingWhitelist);
+
+    // eslint-disable-next-line no-unused-vars
+    let checkWarning = answers => false;
+    switch (`{{Card}}`) {
+      case "Reading": {
+        checkWarning = answers => {
+            if (Iterator.from(answers).some(wanakana.isMixed)) {
+                return true;
+            }
+
+            if (answers.isSubsetOf(readingWhitelist)) {
+                return false;
+            }
+
+            let romaji = new Set(map(answers, s => wanakana.toRomaji(s).toLowerCase()));
+            if (romaji.isSubsetOf(meaningWhitelist)) {
+                return true;
+            }
+
+            switch (`{{Card_Type}}`) {
+              case "Kanji":
+              case "Vocabulary":
+                return answers.isSubsetOf(readingAll)
+                    && !answers.isDisjointFrom(readingWarning);
+            }
+            return false;
+        };
+        break;
+      }
+      case "Meaning": {
+        checkWarning = answers => {
+            if (answers.isSubsetOf(meaningWhitelist)) {
+                return false;
+            }
+
+            let kana = new Set(map(answers, wanakana.toKana));
+            return kana.isSubsetOf(readingAll);
+        };
+      }
+    }
+
+    typeans.addEventListener("keypress", event => {
+        if (event.key === "Enter") {
+            if (`{{Card}}` === "Reading" && typeans.value.endsWith("n")) {
+                typeans.value = typeans.value.slice(0, -1) + "ん";
+            }
+
+            let answers = new Set(typeans.value.split(/[、,]\s*/));
+            if (answers.size
+                    && checkWarning(answers)
+                    && !typeans.classList.contains("shake")) {
+                typeans.classList.add("shake");
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }
+    }, true);
+}
+</script>

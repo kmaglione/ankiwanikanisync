@@ -394,6 +394,17 @@ class WKImporter(NoteImporter):
             subject_ids = data["component_subject_ids"]
             field_values["components"] = " ".join(map(format_id, subject_ids))
 
+            if subject["object"] == "vocabulary":
+                for subj_id in subject_ids:
+                    subj = self.related_subjects[subj_id]
+                    if subj["data"]["characters"] == subject["data"]["characters"]:
+                        readings = self.get_readings(subj)
+                        field_values.update({
+                            "Reading_Onyomi": get_readings("onyomi"),
+                            "Reading_Kunyomi": get_readings("kunyomi"),
+                            "Reading_Nanori": get_readings("nanori"),
+                        })
+
         tags = [f"Lesson_{data['level']}", subject["object"].title()]
 
         if is_WKVocabBase(data):
@@ -766,13 +777,18 @@ class WKImporter(NoteImporter):
 
 
 def ensure_media_files(col: Collection) -> None:
+    from . import __version__
+
+    is_update = config._version != __version__
+    config._version = __version__
+
     datadir = ROOT_DIR / "data"
 
     source_dir = datadir / "files"
     dest_dir = pathlib.Path(col.media.dir())
     for source_file in source_dir.iterdir():
         dest_file = dest_dir / source_file.name
-        if not dest_file.exists():
+        if is_update or not dest_file.exists():
             shutil.copy(source_file, dest_file)
 
 

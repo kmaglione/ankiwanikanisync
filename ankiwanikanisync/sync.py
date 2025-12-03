@@ -814,12 +814,32 @@ def do_process_v9():
 
 
 @collection_op
-def do_process():
+def do_process_v10():
     changed_notes = []
     for nid in wk_col.find_notes():
         note = wk_col.get_note(nid)
         note.tags = note.tags[0].split(",")
         changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process():
+    changed_notes = []
+    for nid in wk_col.find_notes("tag:Vocabulary Characters:_"):
+        note = wk_col.get_note(nid)
+        for comp in wk_col.get_components(note):
+            if comp["Characters"] == note["Characters"]:
+                note["Reading_Kunyomi"] = comp["Reading_Kunyomi"]
+                note["Reading_Onyomi"] = comp["Reading_Onyomi"]
+                note["Reading_Nanori"] = comp["Reading_Nanori"]
+                changed_notes.append(note)
 
     wk_col.col.update_notes(changed_notes)
 

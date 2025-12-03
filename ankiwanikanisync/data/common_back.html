@@ -1,440 +1,624 @@
-<!--SCRIPT: Slice meanings and insert into the Meaning Section.-->
-<script>
-var title = "Meaning<hr>";
-if ("{{Card_Type}}" == "Radical") {
-	var title = "Name<hr>";
+<!--
+The Template is divided into sections.
+Sections get turned off based on which Card Type is displayed.
+-->
+<div id="card-back">
+    <div id="typos" style="display: none">
+    </div>
+    <!-- Correct Answers Section -->
+    <!--For: Radical, Kanji, Vocabulary-->
+    <div>
+        <br>
+        <div class="heading">
+            Correct Answers
+        </div>
+        <p id="correct"></p>
+    </div>
+    <!--Radical Combination Section-->
+    <!--For: Kanji-->
+    <div id="section-radical-combination">
+        <div class="heading">
+            Radical Combination
+        </div>
+        <div id="combination"></div>
+    </div>
+    <!--Meaning Section-->
+    <!--For: Radical, Kanji, Vocabulary-->
+    <div id="section-meaning">
+        <details>
+            <summary id="meaning-title" class="heading"></summary>
+            <p id="meanings"></p>
+            <p class="explanation">Explanation</p>
+            <div class="mnemonic">
+                {{Meaning_Mnemonic}}
+            </div>
+            <div id="meaning-hint">
+                <div class="mnemonic-hint">
+                    <p class="hint">
+                        <img src="_hint.png" width="12" height="12" alt="">
+                        <b style="vertical-align: top">HINTS</b><br>
+                    </p>
+                    {{Meaning_Hint}}
+                </div>
+            </div>
+        </details>
+    </div>
+    <!--Reading Section-->
+    <!--For: Kanji, Vocabulary-->
+    <div id="section-reading">
+        <details id="section-reading-details">
+            <summary class="heading">
+                Reading
+            </summary>
+            <div id="vocabulary-reading" lang="ja">
+                {{Reading}}
+            </div>
+            <div id="kanji-readings" lang="ja">
+                <div id="reading-container">
+                    <div id="onyomi-readings">
+                        On’yomi<br>
+                        {{Reading_Onyomi}}
+                    </div>
+                    <div id="kunyomi-readings">
+                        Kun’yomi<br>
+                        {{Reading_Kunyomi}}
+                    </div>
+                    <div id="nanori-readings">
+                        Nanori<br>
+                        {{Reading_Nanori}}
+                    </div>
+                </div>
+            </div>
+            <div id="reading-audios">
+                {{Audio}}
+            </div>
+{{#Reading_Mnemonic}}
+            <p class="explanation">Explanation</p>
+{{/Reading_Mnemonic}}
+            <div class="mnemonic">
+                {{Reading_Mnemonic}}
+            </div>
+            <div id="reading-hint">
+                <div class="mnemonic-hint">
+                    <p class="hint">
+                        <img src="_hint.png" width="9" height="9" alt="">
+                        <b>HINTS</b><br>
+                    </p>
+                    {{Reading_Hint}}
+                </div>
+            </div><br>
+        </details>
+    </div>
+    <!--Phonetic-Semantic Composition Section-->
+    <!--For: Radical, Kanji-->
+    <div id="section-phonetic-semantic">
+        <details id="section-phonetic-details">
+            <summary class="heading">
+                Phonetic-Semantic Composition
+            </summary>
+            <p class="explanation" id="phonetic-semantic-description"></p>
+            <div id="phonetic-semantic-container">
+                <div id="phonetic-container"></div>
+                <div id="compound-container"></div>
+            </div>
+        </details>
+    </div>
+    <!--Context Section-->
+    <!--For: Vocabulary-->
+    <div id="section-context">
+        <details>
+            <summary class="heading">
+                Context
+            </summary>
+            <div id="context-patterns">
+                <div id="patterns-of-use">
+                    <p class="explanation">Patterns of Use</p>
+                </div>
+                <div id="common-word-combinations">
+                    <p class="explanation">Common Word Combinations</p>
+                </div>
+            </div>
+            <p class="explanation">Context Sentences</p>
+            <div id="context-sentences"></div>
+        </details>
+    </div>
+    <!--Box Section-->
+    <!--For: Radical, Kanji, Vocabulary-->
+    <div id="section-box">
+        <details>
+            <summary id="box-title" class="heading"></summary>
+            <div id="box-container"></div>
+        </details>
+    </div>
+    <!--Found in Vocabulary Section-->
+    <!--For: Kanji-->
+    <div id="section-found-in-vocabulary">
+        <details>
+            <summary class="heading">
+                Found in Vocabulary
+            </summary>
+            <div id="found-in-vocabulary-container"></div>
+        </details>
+    </div>
+</div><!-- id=card-back -->
+
+<script type="module">
+import { chunked, escapeHTML, frag, likelyTypo, stripHTML, zip, $, $$ } from "./_wk3_util.js";
+import wanakana from "./_wanakana.min.js";
+
+function setLangJa(elem) {
+    elem.setAttribute("lang", "ja");
 }
-var div = document.getElementById("meaning-title");
-var element = document.createElement("span");
-element.innerHTML = title;
-div.appendChild(element);
 
-var meanings = "{{Meaning}}";
-var array = meanings.split(",");
-var primary = array[0];
-var alternative = array.splice(1);
-var wordtype = "{{Word_Type}}";
+/* SCRIPT: Slice meanings and insert into the Meaning Section. */
+let card_type = "{{Card_Type}}";
 
-var div = document.getElementById("meanings");
-var element = document.createElement("p");
-element.innerHTML = "<b>PRIMARY </b>" + primary.toString().toUpperCase();
-div.appendChild(element);
-
-if (alternative.toString().length !== 0) {
-	var element = document.createElement("p");
-	element.innerHTML = "<b>ALTERNATIVE </b>" + alternative.toString().toUpperCase();
-	div.appendChild(element);
+let title = "Meaning";
+if (card_type === "Radical") {
+    title = "Name";
 }
 
-if (wordtype.toString().length !== 0) {
-	var element = document.createElement("p");
-	element.innerHTML = "<b>WORD TYPE </b>" + wordtype.toString().toUpperCase();
-	div.appendChild(element);
-}
-</script>
+$(`#meaning-title`).insertAdjacentHTML("beforeend", title);
 
-<!--SCRIPT: Disable unused Reading divisions.-->
-<script>
-function disable_reading_div(id, readings) {
-	var div = document.getElementById(id);
-	if (readings === "") {
-		div.style.display = "none";
-	} else {
-		div.style.display = "";
-	}
-}
+let meanings = "{{Meaning}}";
+let [primary, ...alternative] = meanings.split(",");
+let wordtype = "{{Word_Type}}";
 
-disable_reading_div("onyomi-readings", `{{Reading_Onyomi}}`);
-disable_reading_div("kunyomi-readings", `{{Reading_Kunyomi}}`);
-disable_reading_div("nanori-readings", `{{Reading_Nanori}}`);
-</script>
+{
+    let div = $("#meanings");
+    div.insertAdjacentHTML("beforeend", `<p><b>Primary</b> ${primary}</p>`)
 
-<!--SCRIPT: Disable unused Hint divisions.-->
-<script>
-function disable_hint_div(id, readings) {
-	var div = document.getElementById(id);
-	if (readings === "") {
-		div.style.display = "none";
-	} else {
-		div.style.display = "";
-	}
+    if (alternative.length !== 0) {
+        div.insertAdjacentHTML("beforeend", `<p><b>Alternative</b> ${alternative}</p>`);
+    }
+
+    if (wordtype.length !== 0) {
+        div.insertAdjacentHTML("beforeend", `<p><b>Word Type</b> ${wordtype}</p>`);
+    }
 }
 
-disable_hint_div("meaning-hint", `{{Meaning_Hint}}`);
-disable_hint_div("reading-hint", `{{Reading_Hint}}`);
-</script>
-
-<!--SCRIPT: Slice and add Context Patterns -->
-<script>
-var combinations = `{{Context_Patterns}}`;
-var combinationsarray = combinations.split("|");
-
-for (var i = 1; i < 6; i+=2){
-	var div = document.getElementById('common-word-combinations');
-	var element = document.createElement("p");
-	element.innerHTML = "<ja>" + combinationsarray[0].split(";")[i] + "</ja><br>" + combinationsarray[0].split(";")[i + 1];
-	element.setAttribute("id", i);
-	if (combinationsarray[0].split(";")[i] === undefined) {
-		element.innerHTML = "<br>"; 
-	}
-	div.appendChild(element);
+/* SCRIPT: Disable unused Reading divisions. */
+function maybe_hide_elem(id, readings) {
+    let div = document.getElementById(id);
+    div.style.display = readings ? "" : "none";
 }
 
-for (var i = 0; i < combinationsarray.length; i++){
-	var div = document.getElementById("patterns-of-use")
-	var element = document.createElement("div");
-	element.innerHTML = "<button class=notclicked id=button name='" + i + "' onclick='Click()'>" + combinationsarray[i].split(";")[0] + "</button><br>";
-	div.appendChild(element);
+maybe_hide_elem("onyomi-readings", `{{Reading_Onyomi}}`);
+maybe_hide_elem("kunyomi-readings", `{{Reading_Kunyomi}}`);
+maybe_hide_elem("nanori-readings", `{{Reading_Nanori}}`);
+
+/* SCRIPT: Disable unused Hint divisions. */
+maybe_hide_elem("meaning-hint", `{{Meaning_Hint}}`);
+maybe_hide_elem("reading-hint", `{{Reading_Hint}}`);
+
+/* SCRIPT: Slice and add Context Patterns  */
+let combinations = `{{Context_Patterns}}`.split("|");
+
+function addCombinations(idx) {
+    let div = $("#common-word-combinations");
+    for (let [ja, en] of chunked(combinations[idx].split(";"), 2)) {
+        let element = document.createElement("p");
+        element.innerHTML = `<ja lang="ja">${ja}</ja><br>${en}`;
+        element.classList.add("combination");
+        div.appendChild(element);
+    }
+}
+addCombinations(0);
+
+for (let [i, val] of combinations.entries()){
+    let element = document.createElement("div");
+    element.innerHTML = `
+        <button class="button" lang="ja" name="${i}" onclick="onButtonClick(event)">${
+            val.split(";")[0]
+        }</button><br>`;
+    $("#patterns-of-use").appendChild(element);
 }
 
-var element = document.getElementsByName('0')[0];
-element.classList.add("notclicked");
-element.classList.add("clicked");
+$(".button[name='0']").classList.add("clicked");
 
-function Click() {
-	var z = event.target.name;
+window.onButtonClick = function onButtonClick(event) {
+    for (let elem of $$(".button")){
+        elem.classList.remove("clicked");
+    }
+    event.target.classList.add("clicked");
 
-	for (var i = 0; i < combinationsarray.length; i++){
-		var element = document.getElementsByName(i)[0]
-		element.classList.remove("clicked");
-		element.classList.add("notclicked");
-	}
-
-	var element = document.getElementsByName(event.target.name)[0]
-	element.classList.add("clicked");
-	element.classList.remove("notclicked");
-
-	for (var i = 1; i < combinationsarray[z].length; i+=2){
-		document.getElementById(i).innerHTML = "<ja>" + combinationsarray[z].split(";")[i] + "</ja><br>" + combinationsarray[z].split(";")[i + 1];
-		if (combinationsarray[z].split(";")[i] === undefined) {
-			document.getElementById(i).innerHTML = " ";
-		}
-	}	
-}		
+    for (let elem of $$(".combination")) {
+        elem.remove();
+    }
+    addCombinations(event.target.name);
+}
 if (combinations.length === 0) {
-	document.getElementById('context-patterns').innerHTML = " ";
-}	
-</script>
-
-<!--SCRIPT: Slice and add context sentences.-->
-<script>
-if ("{{Card_Type}}" == "Vocabulary" || "{{Card_Type}}" == "Kana Vocabulary") {
-	var sentences = `{{Context_Sentences}}`;
-	var array = sentences.split("|");
-
-	var div = document.getElementById("context-sentences");
-
-	function appendContextSentence(en, jp) {
-		if (jp !== "") {
-			var element = document.createElement("p");
-			element.innerHTML = "<p><ja>" + jp + "</ja><br>" + en + "</p>";
-			div.appendChild(element);
-		}
-	}
-	appendContextSentence(array[0].toString(), array[1].toString());
-	appendContextSentence(array[2].toString(), array[3].toString());
-	appendContextSentence(array[4].toString(), array[5].toString());
+    $("#context-patterns").textContent = " ";
 }
-</script>
 
-<!--SCRIPT: Disable divisions.-->
-<script>
-var readingsection = document.getElementById("section-reading")
-var meaningsection = document.getElementById("section-meaning")
-var contextsection = document.getElementById("section-context")
-var combinationsection = document.getElementById("section-radical-combination")
-var foundinvocabularysection = document.getElementById("section-found-in-vocabulary")
+/* SCRIPT: Slice and add context sentences. */
+if (["Vocabulary", "Kana Vocabulary"].includes(card_type)) {
+    let div = $("#context-sentences");
 
-if ("{{Card_Type}}" === "Radical") {
-	readingsection.style.display = "none";
-	contextsection.style.display = "none";
-	combinationsection.style.display = "none";
-	foundinvocabularysection.style.display = "none";
+    for (let [en, jp] of chunked(`{{Context_Sentences}}`.split("|"), 2)) {
+        let element = document.createElement("p");
+        element.innerHTML = `<ja>${jp}</ja><br>${en}`;
+        div.appendChild(element);
+    }
 }
-if ("{{Card_Type}}" === "Kanji") {
-	contextsection.style.display = "none";
-} 
-if ("{{Card_Type}}" === "Vocabulary" || "{{Card_Type}}" == "Kana Vocabulary") {
-	combinationsection.style.display = "none";
-	foundinvocabularysection.style.display = "none";
-} 
-</script>
 
-<!--SCRIPT: Populate Box Characters (Found in Kanji, Visually Similar Kanji and Kanji Composition).-->
-<script>
-if ("{{Card_Type}}" == "Radical") {
-	var character = `{{Found_in_Characters}}`;
-	var characterarray = character.split("、 ");
-	var meaning = `{{Found_in_Meaning}}`;
-	var meaningarray = meaning.split("、 ");
-	var reading = `{{Found_in_Reading}}`;
-	var readingarray = reading.split("、 ");
+/* SCRIPT: Disable divisions. */
+switch (card_type) {
+    case "Radical":
+        $("#section-reading").style.display = "none";
+        $("#section-context").style.display = "none";
+        $("#section-radical-combination").style.display = "none";
+        $("#section-found-in-vocabulary").style.display = "none";
+        break;
+    case "Kanji":
+        $("#section-context").style.display = "none";
+        break;
+    case "Vocabulary":
+    case "Kana Vocabulary":
+        $("#section-radical-combination").style.display = "none";
+        $("#section-found-in-vocabulary").style.display = "none";
+}
 
-	if (character.toString().length !== 0) {
-		var element = document.getElementById("box-title");
-		element.innerHTML = "Found In Kanji<hr>";
+/* SCRIPT: Populate Box Characters (Found in Kanji, Visually Similar Kanji and Kanji Composition). */
+switch (card_type) {
+  case "Radical": {
+    let found_in = zip(
+       `{{Found_in_Characters}}`.split("、 "),
+       `{{Found_in_Reading}}`.split("、 "),
+       `{{Found_in_Meaning}}`.split("、 ")
+    );
+    if (found_in.length !== 0) {
+        $("#box-title").textContent = "Found In Kanji";
 
-		for (var i = 0; i < characterarray.length; i++) {
-			var div = document.getElementById("box-container");
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=box-character>" + characterarray[i] + "<div id=box-meaning>" + readingarray[i] + "<br>" + meaningarray[i] + "</div></div>";
-			div.appendChild(element);
-		}
-	} else {
-		var element = document.getElementById("section-box");
-		element.remove();
-	}
-} else if ("{{Card_Type}}" == "Kanji") {
-	var character = `{{Similar_Characters}}`;
-	var characterarray = character.split("、 ");
-	var meaning = `{{Similar_Meaning}}`;
-	var meaningarray = meaning.split("、 ");
-	var reading = `{{Similar_Reading}}`;
-	var readingarray = reading.split("、 ");
+        for (let [char, reading, meaning] of found_in) {
+            $("#box-container").appendChild(frag(
+                `<div id="box-character" lang="ja">
+                    ${char}
+                    <div id="box-meaning">
+                        ${reading}<br>
+                        ${meaning}
+                    </div>
+                </div>`));
+        }
+    } else {
+        $("#section-box").remove();
+    }
+    break;
+  }
+  case "Kanji": {
+    let similar = zip(
+       `{{Similar_Characters}}`.split("、 "),
+       `{{Similar_Reading}}`.split("、 "),
+       `{{Similar_Meaning}}`.split("、 ")
+    );
 
-	if (character.toString().length !== 0) {
-		var element = document.getElementById("box-title")
-		element.innerHTML = "Visually Similar Kanji<hr>";
+    if (similar.length !== 0) {
+        $("#box-title").textContent = "Visually Similar Kanji";
 
-		for (var i = 0; i < characterarray.length; i++) {
-			var div = document.getElementById("box-container");
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=box-character>" + characterarray[i] + "<div id=box-meaning>" + readingarray[i] + "<br>" + meaningarray[i].toString().substring(0, 15) + "</div></div>";
-			div.appendChild(element);
-		}
-	} else {
-		var element = document.getElementById("section-box");
-		element.remove();
-	}
-} else if ("{{Card_Type}}" == "Vocabulary" || "{{Card_Type}}" == "Kana Vocabulary") {
-	var character = `{{Components_Characters}}`;
-	var characterarray = character.split("、 ");
-	var meaning = `{{Components_Meaning}}`;
-	var meaningarray = meaning.split("、 ");
-	var reading = `{{Components_Reading}}`;
-	var readingarray = reading.split("、 ");
+        for (let [char, reading, meaning] of similar) {
+            $("#box-container").appendChild(frag(
+                `<div id="box-character" lang="ja">
+                    ${char}
+                    <div id="box-meaning">
+                        ${reading}<br>
+                        ${meaning.substring(0, 15)}
+                    </div>
+                </div>`));
+        }
+    } else {
+        $("#section-box").remove();
+    }
+    break;
+  }
+  case "Vocabulary":
+  case "Kana Vocabulary": {
+    let comps = zip(
+       `{{Components_Characters}}`.split("、 "),
+       `{{Components_Reading}}`.split("、 "),
+       `{{Components_Meaning}}`.split("、 ")
+    );
 
-	if (character.toString().length !== 0) {
-		var element = document.getElementById("box-title");
-		element.innerHTML = "Kanji Composition<hr>";
+    if (comps.length !== 0) {
+        $("#box-title").textContent = "Kanji Composition";
 
-		for (var i = 0; i < characterarray.length; i++) {
-			var div = document.getElementById("box-container");
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=box-character>" + characterarray[i] + "<div id=box-meaning>" + readingarray[i] + "<br>" + meaningarray[i].toString().substring(0, 15) + "</div></div>";
-			div.appendChild(element);
-		}
-	} else {
-		var element = document.getElementById("section-box");
-		element.remove();
-	}
+        for (let [char, reading, meaning] of comps) {
+            $("#box-container").appendChild(frag(
+                `<div id="box-character">
+                    ${char}
+                    <div id="box-meaning">
+                        ${reading}<br>
+                        ${meaning.substring(0, 15)}
+                    </div>
+                </div>`));
+        }
+    } else {
+        $("#section-box").remove();
+    }
+    break;
+  }
+  default:
+    $("#section-box").remove();
+}
+
+/* SCRIPT: Add Phonetic-Semantic Composition Characters. */
+switch (card_type) {
+  case "Kanji":
+  case "Radical": {
+    let sections = `{{Keisei}}`;
+    let sectionarray = sections.split(" | ");
+    let start = 1;
+    let data = sectionarray[0].split(", ");
+    let description = $("#phonetic-semantic-description");
+    if (data[0] == "compound" || data[0] == "phonetic") {
+        if (data[0] == "compound") {
+            description.innerHTML = `
+                The kanji <kanji>{{Characters}}</kanji> was created using
+                semantic-phonetic composition.<br>
+                <br>
+                The phonetic component is 「<ja>${data[2]}</ja>」with the ON
+                reading(s) 「<ja>${data[3]}</ja>」
+                (including rare ones), and the semantic component is
+                「<ja>${data[4]}</ja>」.<br>`;
+        } else if (data[0] == "phonetic") {
+            if (card_type === "Kanji") {
+                description.innerHTML = `
+                    The kanji <kanji>{{Characters}}</kanji> is used as a phonetic
+                    component in other compounds.<br>
+                    Its ON reading(s) are 「<ja>${data[3]}</ja>」.<br>`;
+            } else {
+                description.innerHTML = `
+                    The radical <radical>{{Characters}}</radical> is used as a phonetic
+                    component in other compounds.<br>
+                    Its ON reading(s) are 「<ja>${data[3]}</ja>」.<br>`;
+            }
+        }
+
+        {
+            let div = $("#phonetic-container");
+            div.appendChild(frag(
+                `<div id="phonetic-character" lang="ja">
+                    ${data[2]}
+                    <div id="box-meaning">
+                        ${data[3].split("・")[0]}<br>
+                        Phonetic
+                    </div>
+                </div>`));
+            if (data[1].includes("R")) {
+                div.appendChild(frag(
+                    `<div id="radical-character" lang="ja">
+                        ${data[2]}
+                        <div id="box-meaning">
+                            ${data[3].split("・")[0]}<br>
+                            ${sectionarray[start]}
+                        </div>
+                    </div>`));
+                start += 1;
+            }
+            if (data[1].includes("K")) {
+                div.appendChild(frag(
+                    `<div id="box-character">
+                        ${data[2]}
+                        <div id="box-meaning">
+                            ${sectionarray[start].split(", ")[1]}<br>
+                            ${sectionarray[start].split(", ")[0]}
+                        </div>
+                    </div>`));
+                start += 1;
+            }
+        }
+        let div = $("#compound-container");
+        for (let section of sectionarray) {
+            let parts = section.split(", ");
+            div.appendChild(frag(
+                `<div id="box-character">
+                    ${parts[0]}
+                    <div id="box-meaning">
+                        ${parts[1]}<br>
+                        ${parts[2]}
+                    </div>
+                </div>`));
+        }
+    } else if (data[0] == "unprocessed") {
+        description.innerHTML = `
+            The kanji <kanji>{{Characters}}</kanji> has not been added to the WK
+            Userscripts Keisei DB yet.
+            Please wait for a future version.<br>`;
+    } else if (data[0] == "nonradical") {
+        description.innerHTML = `
+            The radical <radical>{{Characters}}</radical> is not considered a
+            phonetic mark.<br>`;
+    } else if (data[0] == "unknown") {
+        description.innerHTML = `
+            The kanji <kanji>{{Characters}}</kanji> has an unknown or contested origin,
+            or its phonetic mark is too obscure to be useful.
+            Stay tuned for more information in future versions of WK Userscripts
+            Keisei.`;
+    } else if (`{{Keisei}}` != "") {
+        description.innerHTML = `
+            The kanji <kanji>{{Characters}}</kanji> is not considered a
+            semantic-phonetic composition.<br>
+            Note: {{Keisei}}<br>`;
+    } else {
+        $("#section-phonetic-semantic").style.display = "none";
+    }
+    break;
+  }
+  default:
+    $("#section-phonetic-semantic").style.display = "none";
+}
+
+/* SCRIPT: Add Radical Combination Characters. */
+let comps = zip(
+   `{{Components_Characters}}`.split("、 "),
+   `{{Components_Meaning}}`.split("、 ")
+)
+
+for (let [i, [char, meaning]] of comps.entries()) {
+    {
+        let element = document.createElement("div");
+        element.style.display = "flex";
+        element.style.alignItems = "center";
+
+        element.innerHTML = `
+            <radical-combination lang="ja">
+                <div>${char}</div>
+            </radical-combination>
+            <div>
+                ${meaning.substring(0, 15)}
+            </div>`;
+        $("#combination").appendChild(element);
+    }
+
+    if (i + 1 != comps.length) {
+        $("#combination").appendChild(frag(
+            "<p><div class=combination-plus><b>+<b/></div></p>"));
+    }
+}
+
+/* SCRIPT: Add Found in Vocabulary Characters. */
+let found_in = zip(
+    `{{Found_in_Characters}}`.split("、 "),
+    `{{Found_in_Reading}}`.split("、 "),
+    `{{Found_in_Meaning}}`.split("、 ")
+)
+
+for (let [char, reading, meaning] of found_in) {
+    $("#found-in-vocabulary-container").appendChild(frag(
+        `<div id="found-in-vocabulary-box">
+            <div class="found-in-voc" lang="ja">
+                ${char}
+            </div>
+            <div class="found-in-voc-reading" lang="ja">
+                ${reading}<br>
+                ${meaning}
+            </div>
+        </div>`));
+}
+
+if (found_in.length == 0) {
+    $("#section-found-in-vocabulary").style.display = "none";
+}
+
+/* SCRIPT: Check the answer  */
+let mangleAnswer = ans => ans.toLowerCase().replace("'", "");
+
+let typeans = $("#typeans");
+if (typeans) {
+    var typedAnswer = "";
+    typeans.innerHTML = typeans.innerHTML.replace(/<br.*/, "");
+    typeans.querySelectorAll(".typeGood, .typeBad").forEach((e) => {
+        if (e.innerText == "-") return;
+        typedAnswer += e.innerText;
+    });
+    var typedAnswerLower = mangleAnswer(typedAnswer);
 } else {
-	var element = document.getElementById("section-box");
-	element.remove();
+    typedAnswerLower = "";
 }
-</script>
 
-<!--SCRIPT: Add Phonetic-Semantic Composition Characters.-->
-<script>
-if ("{{Card_Type}}" == "Kanji" || "{{Card_Type}}" == "Radical") {
-	var sections = `{{Keisei}}`;
-	var sectionarray = sections.split(" | ");
-	var start = 1;
-	var data = sectionarray[0].split(", ");
-	var description = document.getElementById("phonetic-semantic-description");
-	if (data[0] == "compound" || data[0] == "phonetic") {
-		if (data[0] == "compound") {
-			// Backticks needed for radicals with "
-			description.innerHTML = "The kanji <kanji>" + `{{Characters}}` + "</kanji> was created using semantic-phonetic composition!<br><br>The phonetic component is「<ja>" + data[2] + "</ja>」with the ON reading(s)「<ja>" + data[3] + "</ja>」(including rare ones), and the semantic component is「<ja>" + data[4] + "</ja>」.<br>"
-		} else if (data[0] == "phonetic") {
-			var description = document.getElementById("phonetic-semantic-description");
-			if ("{{Card_Type}}" == "Kanji") {
-				description.innerHTML = "The kanji <kanji>" + `{{Characters}}` + "</kanji> is used as a phonetic component in other compounds!<br>Its ON reading(s) are「<ja>" + data[3] + "</ja>」.<br>"
-			} else {
-				description.innerHTML = "The radical <radical>" + `{{Characters}}` + "</radical> is used as a phonetic component in other compounds!<br>Its ON reading(s) are「<ja>" + data[3] + "</ja>」.<br>"
-			}
-		}
-		var div = document.getElementById("phonetic-container");
-		var element = document.createElement("div");
-		element.innerHTML = "<div id=phonetic-character>" + data[2] + "<div id=box-meaning>" + data[3].split("・")[0] + "<br>Phonetic</div></div>";
-		div.appendChild(element);
-		if (data[1].includes("R")) {
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=radical-character>" + data[2] + "<div id=box-meaning>" + data[3].split("・")[0] + "<br>" + sectionarray[start] + "</div></div>";
-			div.appendChild(element);
-			start += 1;
-		}
-		if (data[1].includes("K")) {
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=box-character>" + data[2] + "<div id=box-meaning>" + sectionarray[start].split(", ")[1] + "<br>" + sectionarray[start].split(", ")[0] + "</div></div>";
-			div.appendChild(element);
-			start += 1;
-		}
-		var div = document.getElementById("compound-container");
-		for (var i = start; i < sectionarray.length; i++) {
-			var parts = sectionarray[i].split(", ");
-			var element = document.createElement("div");
-			element.innerHTML = "<div id=box-character>" + parts[0] + "<div id=box-meaning>" + parts[1] + "<br>" + parts[2] + "</div></div>";
-			div.appendChild(element);
-		}
-	} else if (data[0] == "unprocessed") {
-		description.innerHTML = "The kanji <kanji>" + `{{Characters}}` + "</kanji> has not been added to the WK Userscripts Keisei DB yet, please wait for a future version.<br>";
-	} else if (data[0] == "nonradical") {
-		description.innerHTML = "The radical <radical>" + `{{Characters}}` + "</radical> is not considered a phonetic mark!<br>";
-	} else if (data[0] == "unknown") {
-		description.innerHTML = "The kanji <kanji>" + `{{Characters}}` + "</kanji> has an unknown or contested origin, or its phonetic mark is too obscure to be useful. Stay tuned for more information in future versions of WK Userscripts Keisei.";
-	} else if (`{{Keisei}}` != "") {
-		description.innerHTML = "The kanji <kanji>" + `{{Characters}}` + "</kanji> is not considered a semantic-phonetic composition.<br>Note: " + `{{Keisei}}` + "<br>";
-	} else {
-        var section = document.getElementById("section-phonetic-semantic");
-        section.style.display = "none";
+let meaningWhitelist = new Set(`{{Meaning_Whitelist}}`.toLowerCase().split(", "));
+let readingWhitelist = new Set(`{{Reading_Whitelist}}`.toLowerCase().split(", "));
+let correctAnswers = [];
+let correctText = $("#correct");
+
+switch (`{{Card}}`) {
+  case "Meaning": {
+    let capitalize = iter => Array.from(iter, elem =>
+        elem.replace(/(^| )\w/g, c => c.toUpperCase()));
+
+    correctAnswers = new Set(`{{Meaning}}`.toLowerCase().split(", "));
+    let [meaning, ...alternatives] = capitalize(correctAnswers);
+
+    let accepted = meaningWhitelist.difference(correctAnswers);
+    correctAnswers = correctAnswers.union(accepted);
+
+    correctText.innerHTML = `Primary: <b>${meaning}</b>`;
+    if (alternatives.length) {
+        correctText.insertAdjacentHTML("beforeend", `<br>
+            Alternative: <b>${alternatives.join(", ")}</b>`);
+    }
+    if (accepted.size) {
+        correctText.insertAdjacentHTML("beforeend", `<br>
+            <details>
+                <summary>Accepted:</summary>
+                <b>${capitalize(accepted).join(", ")}</b>
+            </details>`);
+    }
+    $("#section-meaning").firstElementChild.open = true;
+    break;
+  }
+  case "Reading": {
+    correctAnswers = readingWhitelist;
+    let items = Array.from(correctAnswers, x => `<reading>${x}</reading>`);
+    correctText.innerHTML = items.join(" ");
+
+    $("#section-phonetic-semantic").after($("#section-meaning"));
+    $("#section-reading").firstElementChild.open = true;
+  }
+}
+
+function checkTypos(answers, expected, mangle = x => x) {
+    let found = 0;
+    let typos = $("#typos");
+    for (let ans of answers) {
+        for (let exp of expected) {
+            if (likelyTypo(mangle(exp), mangle(ans))) {
+                found++;
+                typos.insertAdjacentHTML("beforeend", `
+                    <div class="typo">
+                        Did you mean <span class="typo-expected">${escapeHTML(exp)}</span>
+                        instead of <span class="typo-ans">${escapeHTML(ans)}</span>?
+                    </div>
+                `)
+            }
+        }
+    }
+    if (found) {
+        typos.style.display = "";
+    }
+}
+
+if (typedAnswerLower !== "") {
+    let answerDiv = document.createElement("div");
+    answerDiv.setAttribute("id", "typeans");
+    answerDiv.textContent = typedAnswer;
+    answerDiv.classList.add("typeans-{{Card}}")
+    if (`{{Card}}` == "Reading") {
+        setLangJa(answerDiv);
+    }
+    $("#typeans").replaceWith(answerDiv);
+
+    correctAnswers = new Set(
+        Array.from(correctAnswers, a => mangleAnswer(stripHTML(a))));
+
+    let answers = new Set(typedAnswerLower.split(/[、,]\s*/));
+    if (answers.isSubsetOf(correctAnswers)) {
+        answerDiv.classList.add("correct");
+    } else {
+        answerDiv.classList.add("incorrect");
+
+        let mangle = "{{Card_Type}}" == "Reading" ? wanakana.toRomaji : x => x;
+        checkTypos(answers, correctAnswers, mangle);
     }
 } else {
-	var section = document.getElementById("section-phonetic-semantic");
-	section.style.display = "none";
-}
-</script>
-
-<!--SCRIPT: Add Radical Combination Characters.-->
-<script>
-var character = `{{Components_Characters}}`;
-var characterarray = character.split("、 ");
-var meaning = `{{Components_Meaning}}`;
-var meaningarray = meaning.split("、 ");
-
-for (var i = 0; i < meaningarray.length; i++){
-	var div = document.getElementById("combination")
-	var element = document.createElement("div");
-	element.style.display = "flex";
-	element.style.alignItems = "center";
-
-	element.innerHTML = "<radical-combination><div>"+ characterarray[i] + "</div></radical-combination>" + "<div>" + meaningarray[i].toString().substring(0, 15) + "</div>";
-	div.appendChild(element);
-
-	if (i + 1 != characterarray.length) {
-		var div = document.getElementById("combination")
-		var element = document.createElement("p");
-		element.innerHTML = "<div class=combination-plus><b>+<b/></div>";
-		div.appendChild(element);
-	}
-}
-</script>
-
-<!--SCRIPT: Add Found in Vocabulary Characters.-->
-<script>
-var character = `{{Found_in_Characters}}`;
-var characterarray = character.split("、 ");
-var meaning = `{{Found_in_Meaning}}`;
-var meaningarray = meaning.split("、 ");
-var reading = `{{Found_in_Reading}}`;
-var readingarray = reading.split("、 ");
-
-for (var i = 0; i < characterarray.length; i++){
-	var div = document.getElementById("found-in-vocabulary-container")
-	var element = document.createElement("div");
-	element.innerHTML = "<div id=found-in-vocabulary-box><div class=found-in-voc>"+ characterarray[i] +"</div><div class=found-in-voc-reading>" + readingarray[i] +"<br>" + meaningarray[i] +"</div></div>";
-	div.appendChild(element);
+    $("#input").style.display = "none";
 }
 
-if (character.toString().length == 0) {
-	var foundinvocabularysection = document.getElementById("section-found-in-vocabulary")
-	foundinvocabularysection.style.display = "none";
-}
-</script>
-
-<!--SCRIPT: Check the answer -->
-<script>
-//some addons read the script too early:
-var typedAnswer_element = document.getElementById("typeans");
-if (typedAnswer_element) {
-	var typedAnswer = "";
-	typedAnswer_element.innerHTML = typedAnswer_element.innerHTML.replace(/<br.*/, "");
-	typedAnswer_element.querySelectorAll(".typeGood, .typeBad").forEach((e) => {
-		if (e.innerText == "-") return;
-		typedAnswer += e.innerText;
-	});
-	var typedAnswerLower = typedAnswer.replace("'", "").toLowerCase();
-} else {
-	var typedAnswerLower = "";
+/*  Generate tooltips  */
+function setTooltips(sel, text, isJa = false) {
+    for (let tag of $$(sel)) {
+        tag.setAttribute("title", text);
+        if (isJa) {
+            setLangJa(tag);
+        }
+    }
 }
 
-var meaningWhitelist = `{{Meaning_Whitelist}}`.toLowerCase().split(", ");
-var readingWhitelist = `{{Reading_Whitelist}}`.toLowerCase().split(", ");
-var correctAnswers = [];
-var correctText = document.getElementById("correct");
-
-if (`{{Card}}` === "Meaning") {
-	var capitalize = (array) => (array.map((elem) => (elem.trimRight().replace(/(^| )\w/g, c => c.toUpperCase()))));
-
-	correctAnswers = `{{Meaning}}`.toLowerCase().split(", ");
-	var accepted = [];
-	var alternative = capitalize(`{{Meaning}}`.toLowerCase().split(", ").splice(1));
-	meaningWhitelist.forEach((correct) => {
-		if (!correctAnswers.includes(correct)) {
-			correctAnswers.push(correct);
-			accepted.push(correct);
-		}
-	});
-
-	var meanings = capitalize(correctAnswers);
-	accepted = capitalize(accepted);
-
-	correctText.innerHTML = "Primary: <b>" + meanings[0] + "</b>";
-	if (meanings.length > 1) {
-		correctText.innerHTML += "<br>Alternative: <b>" + alternative.join(", ") + "</b>";
-	}
-	if (accepted.length > 0) {
-		correctText.innerHTML += "<br><details><summary>Accepted:</summary><b>" + accepted.join(", ") + "</b></details>";
-	}
-} else if (`{{Card}}` === "Reading") {
-	correctAnswers = readingWhitelist;
-	var items = [];
-	correctAnswers.forEach((x) => {
-		items.push("<reading>" + x + "</reading>");
-	});
-	correctText.innerHTML = items.join(" ");
+for (let tag of $$("ja")) {
+    setLangJa(tag)
 }
 
-if (typedAnswerLower != "") {
-	// answer can contain HTML tags, filter them
-	correctAnswers = correctAnswers.map(a => a.replace(/<\/?[^>]+?(>|$)/g, "").replace("'", "").trim());
-
-	var answerDiv = document.createElement("div");
-	answerDiv.setAttribute("id", "typeans");
-	answerDiv.innerHTML = typedAnswer;
-	if (`{{Card}}` !== "Meaning") {
-		answerDiv.style.fontFamily = "Noto Sans,Noto Sans Special SC,Noto Sans JP,Noto Sans SC,sans-serif";
-	}
-	document.getElementById("typeans").replaceWith(answerDiv);
-
-	if (typedAnswerLower === "") {
-		answerDiv.style.display = "none";
-	} else if (typedAnswerLower.split(/[、,]\s*/).every(v => correctAnswers.includes(v.trim()))) {
-		answerDiv.classList.add("correct");
-	} else {
-		answerDiv.classList.add("incorrect");
-	}
-} else {
-	document.getElementsByClassName("input")[0].style.display = "none";
-	document.getElementsByClassName("input")[0].style.display = "none";
-}
-</script>
-
-<!-- Generate tooltips -->
-<script>
-function setTooltips(tags, text) {
-	for (var i = 0; i < tags.length; i++) {
-		tags[i].setAttribute("title", text);
-	}
-}
-
-var kanji = document.getElementsByTagName("kanji");
-var radicals = document.getElementsByTagName("radical");
-var vocab = document.getElementsByTagName("vocabulary");
-var reading = document.getElementsByTagName("reading");
-
-setTooltips(kanji, "Kanji");
-setTooltips(radicals, "Radical");
-setTooltips(vocab, "Vocabulary");
-setTooltips(reading, "Reading");
+setTooltips("kanji", "Kanji", true);
+setTooltips("radical", "Radical", true);
+setTooltips("vocabulary", "Vocabulary", true);
+setTooltips("reading", "Reading", true);
 </script>

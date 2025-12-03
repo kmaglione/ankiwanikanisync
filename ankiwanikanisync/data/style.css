@@ -1,209 +1,231 @@
 @font-face {
-	font-family: "Open Sans";
-	src: url("_OpenSans.woff2");
+    font-family: "Open Sans";
+    src: url("_OpenSans.woff2");
 }
 
 @font-face {
-	font-family: "Ubuntu";
-	src: url("_Ubuntu.woff2");
+    font-family: "Ubuntu";
+    src: url("_Ubuntu.woff2");
 }
 
 @font-face {
-	font-family: "Noto Sans";
-	src: url("_NotoSans.woff2");
+    font-family: "Noto Sans";
+    src: url("_NotoSans.woff2");
 }
 
 @font-face {
-	font-family: "Noto Sans JP";
-	src: url("_NotoSansJP.woff2");
+    font-family: "Noto Sans JP";
+    src: url("_NotoSansJP.woff2");
 }
 
 @font-face {
-	font-family: "Noto Sans SC";
-	src: url("_NotoSansSC.woff2");
+    font-family: "Noto Sans SC";
+    src: url("_NotoSansSC.woff2");
 }
 
 @font-face {
-	font-family: "Noto Sans Special SC";
-	src: url("_NotoSansSC.woff2");
-	unicode-range: U+5DE9;
+    font-family: "Noto Sans Special SC";
+    src: url("_NotoSansSC.woff2");
+    unicode-range: U+5DE9;
 }
 
 .nightMode #card-back {
-	color: darkgray;
+    color: darkgray;
 }
 
 .nightMode #combination {
-	color: darkgray;
+    color: darkgray;
 }
 
 .nightMode.card {
-	background-image: none;
+    background-image: none;
 }
 
-.nightMode #button {
-	background-color: var(--button-color-dark);
+.nightMode .button {
+    background-color: var(--button-color-dark);
 }
 
-.mobile .notclicked#button:hover {
-	background-color: var(--button-color-dark);
+.mobile .button:not(.clicked):hover {
+    background-color: var(--button-color-dark);
 }
 
-.mobile .clicked#button:hover {
-	background-color: var(--button-color-dark);
+.mobile .button.clicked:hover {
+    background-color: var(--button-color-dark);
 }
 
-.mobile #button {
-	width: max(120px);
+.mobile .button {
+    width: max(6rem);
 }
 
 .mobile #box-character {
-	padding: 0px 15px 10px 15px;
-	font-size: 58px;
+    padding: 0 .75rem .5rem .75rem;
+    font-size: 2.9rem;
 }
 
 .mobile #box-meaning {
-	font-size: 20%;
+    font-size: 20%;
 }
 
 .mobile .found-in-voc-reading {
-	font-size: 10px;
-	padding-top: 3px;
-	padding-bottom: 2px;
+    font-size: .5rem;
+    padding-top: 3px;
+    padding-bottom: 2px;
 }
 
 .mobile .found-in-voc {
-	font-size: 24px;
-	padding-top: 0px;
-	padding-bottom: 4px;
+    font-size: 1.2rem;
+    padding-top: 0;
+    padding-bottom: 4px;
 }
 
 .mobile.card.nightMode {
-	color:white;
+    color: white;
 }
 
 :root {
-	--background-color-light: #black;
-	--background-color-dark: #E1E1E1;
-	--font-color-dark: #333333;
-	--font-color-light: white;
-	--hint-color: #555555;
-	--meaning-color: #777777;
-	--meaning-sub-color: #616161;
-	--shadow-color: darkgray;
-	--kanji-color: #f100a1;
-	--kanji-color-dark: #b30077;
-	--reading-color: #484848;
-	--reading-color-dark: #0a0a0a;
-	--radical-color: #00a0f1;
-	--radical-color-dark: #0077b2;
-	--vocab-color: #9e00ed;
-	--vocab-color-dark: #7600b1;
-	--incorrect-color: #f03;
-	--correct-color: #88cc00;
-	--incorrect-color-dark: #f03;
-	--correct-color-dark: #88cc00;
-	--button-color-dark: #616161;
-	--button-color-light: #E0E0E0;
-	--button-color-hover: #BDBDBD;
+    --japanese-font: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
+    --background-color-light: black;
+    --background-color-dark: #E1E1E1;
+    --font-color-dark: #333333;
+    --font-color-light: white;
+    --hint-color: #555555;
+    --meaning-color: #777777;
+    --meaning-sub-color: #616161;
+    --shadow-color: darkgray;
+    --kanji-color: #f100a1;
+    --kanji-color-dark: #b30077;
+    --reading-color: #484848;
+    --reading-color-dark: #0a0a0a;
+    --radical-color: #00a0f1;
+    --radical-color-dark: #0077b2;
+    --vocab-color: #9e00ed;
+    --vocab-color-dark: #7600b1;
+    --incorrect-color: #f03;
+    --correct-color: #88cc00;
+    --incorrect-color-dark: #f03;
+    --correct-color-dark: #88cc00;
+    --button-color-dark: #616161;
+    --button-color-light: #E0E0E0;
+    --button-color-hover: #BDBDBD;
+}
+
+:root {
+    font-size: 1rem;
 }
 
 .card {
-	font-family: "Open Sans";
-	font-size: 20px;
-	text-align: center;
-	color: black;
-	margin: 10px;
-	background-image: url(_back.png);
+    font-family: "Open Sans";
+    font-size: 1rem;
+    text-align: center;
+    color: black;
+    margin: .5rem;
+    background-image: url(_back.png);
 }
 
 .card-front {
-	font-size: 150px;
-	text-align: center;
+    font-size: 7.5rem;
+    text-align: center;
 }
 
 #card-back {
-	font-size: 26px;
-	text-align: left;
-	color: var(--font-color-dark);
-	max-width: 76.1ch;
-	padding: 2%;
-	margin: auto;
+    font-size: 1.3rem;
+    text-align: left;
+    color: var(--font-color-dark);
+    max-width: 76.1ch;
+    padding: .5em 1em;
+    margin: auto;
+}
+
+.heading {
+    border-bottom: 1px solid var(--shadow-color);
+    padding-bottom: .3em;
+    margin-bottom: 1em;
+}
+
+summary {
+    list-style-position: outside;
+}
+
+@media (width <= 60ch) {
+    #card-back {
+        padding: .2em;
+    }
+    summary {
+        list-style-position: inside;
+    }
+}
+
+*:lang(ja) {
+    font-family: var(--japanese-font);
+}
+
+kanji,
+reading,
+radical,
+vocabulary {
+    padding: 0 .2em;
+    margin: 0 .1em 0 0;
+    border-radius: .3em;
 }
 
 kanji {
-	background-color: var(--kanji-color);
-	box-shadow: 0px 2px var(--kanji-color-dark);
-	color: var(--font-color-light);
-	padding: 2px;
-	margin: 0px 2px 0px 0px;
-	border-radius: 4px;
+    background-color: var(--kanji-color);
+    box-shadow: 0 2px var(--kanji-color-dark);
+    color: var(--font-color-light);
 }
 
 reading {
-	background-color: var(--reading-color);
-	box-shadow: 0px 2px var(--reading-color-dark);
-	color: var(--font-color-light);
-	padding: 2px;
-	margin: 0px 2px 0px 0px;
-	border-radius: 4px;
+    background-color: var(--reading-color);
+    box-shadow: 0 2px var(--reading-color-dark);
+    color: var(--font-color-light);
 }
 
 radical {
-	background-color: var(--radical-color);
-	box-shadow: 0px 2px var(--radical-color-dark);
-	color: var(--font-color-light);
-	--color-text: var(--font-color-light);
-	padding: 2px;
-	margin: 0px 2px 0px 0px;
-	border-radius: 4px;
+    background-color: var(--radical-color);
+    box-shadow: 0 2px var(--radical-color-dark);
+    color: var(--font-color-light);
+    --color-text: var(--font-color-light);
 }
 
 vocabulary {
-	background-color: var(--vocab-color);
-	box-shadow: 0px 2px var(--vocab-color-dark);
-	color: var(--font-color-light);
-	padding: 2px;
-	margin: 0px 2px 0px 0px;
-	border-radius: 4px;
+    background-color: var(--vocab-color);
+    box-shadow: 0 2px var(--vocab-color-dark);
+    color: var(--font-color-light);
 }
 
 .meaning {
-	background-image: linear-gradient(to bottom, #efefef, #e0e0e0);
-	box-shadow: 0px 1px 5px 0px var(--shadow-color);
-	color: var(--font-color-dark);
-	line-height: 40px;
+    background-image: linear-gradient(to bottom, #efefef, #e0e0e0);
+    box-shadow: 0 1px 5px 0 var(--shadow-color);
+    color: var(--font-color-dark);
+    line-height: 2rem;
 }
 
 .reading {
-	background-image: linear-gradient(to bottom, #323232, #000000);
-	color: var(--font-color-light);
-	line-height: 40px;
+    background-image: linear-gradient(to bottom, #323232, #000000);
+    color: var(--font-color-light);
+    line-height: 2rem;
 }
 
 .radical {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 100px;
-	color: var(--font-color-light);
-	background-color: var(--radical-color);
-	--color-text: var(--font-color-light);
-	text-shadow: 2px 2px 0 #0093dd;
+    font-size: 5rem;
+    color: var(--font-color-light);
+    background-color: var(--radical-color);
+    --color-text: var(--font-color-light);
+    text-shadow: 2px 2px 0 #0093dd;
 }
 
 .kanji {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 100px;
-	color: var(--font-color-light);
-	background-color: var(--kanji-color);
-	text-shadow: 2px 2px 0 #dd0093;
+    font-size: 5rem;
+    color: var(--font-color-light);
+    background-color: var(--kanji-color);
+    text-shadow: 2px 2px 0 #dd0093;
 }
 
 .vocabulary {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 100px;
-	color: var(--font-color-light);
-	background-color: var(--vocab-color);
-	text-shadow: 2px 2px 0 #9300dd;
+    font-size: 5rem;
+    color: var(--font-color-light);
+    background-color: var(--vocab-color);
+    text-shadow: 2px 2px 0 #9300dd;
 }
 
 .radical a, .radical a:link, .radical a:visited,
@@ -213,403 +235,434 @@ vocabulary {
   kanji a, kanji a:link, kanji a:visited,
   vocabulary a, vocabulary a:link, vocabulary a:visited
 {
-	color: var(--font-color-light) !important;
-	text-decoration: none !important;
+    color: var(--font-color-light) !important;
+    text-decoration: none !important;
 }
 
 #meaning-title p {
-	margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 #meanings {
-	font-size: 14px;
-	margin: 0px;
+    text-transform: uppercase;
+    font-size: .7rem;
+    margin: 0;
 }
 
 #meanings p {
-	margin: 0px;
+    margin: 0;
 }
 
 .explanation {
-	font-family: "Open Sans";
-	font-size: 18px;
-	margin: 10px 0px 10px 0px;
+    font-family: "Open Sans";
+    font-size: .9rem;
+    margin: .5rem 0 .5rem 0;
 }
 
 .mnemonic {
-	font-size: 16px;
-	font-family: "Ubuntu";
-	line-height: 1.6;
-	margin: 0px 0px 10px 0px;
+    font-size: .8rem;
+    font-family: "Ubuntu";
+    line-height: 1.6;
+    margin: 0 0 .5rem 0;
 }
 
 .mnemonic-hint {
-	font-size: 16px;
-	font-family: "Ubuntu";
-	background-color: var(--background-color-dark);
-	color: var(--font-color-dark);
-	padding: 10px 20px 20px 20px;
-	margin: 0px 0px 10px 0px;
+    font-size: .8rem;
+    font-family: "Ubuntu";
+    background-color: var(--background-color-dark);
+    color: var(--font-color-dark);
+    padding: .5rem 1rem 1rem 1rem;
+    margin: 0 0 .5rem 0;
 }
 
 .hint {
-	font-size: 11px;
-	color: var(--hint-color);
+    font-size: .55rem;
+    color: var(--hint-color);
 }
 
 #vocabulary-reading {
-	font-size: 18px;
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	color: var(--meaning-color);
+    font-size: .9rem;
+    color: var(--meaning-color);
 }
 
 #reading-container {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-around;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
 }
 
 #kanji-readings {
-	font-size: 16px;
-	line-height: 2;
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	color: var(--meaning-color);
+    font-size: .8rem;
+    line-height: 2;
+    color: var(--meaning-color);
 }
 
 #context-patterns {
-	font-family: "Ubuntu";
-	display: flex;
-	margin: -10px 10px 15px 0px;
+    font-family: "Ubuntu";
+    display: flex;
+    margin: -10px .5rem .75rem 0;
 }
 
 #common-word-combinations {
-	box-shadow: -10px 0 5px -10px #8888;
-	padding: 0px 0px 0px 20px;
+    box-shadow: -10px 0 5px -10px #8888;
+    padding: 0 0 0 1rem;
 }
 
-ja {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
+.button {
+    padding: .5rem 1px .5rem .5rem;
+    margin: 0 0 4px 0;
+    text-align: left;
+    font-size: .7rem;
+    background: none;
+    border-radius: 6px 0 0 6px;
+    border: none;
+    width: max(7rem);
 }
 
-#button {
-	padding: 10px 1px 10px 10px;
-	margin: 0px 0px 4px 0px;
-	text-align: left;
-	font-size: 14px;
-	background: none;
-	border-radius: 6px 0px 0px 6px;
-	border: none;
-	width: max(140px);
+.button:not(.clicked) {
+    background-color: var(--button-color-light);
+    transition-duration: 0.2s;
 }
 
-.notclicked#button {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	background-color: var(--button-color-light);
-	transition-duration: 0.2s;
+.button.clicked {
+    color: var(--font-color-light);
+    background-color: var(--button-color-dark);
+    transition-duration: 0.2s;
+    clip-path: polygon(100% 100%, 100% 85%, 90% 50%, 100% 15%, 100% 0, 0 0, 0 100%);
 }
 
-.clicked#button {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	color: var(--font-color-light);
-	background-color: var(--button-color-dark);
-	transition-duration: 0.2s;
-	clip-path: polygon(100% 100%, 100% 85%, 90% 50%, 100% 15%, 100% 0, 0 0, 0 100%);
+.button:not(.clicked):hover {
+    background-color: var(--button-color-hover);
 }
 
-.notclicked#button:hover {
-	background-color: var(--button-color-hover);
+.button.clicked:hover {
+    background-color: var(--button-color-hover);
 }
 
-.clicked#button:hover {
-	background-color: var(--button-color-hover);
-}
-
-#button:focus {
-	outline: 0;
+.button:focus {
+    outline: 0;
 }
 
 #context-sentences {
-	font-size: 16px;
-	font-family: "Ubuntu";
+    font-size: .8rem;
+    font-family: "Ubuntu";
 }
 
 #patterns-of-use {
-	font-size: 15px;
-	margin: 0px -30px 30px 0px;
+    font-size: .75rem;
+    margin: 0 -30px 30px 0;
 }
 
 #common-word-combinations {
-	font-size: 16px;
-	margin: 0px 30px 3px;
+    font-size: .8rem;
+    margin: 0 30px 3px;
 }
 
 #box-container {
-	display: flex;
-	align-items: right;
-	flex-wrap: wrap;
+    display: flex;
+    align-items: right;
+    flex-wrap: wrap;
 }
 
 #box-character {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 72px;
-	color: var(--font-color-light);
-	background-image: linear-gradient(to bottom, #f0a, #dd0093);
-	border-top: 1px solid #f6c;
-	border-bottom: 1px solid #cc0088;
-	border-left: 1px solid #f6c;
-	text-align: center;
-	padding: 0px 20px 10px 20px;
-	text-shadow: 0px 1px var(--kanji-color-dark);
-	overflow: hidden;
+    font-size: 3.6rem;
+    color: var(--font-color-light);
+    background-image: linear-gradient(to bottom, #f0a, #dd0093);
+    border-top: 1px solid #f6c;
+    border-bottom: 1px solid #cc0088;
+    border-left: 1px solid #f6c;
+    text-align: center;
+    padding: 0 1rem .5rem 1rem;
+    text-shadow: 0 1px var(--kanji-color-dark);
+    overflow: hidden;
 }
 
 #box-character a, #box-character a:link, #box-character a:visited {
-	color: var(--font-color-light) !important;
+    color: var(--font-color-light) !important;
 }
 
 #box-meaning {
-	font-size: 14px;
-	margin: 0px -100px 0px -100px;
+    font-size: .7rem;
+    margin: 0 -100px 0 -100px;
 }
 
 radical-combination {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 24px;
-	color: white;
-	--color-text: white;
-	background-color: var(--radical-color);
-	box-shadow: 0px 2px var(--radical-color-dark);
-	padding: 5px 8px;
-	margin: 0px 12px 0px -0px;
-	border-radius: 4px;
+    font-size: 1.2rem;
+    color: white;
+    --color-text: white;
+    background-color: var(--radical-color);
+    box-shadow: 0 2px var(--radical-color-dark);
+    padding: 5px 8px;
+    margin: 0 12px 0 -0px;
+    border-radius: .2rem;
 }
 
 radical-combination a, radical-combination a:link, radical-combination a:visited {
-	color: white !important;
+    color: white !important;
 }
 
 #combination {
-	font-size: 20px;
-	display: flex;
-	align-items: center;
-	margin-bottom: 20px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .combination-plus {
-	font-size: 25px;
-	margin: 0px 15px 0px 15px;
+    font-size: 1.25rem;
+    margin: 0 .75rem 0 .75rem;
 }
 
 .found-in-voc {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 26px;
-	background-image: linear-gradient(to bottom, #9B3AF8, #8631D6);
-	width: 50%;
-	padding: 9px;
-	background-color: #a0f;
-	background-image: linear-gradient(to bottom, #a0f, #9300dd);
-	border-top: 1px solid #a0f;
-	border-color: #c655ff transparent #80c #c655ff;
+    font-size: 1.3rem;
+    background-image: linear-gradient(to bottom, #9B3AF8, #8631D6);
+    width: 50%;
+    padding: 9px;
+    background-color: #a0f;
+    background-image: linear-gradient(to bottom, #a0f, #9300dd);
+    border-top: 1px solid #a0f;
+    border-color: #c655ff transparent #80c #c655ff;
 }
 
 .found-in-voc-reading {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 10px;
-	width: 50%;
-	background-color: #a0f;
-	background-image: linear-gradient(to bottom, #a0f, #9300dd);
-	border-top: 1px solid #a0f;
-	border-color: #c655ff transparent #80c #c655ff;
-	text-align: right;
-	padding: 15px;
+    font-size: .5rem;
+    width: 50%;
+    background-color: #a0f;
+    background-image: linear-gradient(to bottom, #a0f, #9300dd);
+    border-top: 1px solid #a0f;
+    border-color: #c655ff transparent #80c #c655ff;
+    text-align: right;
+    padding: .75rem;
 }
 
 #found-in-vocabulary-box {
-	display: flex;
-	color: white;
+    display: flex;
+    color: white;
 }
 
 #found-in-vocabulary-box a, #found-in-vocabulary-box a:link, #found-in-vocabulary-box a:visited {
-	color: white !important;
+    color: white !important;
 }
 
 #section-found-in-vocabulary {
-	margin: 10px 0px 0px 0px;
+    margin: .5rem 0 0 0;
+}
+
+#input {
+    box-shadow: 0 2px 3px 0 var(--shadow-color);
+    text-align: center;
+    overflow: hidden;
+    background-color: field;
 }
 
 #typeans {
-	box-shadow: 0px 2px 3px 0px var(--shadow-color);
-	line-height: 40px;
-	text-align: center;
-	height: 40px;
-	border: 0;
-	outline-style: none;
-	font-family: arial;
-	font-size: 20px;
-	margin-top: 5px;
+    line-height: 2em;
+    text-align: center;
+    height: 2em;
+    border: 0;
+    outline-style: none;
+    font-family: arial;
+    font-size: 1rem;
+    margin-top: .25em;
+    background: transparent;
 }
 
+@keyframes shake {
+    from {
+        translate: 0 0;
+    }
+    25% {
+        translate: 1em 0;
+    }
+    75% {
+        translate: -1em 0;
+    }
+    to {
+        translate: 0 0;
+    }
+}
+
+.shake {
+    animation-name: shake;
+    animation-duration: .2s;
+    animation-iteration-count: 5;
+}
+
+#typos {
+    text-align: center;
+}
+
+.typo-expected,
+.typo-ans {
+    font-style: italic;
+}
+
+.typo-expected::before,
+.typo-ans::before {
+    content: "“";
+}
+
+.typo-expected::after,
+.typo-ans::after {
+    content: "”";
+}
+
+
 .correct {
-	background: var(--correct-color)!important;
-	color: var(--font-color-light);
+    background: var(--correct-color)!important;
+    color: var(--font-color-light);
 }
 
 .incorrect {
-	background: var(--incorrect-color)!important;
-	color: var(--font-color-light);
+    background: var(--incorrect-color)!important;
+    color: var(--font-color-light);
 }
 
 .replay-button svg {
-	display:none;
+    display:none;
 }
 
 .replay-button:before {
-	content: '▶';
-	font-size: 18px;
-	color: var(--meaning-color);
+    content: '▶';
+    font-size: .9rem;
+    color: var(--meaning-color);
 }
 
 /* Level Indicator */
 #question-display {
-	position: relative;
+    position: relative;
 }
 #level {
-	position: absolute;
-	z-index: 999;
-	left: 20px;
-	top: 20px;
-	background-color: #a1a1a1;
-	background-image: linear-gradient(#a6a6a6, #999);
-	color: #d5d5d5;
-	text-shadow: 0 -1px 0 rgb(0 0 0 / 20%), 0 1px 0 rgb(255 255 255 / 50%);
-	display: inline-block;
-	width: 48px;
-	height: 48px;
-	line-height: 48px;
-	text-align: center;
-	box-shadow: 0 -3px 0 rgb(0 0 0 / 20%) inset;
-	text-decoration: none;
-	font-size: 27px;
-	border-radius: 3px;
-	margin: 0 10px 10px 0;
+    position: absolute;
+    z-index: 999;
+    left: 1rem;
+    top: 1rem;
+    background-color: #a1a1a1;
+    background-image: linear-gradient(#a6a6a6, #999);
+    color: #d5d5d5;
+    text-shadow: 0 -1px 0 rgb(0 0 0 / 20%), 0 1px 0 rgb(255 255 255 / 50%);
+    display: inline-block;
+    width: 1.8em;
+    height: 1.8em;
+    line-height: 1.8em;
+    text-align: center;
+    box-shadow: 0 -3px 0 rgb(0 0 0 / 20%) inset;
+    text-decoration: none;
+    font-size: 1.35rem;
+    border-radius: 3px;
+    margin: 0 .5rem .5rem 0;
 }
 .mobile #level {
-	width: 32px;
-	height: 32px;
-	line-height: 32px;
-	font-size: 18px;
+    font-size: .9rem;
 }
 
 /* Correct Answers */
 #correct {
-	font-size: 16px;
+    font-size: .8rem;
 }
 #correct reading {
-	font-size: 20px;
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
+    font-size: 1rem;
 }
 .mobile #correct reading {
-	font-size: 24px;
+    font-size: 1.2rem;
 }
 
 /* Pitch-Accent */
 .mora {
-	display: inline-block;
-	margin-bottom: 0.2em;
+    display: inline-block;
+    margin-bottom: 0.2em;
 }
 
 .mora > * {
-	margin: 0;
-	border: 0 dotted currentcolor;
-	--border-width: 1.5px;
+    margin: 0;
+    border: 0 dotted currentcolor;
+    --border-width: 1.5px;
 }
 
 .mora > .mora-h-l {
-	border-top-width: var(--border-width);
-	border-right-width: var(--border-width);
+    border-top-width: var(--border-width);
+    border-right-width: var(--border-width);
 }
 
 .mora > .mora-l-h {
-	border-bottom-width: var(--border-width);
-	border-right-width: var(--border-width);
+    border-bottom-width: var(--border-width);
+    border-right-width: var(--border-width);
 }
 
 .mora > .mora-h {
-	border-top-width: var(--border-width);
+    border-top-width: var(--border-width);
 }
 
 .mora > .mora-l {
-	border-bottom-width: var(--border-width);
+    border-bottom-width: var(--border-width);
 }
 
 /* Keisei */
 #section-phonetic-semantic {
-	margin: 10px 0px 0px 0px;
+    margin: .5rem 0 0 0;
 }
 #phonetic-semantic-container {
-	display: flex;
-	flex-direction: row;
+    display: flex;
+    flex-direction: row;
 }
 @media (max-width: 650px) {
-	#phonetic-semantic-container {
-		flex-direction: column;
-	}
-	#phonetic-container {
-		margin-right: 0;
-		margin-bottom: 20px;
-	}
+    #phonetic-semantic-container {
+        flex-direction: column;
+    }
+    #phonetic-container {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
 }
 #phonetic-container {
-	display: flex;
-	align-items: start;
-	margin-right: 20px;
+    display: flex;
+    align-items: start;
+    margin-right: 1rem;
 }
 #compound-container {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
 }
 #phonetic-character {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 72px;
-	color: var(--font-color-light);
-	background-image: linear-gradient(to bottom, #0c4, #092);
-	border-top:1px solid #0c4;
-	border-bottom:1px solid #092;
-	border-left:1px solid #0c4;
-	text-align: center;
-	padding: 0px 20px 10px 20px;
-	text-shadow: 0px 1px var(--kanji-color-dark);
-	overflow: hidden;
+    font-size: 3.6rem;
+    color: var(--font-color-light);
+    background-image: linear-gradient(to bottom, #0c4, #092);
+    border-top:1px solid #0c4;
+    border-bottom:1px solid #092;
+    border-left:1px solid #0c4;
+    text-align: center;
+    padding: 0 1rem .5rem 1rem;
+    text-shadow: 0 1px var(--kanji-color-dark);
+    overflow: hidden;
 }
 #radical-character {
-	font-family: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
-	font-size: 72px;
-	color: var(--font-color-light);
-	background-image: linear-gradient(to bottom, #0af, #0093dd);
-	border-top:1px solid #88d7ff;
-	border-bottom:1px solid #069;
-	border-left:1px solid #88d7ff;
-	text-align: center;
-	padding: 0px 20px 10px 20px;
-	text-shadow: 0px 1px var(--kanji-color-dark);
-	overflow: hidden;
+    font-size: 3.6rem;
+    color: var(--font-color-light);
+    background-image: linear-gradient(to bottom, #0af, #0093dd);
+    border-top:1px solid #88d7ff;
+    border-bottom:1px solid #069;
+    border-left:1px solid #88d7ff;
+    text-align: center;
+    padding: 0 1rem .5rem 1rem;
+    text-shadow: 0 1px var(--kanji-color-dark);
+    overflow: hidden;
 }
 .mobile #phonetic-character {
-	padding: 0px 15px 10px 15px;
-	font-size: 58px;
+    padding: 0 .75rem .5rem .75rem;
+    font-size: 2.9rem;
 }
 .mobile #radical-character {
-	padding: 0px 15px 10px 15px;
-	font-size: 58px;
+    padding: 0 .75rem .5rem .75rem;
+    font-size: 2.9rem;
 }
 
 /* SVG-Radicals */
 wk-radical-svg > svg {
-	position: relative;
-	top: 0.3em;
-	height: 1em;
-	padding-bottom: 0.25em;
-	margin: 0 auto;
-	display: inline-block;
+    position: relative;
+    top: 0.3em;
+    height: 1em;
+    padding-bottom: 0.25em;
+    margin: 0 auto;
+    display: inline-block;
 }

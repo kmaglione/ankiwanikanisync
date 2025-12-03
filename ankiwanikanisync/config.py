@@ -59,6 +59,7 @@ class WKConfig(object):
     _last_assignments_sync = Prop[str]("")
     _last_lessons_sync = Prop[str]("")
     _last_due_sync = Prop[str]("")
+    _version = Prop[str]("")
 
 
 config = WKConfig()

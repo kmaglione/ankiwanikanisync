@@ -14,6 +14,8 @@ from .play_all_audio import install_play_all_audio
 from .sync import auto_sync, do_clear_cache, do_process, do_sync, do_update_intervals
 from .timers import timers
 
+__version__ = "0.1.1"
+
 
 def init_tools_menu():
     menu = QMenu("WaniKani", mw)
