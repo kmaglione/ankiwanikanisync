@@ -7,8 +7,11 @@
     {{type:card_id}}
 </div>
 
+__CARD_DATA__
+
 <!-- Kana input -->
 <script type="module">
+/* globals _ */
 import wanakana from "./_wanakana.min.js";
 import { stripHTML, $ } from "./_wk3_util.js";
 
@@ -16,12 +19,12 @@ let map = (iter, fn) => Iterator.from(iter).map(fn);
 
 let typeans = $("#typeans");
 
-let questionName = "{{Card_Type}}" === "Radical" ? "Name" : "{{Card}}";
+let questionName = _.Card_Type === "Radical" ? "Name" : _.Card;
 
 let questionNameDiv = $("#question-name");
 questionNameDiv.innerHTML = `{{Card_Type}} <b>${questionName}</b>`;
 
-switch ("{{Card}}") {
+switch (_.Card) {
   case "Meaning":
     questionNameDiv.classList.add("meaning");
     break;
@@ -31,7 +34,7 @@ switch ("{{Card}}") {
 }
 
 let questionDisplayDiv = $("#question-display");
-switch ("{{Card_Type}}") {
+switch (_.Card_Type) {
   case "Radical":
     questionDisplayDiv.classList.add("radical");
     break;
@@ -44,7 +47,7 @@ switch ("{{Card_Type}}") {
 }
 
 if (typeans && ["textarea", "input"].includes(typeans.localName)) {
-    if ("{{Card}}" == "Reading") {
+    if (_.Card == "Reading") {
         wanakana.bind(typeans);
     }
 
@@ -53,19 +56,19 @@ if (typeans && ["textarea", "input"].includes(typeans.localName)) {
         event.target.classList.remove("shake");
     });
 
-    let meaningWhitelist = new Set(`{{Meaning_Whitelist}}`.split(", ").map(s => s.toLowerCase()));
+    let meaningWhitelist = new Set(_.Meaning_Whitelist.split(", ").map(s => s.toLowerCase()));
 
-    let readingWhitelist = new Set(`{{Reading_Whitelist}}`.split(", ").map(stripHTML));
+    let readingWhitelist = new Set(_.Reading_Whitelist.split(", ").map(stripHTML));
 
-    let readingAll = new Set(`{{Reading_Onyomi}}`.split(", ")
-                             .concat(`{{Reading_Kunyomi}}`.split(", "))
+    let readingAll = new Set(_.Reading_Onyomi.split(", ")
+                             .concat(_.Reading_Kunyomi.split(", "))
                              .map(stripHTML));
 
     let readingWarning = readingAll.difference(readingWhitelist);
 
     // eslint-disable-next-line no-unused-vars
     let checkWarning = answers => false;
-    switch (`{{Card}}`) {
+    switch (_.Card) {
       case "Reading": {
         checkWarning = answers => {
             if (Iterator.from(answers).some(wanakana.isMixed)) {
@@ -81,7 +84,7 @@ if (typeans && ["textarea", "input"].includes(typeans.localName)) {
                 return true;
             }
 
-            switch (`{{Card_Type}}`) {
+            switch (_.Card_Type) {
               case "Kanji":
               case "Vocabulary":
                 return answers.isSubsetOf(readingAll)
@@ -105,7 +108,7 @@ if (typeans && ["textarea", "input"].includes(typeans.localName)) {
 
     typeans.addEventListener("keypress", event => {
         if (event.key === "Enter") {
-            if (`{{Card}}` === "Reading" && typeans.value.endsWith("n")) {
+            if (_.Card === "Reading" && typeans.value.endsWith("n")) {
                 typeans.value = typeans.value.slice(0, -1) + "ん";
             }
 

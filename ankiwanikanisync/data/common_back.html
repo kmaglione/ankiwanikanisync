@@ -142,7 +142,10 @@ Sections get turned off based on which Card Type is displayed.
     </div>
 </div><!-- id=card-back -->
 
+__CARD_DATA__
+
 <script type="module">
+/* globals _ */
 import { chunked, escapeHTML, frag, likelyTypo, stripHTML, zip, $, $$ } from "./_wk3_util.js";
 import wanakana from "./_wanakana.min.js";
 
@@ -151,29 +154,26 @@ function setLangJa(elem) {
 }
 
 /* SCRIPT: Slice meanings and insert into the Meaning Section. */
-let card_type = "{{Card_Type}}";
-
 let title = "Meaning";
-if (card_type === "Radical") {
+if (_.Card_Type === "Radical") {
     title = "Name";
 }
 
-$(`#meaning-title`).insertAdjacentHTML("beforeend", title);
+/* SCRIPT: Slice meanings and insert into the Meaning Section. */
+$(`#meaning-title`).append(_.Card_Type === "Radical" ? "Name" : "Meaning");
 
-let meanings = "{{Meaning}}";
-let [primary, ...alternative] = meanings.split(",");
-let wordtype = "{{Word_Type}}";
+let [primary, ...alternative] = _.Meaning.split(",");
 
 {
     let div = $("#meanings");
     div.insertAdjacentHTML("beforeend", `<p><b>Primary</b> ${primary}</p>`)
 
-    if (alternative.length !== 0) {
+    if (alternative.length) {
         div.insertAdjacentHTML("beforeend", `<p><b>Alternative</b> ${alternative}</p>`);
     }
 
-    if (wordtype.length !== 0) {
-        div.insertAdjacentHTML("beforeend", `<p><b>Word Type</b> ${wordtype}</p>`);
+    if (_.Word_Type.length) {
+        div.insertAdjacentHTML("beforeend", `<p><b>Word Type</b> ${_.Word_Type}</p>`);
     }
 }
 
@@ -183,16 +183,16 @@ function maybe_hide_elem(id, readings) {
     div.style.display = readings ? "" : "none";
 }
 
-maybe_hide_elem("onyomi-readings", `{{Reading_Onyomi}}`);
-maybe_hide_elem("kunyomi-readings", `{{Reading_Kunyomi}}`);
-maybe_hide_elem("nanori-readings", `{{Reading_Nanori}}`);
+maybe_hide_elem("onyomi-readings", _.Reading_Onyomi);
+maybe_hide_elem("kunyomi-readings", _.Reading_Kunyomi);
+maybe_hide_elem("nanori-readings", _.Reading_Nanori);
 
 /* SCRIPT: Disable unused Hint divisions. */
-maybe_hide_elem("meaning-hint", `{{Meaning_Hint}}`);
-maybe_hide_elem("reading-hint", `{{Reading_Hint}}`);
+maybe_hide_elem("meaning-hint", _.Meaning_Hint);
+maybe_hide_elem("reading-hint", _.Reading_Hint);
 
 /* SCRIPT: Slice and add Context Patterns  */
-let combinations = `{{Context_Patterns}}`.split("|");
+let combinations = _.Context_Patterns.split("|");
 
 function addCombinations(idx) {
     let div = $("#common-word-combinations");
@@ -232,10 +232,10 @@ if (combinations.length === 0) {
 }
 
 /* SCRIPT: Slice and add context sentences. */
-if (["Vocabulary", "Kana Vocabulary"].includes(card_type)) {
+if (["Vocabulary", "Kana Vocabulary"].includes(_.Card_Type)) {
     let div = $("#context-sentences");
 
-    for (let [en, jp] of chunked(`{{Context_Sentences}}`.split("|"), 2)) {
+    for (let [en, jp] of chunked(_.Context_Sentences.split("|"), 2)) {
         let element = document.createElement("p");
         element.innerHTML = `<ja>${jp}</ja><br>${en}`;
         div.appendChild(element);
@@ -243,7 +243,7 @@ if (["Vocabulary", "Kana Vocabulary"].includes(card_type)) {
 }
 
 /* SCRIPT: Disable divisions. */
-switch (card_type) {
+switch (_.Card_Type) {
     case "Radical":
         $("#section-reading").style.display = "none";
         $("#section-context").style.display = "none";
@@ -260,12 +260,12 @@ switch (card_type) {
 }
 
 /* SCRIPT: Populate Box Characters (Found in Kanji, Visually Similar Kanji and Kanji Composition). */
-switch (card_type) {
+switch (_.Card_Type) {
   case "Radical": {
     let found_in = zip(
-       `{{Found_in_Characters}}`.split("、 "),
-       `{{Found_in_Reading}}`.split("、 "),
-       `{{Found_in_Meaning}}`.split("、 ")
+       _.Found_in_Characters.split("、 "),
+       _.Found_in_Reading.split("、 "),
+       _.Found_in_Meaning.split("、 ")
     );
     if (found_in.length !== 0) {
         $("#box-title").textContent = "Found In Kanji";
@@ -287,9 +287,9 @@ switch (card_type) {
   }
   case "Kanji": {
     let similar = zip(
-       `{{Similar_Characters}}`.split("、 "),
-       `{{Similar_Reading}}`.split("、 "),
-       `{{Similar_Meaning}}`.split("、 ")
+       _.Similar_Characters.split("、 "),
+       _.Similar_Reading.split("、 "),
+       _.Similar_Meaning.split("、 ")
     );
 
     if (similar.length !== 0) {
@@ -313,9 +313,9 @@ switch (card_type) {
   case "Vocabulary":
   case "Kana Vocabulary": {
     let comps = zip(
-       `{{Components_Characters}}`.split("、 "),
-       `{{Components_Reading}}`.split("、 "),
-       `{{Components_Meaning}}`.split("、 ")
+       _.Components_Characters.split("、 "),
+       _.Components_Reading.split("、 "),
+       _.Components_Meaning.split("、 ")
     );
 
     if (comps.length !== 0) {
@@ -341,11 +341,10 @@ switch (card_type) {
 }
 
 /* SCRIPT: Add Phonetic-Semantic Composition Characters. */
-switch (card_type) {
+switch (_.Card_Type) {
   case "Kanji":
   case "Radical": {
-    let sections = `{{Keisei}}`;
-    let sectionarray = sections.split(" | ");
+    let sectionarray = _.Keisei.split(" | ");
     let start = 1;
     let data = sectionarray[0].split(", ");
     let description = $("#phonetic-semantic-description");
@@ -360,7 +359,7 @@ switch (card_type) {
                 (including rare ones), and the semantic component is
                 「<ja>${data[4]}</ja>」.<br>`;
         } else if (data[0] == "phonetic") {
-            if (card_type === "Kanji") {
+            if (_.Card_Type === "Kanji") {
                 description.innerHTML = `
                     The kanji <kanji>{{Characters}}</kanji> is used as a phonetic
                     component in other compounds.<br>
@@ -433,7 +432,7 @@ switch (card_type) {
             or its phonetic mark is too obscure to be useful.
             Stay tuned for more information in future versions of WK Userscripts
             Keisei.`;
-    } else if (`{{Keisei}}` != "") {
+    } else if (_.Keisei != "") {
         description.innerHTML = `
             The kanji <kanji>{{Characters}}</kanji> is not considered a
             semantic-phonetic composition.<br>
@@ -449,8 +448,8 @@ switch (card_type) {
 
 /* SCRIPT: Add Radical Combination Characters. */
 let comps = zip(
-   `{{Components_Characters}}`.split("、 "),
-   `{{Components_Meaning}}`.split("、 ")
+   _.Components_Characters.split("、 "),
+   _.Components_Meaning.split("、 ")
 )
 
 for (let [i, [char, meaning]] of comps.entries()) {
@@ -477,9 +476,9 @@ for (let [i, [char, meaning]] of comps.entries()) {
 
 /* SCRIPT: Add Found in Vocabulary Characters. */
 let found_in = zip(
-    `{{Found_in_Characters}}`.split("、 "),
-    `{{Found_in_Reading}}`.split("、 "),
-    `{{Found_in_Meaning}}`.split("、 ")
+    _.Found_in_Characters.split("、 "),
+    _.Found_in_Reading.split("、 "),
+    _.Found_in_Meaning.split("、 ")
 )
 
 for (let [char, reading, meaning] of found_in) {
@@ -515,17 +514,17 @@ if (typeans) {
     typedAnswerLower = "";
 }
 
-let meaningWhitelist = new Set(`{{Meaning_Whitelist}}`.toLowerCase().split(", "));
-let readingWhitelist = new Set(`{{Reading_Whitelist}}`.toLowerCase().split(", "));
+let meaningWhitelist = new Set(_.Meaning_Whitelist.toLowerCase().split(", "));
+let readingWhitelist = new Set(_.Reading_Whitelist.toLowerCase().split(", "));
 let correctAnswers = [];
 let correctText = $("#correct");
 
-switch (`{{Card}}`) {
+switch (_.Card) {
   case "Meaning": {
     let capitalize = iter => Array.from(iter, elem =>
         elem.replace(/(^| )\w/g, c => c.toUpperCase()));
 
-    correctAnswers = new Set(`{{Meaning}}`.toLowerCase().split(", "));
+    correctAnswers = new Set(_.Meaning.toLowerCase().split(", "));
     let [meaning, ...alternatives] = capitalize(correctAnswers);
 
     let accepted = meaningWhitelist.difference(correctAnswers);
@@ -582,7 +581,7 @@ if (typedAnswerLower !== "") {
     answerDiv.setAttribute("id", "typeans");
     answerDiv.textContent = typedAnswer;
     answerDiv.classList.add("typeans-{{Card}}")
-    if (`{{Card}}` == "Reading") {
+    if (_.Card == "Reading") {
         setLangJa(answerDiv);
     }
     $("#typeans").replaceWith(answerDiv);
@@ -596,7 +595,7 @@ if (typedAnswerLower !== "") {
     } else {
         answerDiv.classList.add("incorrect");
 
-        let mangle = "{{Card_Type}}" == "Reading" ? wanakana.toRomaji : x => x;
+        let mangle = _.Card_Type == "Reading" ? wanakana.toRomaji : x => x;
         checkTypos(answers, correctAnswers, mangle);
     }
 } else {

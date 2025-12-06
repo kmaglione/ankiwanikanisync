@@ -805,8 +805,30 @@ class ModelData(TypedDict):
 def get_model_data() -> ModelData:
     datadir = ROOT_DIR / "data"
 
-    common_back = (datadir / "common_back.html").read_text(encoding="utf-8")
-    common_front = (datadir / "common_front.html").read_text(encoding="utf-8")
+    def subs(field: str) -> str:
+        return "{{" + field + "}}"
+
+    card_data = """
+        <script>
+            var _ = {
+"""
+    for field in [*WKImporter.FIELDS, "Card"]:
+        if field in ("raw_data", "Keisei"):
+            card_data += f'\
+                "{field}": {subs(field)},\n'
+        else:
+            card_data += f'\
+                "{field}": String.raw`{subs(field)}`,\n'
+    card_data += """
+            }
+    </script>
+"""
+
+    def read_common(path: pathlib.Path) -> str:
+        return path.read_text(encoding="utf-8").replace("__CARD_DATA__", card_data)
+
+    common_back = read_common(datadir / "common_back.html")
+    common_front = read_common(datadir / "common_front.html")
 
     def read_template(path: pathlib.Path) -> str:
         return (
