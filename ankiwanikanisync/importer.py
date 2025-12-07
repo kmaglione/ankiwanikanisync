@@ -6,6 +6,7 @@ import pathlib
 import re
 import shutil
 from collections.abc import Mapping, Sequence
+from itertools import chain
 from time import sleep
 from typing import Any, Final, Literal, NamedTuple, Optional, cast, get_args
 
@@ -223,6 +224,159 @@ class PitchData(NamedTuple):
     accent: int
 
 
+class KeiseiCompound(TypedDict):
+    character: str
+    reading: str
+    meaning: str
+
+
+class KeiseiJSON(TypedDict, total=False):
+    compounds: list[KeiseiCompound]
+    component: str
+    kanji: tuple[str, str]
+    radical: str
+    readings: Sequence[str]
+    semantic: str
+    type: str
+
+
+class Keisei:
+    def __init__(self):
+        self.keisei_data = self.load()
+
+    def load(self) -> KeiseiData:
+        def read_json_xz(file: pathlib.Path) -> Any:
+            with lzma.open(file, mode="rt", encoding="utf-8") as f:
+                return json.load(f)
+
+        keiseidir = ROOT_DIR / "keisei"
+        return {
+            "kanji": read_json_xz(keiseidir / "kanji.json.xz"),
+            "phonetic": read_json_xz(keiseidir / "phonetic.json.xz"),
+            "wk_kanji": read_json_xz(keiseidir / "wk_kanji.json.xz"),
+        }
+
+    def get(self, subject: WKSubject) -> KeiseiJSON | None:
+        data: KeiseiJSON = {"compounds": []}
+
+        def split(val): return (val or "").split(", ")
+
+        match subject["object"]:
+            case "radical":
+                # Note: For some WaniKani radicals, there is not corresponding
+                # Unicode codepoint, and the character image is actually an
+                # SVG. Don't try to look up the empty string in the keisei
+                # database in that case.
+                item = subject["data"]["characters"]
+                if not (item and item in self.keisei_data["phonetic"]):
+                    return {"type": "nonradical"}
+
+                data["type"] = "phonetic"
+
+                ph_item = self.keisei_data["phonetic"][item]
+                if ph_item["wk-radical"]:
+                    data["radical"] = ph_item["wk-radical"].replace("-", " ").title()
+
+                if self.keisei_data["kanji"].get(item, None):
+                    if wk_kanji := self.keisei_data["wk_kanji"].get(item):
+                        meaning = split(wk_kanji["meaning"])[0].title()
+                        data["kanji"] = (meaning, self.get_reading(item))
+                    else:
+                        data["kanji"] = ("Non-WK", "-")
+
+                data["component"] = item
+                data["readings"] = ph_item["readings"]
+
+                for compound in sorted(ph_item["compounds"], key=self.get_level):
+                    if wk_kanji := self.keisei_data["wk_kanji"].get(compound):
+                        meaning = split(wk_kanji["meaning"])[0]
+                        data["compounds"].append(
+                            KeiseiCompound(
+                                character=compound,
+                                reading=self.get_reading(compound),
+                                meaning=meaning.title(),
+                            )
+                        )
+                    else:
+                        data["compounds"].append(
+                            KeiseiCompound(
+                                character=compound, reading="-", meaning="Non-WK"
+                            )
+                        )
+            case "kanji":
+                item = subject["data"]["characters"]
+                if item not in self.keisei_data["kanji"]:
+                    return {"type": "unprocessed"}
+
+                kanji = self.keisei_data["kanji"][item]
+
+                if item in self.keisei_data["phonetic"]:
+                    data["type"] = "phonetic"
+                    component = item
+                elif kanji["type"] == "comp_phonetic":
+                    data["type"] = "compound"
+                    component = kanji["phonetic"]
+                else:
+                    return {"type": kanji["type"]}
+
+                ph_comp = self.keisei_data["phonetic"][component]
+
+                if rad := ph_comp["wk-radical"]:
+                    data["radical"] = rad.replace("-", " ").title()
+
+                if component in self.keisei_data["kanji"]:
+                    if wk_kanji := self.keisei_data["wk_kanji"].get(component):
+                        meaning = split(wk_kanji["meaning"])[0].title()
+                        data["kanji"] = (meaning, self.get_reading(component))
+                    else:
+                        data["kanji"] = ("Non-WK", "-")
+
+                data["component"] = component
+                data["readings"] = ph_comp["readings"]
+                if kanji["type"] == "comp_phonetic":
+                    assert kanji["semantic"]
+                    data["semantic"] = kanji["semantic"]
+
+                for compound in sorted(ph_comp["compounds"], key=self.get_level):
+                    if wk_kanji := self.keisei_data["wk_kanji"].get(compound):
+                        meaning = split(wk_kanji["meaning"])[0]
+                        data["compounds"].append(
+                            KeiseiCompound(
+                                character=compound,
+                                reading=self.get_reading(compound),
+                                meaning=meaning.title(),
+                            )
+                        )
+                    else:
+                        data["compounds"].append(
+                            KeiseiCompound(
+                                character=compound, reading="-", meaning="Non-WK"
+                            )
+                        )
+            case _:
+                return None
+
+        return data
+
+    def get_reading(self, item: str) -> str:
+        if kanji := self.keisei_data["kanji"].get(item):
+            return kanji["readings"][0]
+        if phonetic := self.keisei_data["phonetic"].get(item):
+            return phonetic["readings"][0]
+
+        def split(val): return (val or "").split(", ")
+
+        wk = self.keisei_data["wk_kanji"][item]
+        return next(
+            chain(split(wk["onyomi"]), split(wk["kunyomi"]), split(wk["nanori"]))
+        )
+
+    def get_level(self, item) -> int:
+        if wk_kanji := self.keisei_data["wk_kanji"].get(item):
+            return wk_kanji["level"]
+        return 100
+
+
 class WKImporter(NoteImporter):
     # Don't include the _tags key
     FIELDS: Final[Sequence[str]] = get_args(FieldName)
@@ -249,7 +403,7 @@ class WKImporter(NoteImporter):
         )
 
         self.pitch_data = self.load_pitch_data()
-        self.keisei_data = self.load_keisei_data()
+        self.keisei = Keisei()
 
         self.radical_svg_cache: dict[str, str] = {}
 
@@ -286,18 +440,6 @@ class WKImporter(NoteImporter):
                             res[key] = pitch_data
 
         return res
-
-    def load_keisei_data(self) -> KeiseiData:
-        def read_json_xz(file: pathlib.Path) -> Any:
-            with lzma.open(file, mode="rt", encoding="utf-8") as f:
-                return json.load(f)
-
-        keiseidir = ROOT_DIR / "keisei"
-        return {
-            "kanji": read_json_xz(keiseidir / "kanji.json.xz"),
-            "phonetic": read_json_xz(keiseidir / "phonetic.json.xz"),
-            "wk_kanji": read_json_xz(keiseidir / "wk_kanji.json.xz"),
-        }
 
     def fields(self) -> int:
         return len(self.model["flds"]) + 1  # Final unnamed field is _tags
@@ -387,7 +529,7 @@ class WKImporter(NoteImporter):
             "Found_in_Reading": "、 ".join(amalgums.readings),
             "Context_Patterns": self.get_context_patterns(subject),
             "Context_Sentences": self.get_context_sentences(subject),
-            "Keisei": self.get_keisei(subject),
+            "Keisei": json.dumps(self.keisei.get(subject)).translate(html_trans),
         }
 
         if is_WKAmalgumData(data):
@@ -399,11 +541,13 @@ class WKImporter(NoteImporter):
                     subj = self.related_subjects[subj_id]
                     if subj["data"]["characters"] == subject["data"]["characters"]:
                         readings = self.get_readings(subj)
-                        field_values.update({
-                            "Reading_Onyomi": get_readings("onyomi"),
-                            "Reading_Kunyomi": get_readings("kunyomi"),
-                            "Reading_Nanori": get_readings("nanori"),
-                        })
+                        field_values.update(
+                            {
+                                "Reading_Onyomi": get_readings("onyomi"),
+                                "Reading_Kunyomi": get_readings("kunyomi"),
+                                "Reading_Nanori": get_readings("nanori"),
+                            }
+                        )
 
         tags = [f"Lesson_{data['level']}", subject["object"].title()]
 
@@ -649,128 +793,6 @@ class WKImporter(NoteImporter):
             for audio in sorted(audios, key=audio_sort)
             if audio["content_type"] == "audio/mpeg"
         )
-
-    def get_keisei(self, subject: WKSubject) -> str:
-        res = []
-        data = ["", "", "", ""]
-
-        if subject["object"] == "radical":
-            item = subject["data"]["characters"]
-            if not (item and item in self.keisei_data["phonetic"]):
-                return "nonradical"
-
-            data[0] = "phonetic"
-
-            ph_item = self.keisei_data["phonetic"][item]
-            if ph_item["wk-radical"]:
-                data[1] += "R"
-                res.append(ph_item["wk-radical"].replace("-", " ").title())
-
-            kj_item = self.keisei_data["kanji"].get(item, None)
-            if kj_item:
-                data[1] += "K"
-                if item in self.keisei_data["wk_kanji"]:
-                    meaning = (
-                        self.keisei_data["wk_kanji"][item]["meaning"]
-                        .split(", ")[0]
-                        .title()
-                    )
-                    res.append(f"{meaning}, {self.get_keisei_reading(item)}")
-                else:
-                    res.append("Non-WK, -")
-
-            data[2] = item
-            data[3] = "・".join(ph_item["readings"])
-
-            for compound in sorted(ph_item["compounds"], key=self.get_keisei_level):
-                if compound in self.keisei_data["wk_kanji"]:
-                    meaning = self.keisei_data["wk_kanji"][compound]["meaning"].split(
-                        ", "
-                    )[0]
-                    res.append(
-                        f"{compound}, {self.get_keisei_reading(compound)}, {
-                            meaning.title()
-                        }"
-                    )
-                else:
-                    res.append(f"{compound}, -, Non-WK")
-        elif subject["object"] == "kanji":
-            item = subject["data"]["characters"]
-            if not item or item not in self.keisei_data["kanji"]:
-                return "unprocessed"
-
-            kj_item = self.keisei_data["kanji"][item]
-
-            if item in self.keisei_data["phonetic"]:
-                data[0] = "phonetic"
-                component = item
-            elif kj_item["type"] == "comp_phonetic":
-                data[0] = "compound"
-                component = kj_item["phonetic"]
-            else:
-                return kj_item["type"]
-
-            ph_comp = self.keisei_data["phonetic"][component]
-
-            rad = ph_comp["wk-radical"]
-            if rad:
-                data[1] += "R"
-                res.append(rad.replace("-", " ").title())
-
-            if component in self.keisei_data["kanji"]:
-                data[1] += "K"
-                if component in self.keisei_data["wk_kanji"]:
-                    meaning = (
-                        self.keisei_data["wk_kanji"][component]["meaning"]
-                        .split(", ")[0]
-                        .title()
-                    )
-                    res.append(f"{meaning}, {self.get_keisei_reading(component)}")
-                else:
-                    res.append("Non-WK, -")
-
-            data[2] = component
-            data[3] = "・".join(ph_comp["readings"])
-            if kj_item["type"] == "comp_phonetic":
-                assert kj_item["semantic"]
-                data.append(kj_item["semantic"])
-
-            for compound in sorted(ph_comp["compounds"], key=self.get_keisei_level):
-                if compound in self.keisei_data["wk_kanji"]:
-                    meaning = self.keisei_data["wk_kanji"][compound]["meaning"].split(
-                        ", "
-                    )[0]
-                    res.append(
-                        f"{compound}, {self.get_keisei_reading(compound)}, {
-                            meaning.title()
-                        }"
-                    )
-                else:
-                    res.append(f"{compound}, -, Non-WK")
-        else:
-            return ""
-
-        return " | ".join([", ".join(data), *res])
-
-    def get_keisei_reading(self, item: str) -> Sequence[str]:
-        result: Sequence[str] = []
-        if item in self.keisei_data["kanji"]:
-            result = self.keisei_data["kanji"][item]["readings"]
-        elif item in self.keisei_data["phonetic"]:
-            result = self.keisei_data["phonetic"][item]["readings"]
-        else:
-            wk_item = self.keisei_data["wk_kanji"][item]
-            result = [
-                *(wk_item["onyomi"] or "").split(", "),
-                *(wk_item["kunyomi"] or "").split(", "),
-                *(wk_item["nanori"] or "").split(", "),
-            ]
-        return result[0]
-
-    def get_keisei_level(self, item) -> int:
-        if item in self.keisei_data["wk_kanji"]:
-            return self.keisei_data["wk_kanji"][item]["level"]
-        return 100
 
     def html_newlines(self, inp: str) -> str:
         return inp.replace("\r", "").replace("\n", "<br/>")

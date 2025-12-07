@@ -113,8 +113,11 @@
     font-size: 1rem;
 }
 
-.card {
+.card, :lang(en) {
     font-family: "Open Sans";
+}
+
+.card {
     font-size: 1rem;
     text-align: center;
     color: black;

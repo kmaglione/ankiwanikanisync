@@ -153,10 +153,17 @@ function setLangJa(elem) {
     elem.setAttribute("lang", "ja");
 }
 
-/* SCRIPT: Slice meanings and insert into the Meaning Section. */
-let title = "Meaning";
-if (_.Card_Type === "Radical") {
-    title = "Name";
+let tagTitles = {
+    "kanji": "Kanji",
+    "radical": "Radical",
+    "vocabulary": "Vocabulary",
+    "reading": "Reading",
+};
+
+function jaTag(tag, contents) {
+    return `<${tag} lang="ja" title="${tagTitles[tag] || ""}">${
+        contents
+    }</${tag}>`
 }
 
 /* SCRIPT: Slice meanings and insert into the Meaning Section. */
@@ -197,10 +204,10 @@ let combinations = _.Context_Patterns.split("|");
 function addCombinations(idx) {
     let div = $("#common-word-combinations");
     for (let [ja, en] of chunked(combinations[idx].split(";"), 2)) {
-        let element = document.createElement("p");
-        element.innerHTML = `<ja lang="ja">${ja}</ja><br>${en}`;
-        element.classList.add("combination");
-        div.appendChild(element);
+        div.append(frag(`<p class="combination">
+            ${jaTag("ja", ja)}<br>
+            ${en}
+        </p>`))
     }
 }
 addCombinations(0);
@@ -236,9 +243,7 @@ if (["Vocabulary", "Kana Vocabulary"].includes(_.Card_Type)) {
     let div = $("#context-sentences");
 
     for (let [en, jp] of chunked(_.Context_Sentences.split("|"), 2)) {
-        let element = document.createElement("p");
-        element.innerHTML = `<ja>${jp}</ja><br>${en}`;
-        div.appendChild(element);
+        div.append(frag(`<p>${jaTag("ja", jp)}<br>${en}</p>`));
     }
 }
 
@@ -276,7 +281,7 @@ switch (_.Card_Type) {
                     ${char}
                     <div id="box-meaning">
                         ${reading}<br>
-                        ${meaning}
+                        <span lang="en">${meaning}</span>
                     </div>
                 </div>`));
         }
@@ -301,7 +306,7 @@ switch (_.Card_Type) {
                     ${char}
                     <div id="box-meaning">
                         ${reading}<br>
-                        ${meaning.substring(0, 15)}
+                        <span lang="en">${meaning.substring(0, 15)}</span>
                     </div>
                 </div>`));
         }
@@ -323,11 +328,11 @@ switch (_.Card_Type) {
 
         for (let [char, reading, meaning] of comps) {
             $("#box-container").appendChild(frag(
-                `<div id="box-character">
+                `<div id="box-character" lang="ja">
                     ${char}
                     <div id="box-meaning">
                         ${reading}<br>
-                        ${meaning.substring(0, 15)}
+                        <span lang="en">${meaning.substring(0, 15)}</span>
                     </div>
                 </div>`));
         }
@@ -341,34 +346,37 @@ switch (_.Card_Type) {
 }
 
 /* SCRIPT: Add Phonetic-Semantic Composition Characters. */
+const CDOT = "・";
 switch (_.Card_Type) {
   case "Kanji":
   case "Radical": {
-    let sectionarray = _.Keisei.split(" | ");
-    let start = 1;
-    let data = sectionarray[0].split(", ");
+    let data = _.Keisei;
     let description = $("#phonetic-semantic-description");
-    if (data[0] == "compound" || data[0] == "phonetic") {
-        if (data[0] == "compound") {
+    switch (data.type) {
+      case "compound":
+      case "phonetic": {
+        switch (data.type) {
+          case "compound":
             description.innerHTML = `
-                The kanji <kanji>{{Characters}}</kanji> was created using
+                The kanji ${jaTag("kanji", _.Characters)} was created using
                 semantic-phonetic composition.<br>
                 <br>
-                The phonetic component is 「<ja>${data[2]}</ja>」with the ON
-                reading(s) 「<ja>${data[3]}</ja>」
+                The phonetic component is 「${jaTag("ja", data.component)}」with the ON
+                reading(s) 「${jaTag("ja", data.readings.join(CDOT))}」
                 (including rare ones), and the semantic component is
-                「<ja>${data[4]}</ja>」.<br>`;
-        } else if (data[0] == "phonetic") {
+                「${jaTag("ja", data.semantic)}」.<br>`;
+            break;
+          case "phonetic":
             if (_.Card_Type === "Kanji") {
                 description.innerHTML = `
-                    The kanji <kanji>{{Characters}}</kanji> is used as a phonetic
+                    The kanji ${jaTag("kanji", _.Characters)} is used as a phonetic
                     component in other compounds.<br>
-                    Its ON reading(s) are 「<ja>${data[3]}</ja>」.<br>`;
+                    Its ON reading(s) are 「${jaTag("ja", data.readings.join(CDOT))}」.<br>`;
             } else {
                 description.innerHTML = `
-                    The radical <radical>{{Characters}}</radical> is used as a phonetic
+                    The radical ${jaTag("radical", _.Characters)} is used as a phonetic
                     component in other compounds.<br>
-                    Its ON reading(s) are 「<ja>${data[3]}</ja>」.<br>`;
+                    Its ON reading(s) are 「${jaTag("ja", data.readings.join(CDOT))}」.<br>`;
             }
         }
 
@@ -376,69 +384,72 @@ switch (_.Card_Type) {
             let div = $("#phonetic-container");
             div.appendChild(frag(
                 `<div id="phonetic-character" lang="ja">
-                    ${data[2]}
+                    ${data.component}
                     <div id="box-meaning">
-                        ${data[3].split("・")[0]}<br>
-                        Phonetic
+                        ${data.readings[0]}<br>
+                        <span lang="en">Phonetic</span>
                     </div>
                 </div>`));
-            if (data[1].includes("R")) {
+            if (data.radical) {
                 div.appendChild(frag(
                     `<div id="radical-character" lang="ja">
-                        ${data[2]}
+                        ${data.component}
                         <div id="box-meaning">
-                            ${data[3].split("・")[0]}<br>
-                            ${sectionarray[start]}
+                            ${data.readings[0]}<br>
+                            <span lang="en">${data.radical}</span>
                         </div>
                     </div>`));
-                start += 1;
             }
-            if (data[1].includes("K")) {
+            if (data.kanji) {
                 div.appendChild(frag(
-                    `<div id="box-character">
-                        ${data[2]}
+                    `<div id="box-character" lang="ja">
+                        ${data.component}
                         <div id="box-meaning">
-                            ${sectionarray[start].split(", ")[1]}<br>
-                            ${sectionarray[start].split(", ")[0]}
+                            ${data.kanji[1]}<br>
+                            <span lang="en">${data.kanji[0]}</span>
                         </div>
                     </div>`));
-                start += 1;
             }
         }
         let div = $("#compound-container");
-        for (let section of sectionarray) {
-            let parts = section.split(", ");
+        for (let comp of data.compounds) {
             div.appendChild(frag(
-                `<div id="box-character">
-                    ${parts[0]}
+                `<div id="box-character" lang="ja">
+                    ${comp.character}
                     <div id="box-meaning">
-                        ${parts[1]}<br>
-                        ${parts[2]}
+                        ${comp.reading}<br>
+                        <span lang="en">${comp.meaning}</span>
                     </div>
                 </div>`));
         }
-    } else if (data[0] == "unprocessed") {
+        break;
+      }
+      case "unprocessed":
         description.innerHTML = `
-            The kanji <kanji>{{Characters}}</kanji> has not been added to the WK
+            The kanji ${jaTag("kanji", _.Characters)} has not been added to the WK
             Userscripts Keisei DB yet.
             Please wait for a future version.<br>`;
-    } else if (data[0] == "nonradical") {
+        break;
+      case "nonradical":
         description.innerHTML = `
-            The radical <radical>{{Characters}}</radical> is not considered a
+            The radical ${jaTag("radical", _.Characters)} is not considered a
             phonetic mark.<br>`;
-    } else if (data[0] == "unknown") {
+        break;
+      case "unknown":
         description.innerHTML = `
-            The kanji <kanji>{{Characters}}</kanji> has an unknown or contested origin,
+            The kanji ${jaTag("kanji", _.Characters)} has an unknown or contested origin,
             or its phonetic mark is too obscure to be useful.
             Stay tuned for more information in future versions of WK Userscripts
             Keisei.`;
-    } else if (_.Keisei != "") {
-        description.innerHTML = `
-            The kanji <kanji>{{Characters}}</kanji> is not considered a
-            semantic-phonetic composition.<br>
-            Note: {{Keisei}}<br>`;
-    } else {
+        break;
+      case null:
         $("#section-phonetic-semantic").style.display = "none";
+        break;
+      default:
+        description.innerHTML = `
+            The kanji ${jaTag("kanji", _.Characters)} is not considered a
+            semantic-phonetic composition.<br>
+            Note: ${data.type}<br>`;
     }
     break;
   }
@@ -547,7 +558,7 @@ switch (_.Card) {
   }
   case "Reading": {
     correctAnswers = readingWhitelist;
-    let items = Array.from(correctAnswers, x => `<reading>${x}</reading>`);
+    let items = Array.from(correctAnswers, x => jaTag("reading", x));
     correctText.innerHTML = items.join(" ");
 
     $("#section-phonetic-semantic").after($("#section-meaning"));
@@ -602,22 +613,15 @@ if (typedAnswerLower !== "") {
     $("#input").style.display = "none";
 }
 
-/*  Generate tooltips  */
-function setTooltips(sel, text, isJa = false) {
-    for (let tag of $$(sel)) {
-        tag.setAttribute("title", text);
-        if (isJa) {
-            setLangJa(tag);
-        }
+/* Generate tooltips for tags that came from card field substitutions */
+for (let [tag, title] of Object.entries(tagTitles)) {
+    for (let elem of $$(`${tag}:not([title])`)) {
+        elem.setAttribute("title", title);
+        setLangJa(elem);
     }
 }
 
-for (let tag of $$("ja")) {
+for (let tag of $$("ja:not([lang])")) {
     setLangJa(tag)
 }
-
-setTooltips("kanji", "Kanji", true);
-setTooltips("radical", "Radical", true);
-setTooltips("vocabulary", "Vocabulary", true);
-setTooltips("reading", "Reading", true);
 </script>

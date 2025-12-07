@@ -830,7 +830,7 @@ def do_process_v10():
 
 
 @collection_op
-def do_process():
+def do_process_v11():
     changed_notes = []
     for nid in wk_col.find_notes("tag:Vocabulary Characters:_"):
         note = wk_col.get_note(nid)
@@ -840,6 +840,27 @@ def do_process():
                 note["Reading_Onyomi"] = comp["Reading_Onyomi"]
                 note["Reading_Nanori"] = comp["Reading_Nanori"]
                 changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process():
+    from .importer import Keisei, html_trans
+
+    keisei = Keisei()
+
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        subject: WKSubject = json.loads(note["raw_data"])
+        note["Keisei"] = json.dumps(keisei.get(subject)).translate(html_trans)
+        changed_notes.append(note)
 
     wk_col.col.update_notes(changed_notes)
 
