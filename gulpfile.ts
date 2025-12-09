@@ -1,0 +1,186 @@
+import { src, dest, parallel, series, watch } from "gulp";
+import eslint from "gulp-eslint-new";
+import htmlhint from "gulp-htmlhint";
+import prettyError from "gulp-prettyerror";
+import sourcemaps from "gulp-sourcemaps";
+import stylelint from "gulp-stylelint-esm";
+import ts from "gulp-typescript";
+import zip from "gulp-zip";
+
+import { deleteAsync } from "del";
+
+import os from "node:os";
+import path from "node:path";
+import process from "node:process";
+
+const tsProject = ts.createProject("tsconfig.json");
+
+const files = {
+    py: [
+        "ankiwanikanisync/**/*.py",
+        "!ankiwanikanisync/pitch/update_accent_data.py",
+    ],
+    db: [
+        "ankiwanikanisync/**/*.(json|csv).xz",
+        "ankiwanikanisync/manifest.json",
+        "ankiwanikanisync/py.typed",
+    ],
+    // Note: @(data) is a hack to get the correct glob root.
+    ts: ["ankiwanikanisync/@(data)/**/*.ts"],
+    js: ["ankiwanikanisync/@(data)/**/*.js"],
+    css: ["ankiwanikanisync/@(data)/**/*.css"],
+    media: ["ankiwanikanisync/@(data)/files/**/*.(woff2|png)"],
+    html: ["ankiwanikanisync/@(data)/**/*.html"],
+};
+
+const watchOpts = {
+    delay: 200,
+};
+
+export function lint_eslint() {
+    return src([
+        ...files.js,
+        ...files.ts,
+    ]).pipe(prettyError())
+      .pipe(eslint())
+      .pipe(eslint.format())
+      .pipe(eslint.failAfterError());
+}
+
+export function lint_htmlhint() {
+    return src(files.html)
+      .pipe(prettyError())
+      .pipe(htmlhint(".htmlhintrc"))
+      .pipe(htmlhint.failAfterError());
+}
+
+export function lint_stylelint() {
+    return src(files.css)
+        .pipe(prettyError())
+        .pipe(stylelint({}));
+}
+
+export function watch_eslint() {
+    return watch([
+        ...files.js,
+        ...files.ts,
+    ], watchOpts, lint_eslint);
+}
+
+export function watch_htmlhint() {
+    return watch(files.html, watchOpts, lint_htmlhint);
+}
+
+export function watch_stylelint() {
+    return watch(files.css, watchOpts, lint_stylelint);
+}
+
+export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint);
+
+export function build_static() {
+    return src([
+        ...files.html,
+        ...files.js,
+        ...files.css,
+        ...files.media,
+        ...files.db,
+        ...files.py,
+    ]).pipe(dest("dist/"));
+}
+
+export function build_tf() {
+    return src([
+        ...files.db,
+        ...files.py,
+    ]).pipe(dest("dist/"));
+}
+
+export function watch_static() {
+    return watch([
+        ...files.html,
+        ...files.js,
+        ...files.css,
+        ...files.media,
+        ...files.db,
+        ...files.py,
+    ], watchOpts, build_static);
+}
+
+export function build_ts() {
+    return src(files.ts).pipe(sourcemaps.init())
+                        .pipe(tsProject())
+                        .js
+                        .pipe(sourcemaps.write("."))
+                        .pipe(dest("dist/"));
+}
+
+export function watch_ts() {
+    return watch(files.ts, watchOpts, build_ts);
+}
+
+export function clean() {
+    return deleteAsync("dist/**/*");
+}
+
+export const build = series(
+    clean,
+    parallel(
+        build_static,
+        build_ts,
+        lint,
+    ));
+
+function getInstallPath(): string {
+    if (process.env.ANKIWANIKANISYNC_INSTALL_PATH) {
+        return process.env.ANKIWANIKANISYNC_INSTALL_PATH;
+    }
+    const home = os.homedir();
+    let dir;
+    switch (os.platform()) {
+        case "darwin":
+            dir = path.join(home, "Library/Application Support/Anki2");
+            break;
+        case "win32":
+            dir = path.join(process.env.APPDATA, "Anki2");
+            break;
+        default:
+            dir = path.join(
+                process.env.XDG_DATA_HOME || path.join(home, ".local/share/"),
+                "Anki2");
+    }
+    return path.join(dir, "addons21/ankiwanikanisync");
+}
+function relativePath(pathStr: string): string {
+    return path.relative(import.meta.dirname, pathStr).replace("\\", "/");
+}
+
+function doInstall() {
+    return src("dist/**/*")
+        .pipe(dest(relativePath(getInstallPath()) + "/"));
+}
+
+export const install = series(build, doInstall);
+
+export function export_zip() {
+    return src("dist/**/*")
+        .pipe(zip("ankiwanikanisync.zip"))
+        .pipe(dest("./"));
+}
+
+export const dist = series(build, export_zip)
+
+export function watch_dist() {
+    return watch("dist/**/*", watchOpts, doInstall);
+}
+
+export const watch_lint = parallel(
+    watch_eslint,
+    watch_htmlhint,
+    watch_stylelint,
+);
+
+export const watch_all = parallel(
+    watch_static,
+    watch_ts,
+    watch_dist,
+);

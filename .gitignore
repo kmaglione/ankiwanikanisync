@@ -3,6 +3,8 @@
 .ruff_cache
 .venv
 bak/
+dist/
 /meta.json
 __pycache__/
 node_modules
+ankiwanikanisync.zip
