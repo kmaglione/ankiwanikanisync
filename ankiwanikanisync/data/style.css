@@ -4,7 +4,7 @@
 }
 
 @font-face {
-    font-family: "Ubuntu";
+    font-family: Ubuntu;
     src: url("_Ubuntu.woff2");
 }
 
@@ -58,7 +58,7 @@
 }
 
 .mobile #box-character {
-    padding: 0 .75rem .5rem .75rem;
+    padding: 0 .75rem .5rem;
     font-size: 2.9rem;
 }
 
@@ -86,10 +86,10 @@
     --japanese-font: "Noto Sans", "Noto Sans Special SC", "Noto Sans JP", "Noto Sans SC", sans-serif;
     --background-color-light: black;
     --background-color-dark: #E1E1E1;
-    --font-color-dark: #333333;
+    --font-color-dark: #333;
     --font-color-light: white;
-    --hint-color: #555555;
-    --meaning-color: #777777;
+    --hint-color: #555;
+    --meaning-color: #777;
     --meaning-sub-color: #616161;
     --shadow-color: darkgray;
     --kanji-color: #f100a1;
@@ -101,9 +101,9 @@
     --vocab-color: #9e00ed;
     --vocab-color-dark: #7600b1;
     --incorrect-color: #f03;
-    --correct-color: #88cc00;
+    --correct-color: #8c0;
     --incorrect-color-dark: #f03;
-    --correct-color-dark: #88cc00;
+    --correct-color-dark: #8c0;
     --button-color-dark: #616161;
     --button-color-light: #E0E0E0;
     --button-color-hover: #BDBDBD;
@@ -114,7 +114,7 @@
 }
 
 .card, :lang(en) {
-    font-family: "Open Sans";
+    font-family: "Open Sans", sans-serif;
 }
 
 .card {
@@ -122,7 +122,7 @@
     text-align: center;
     color: black;
     margin: .5rem;
-    background-image: url(_back.png);
+    background-image: url("_back.png");
 }
 
 .card-front {
@@ -153,6 +153,7 @@ summary {
     #card-back {
         padding: .2em;
     }
+
     summary {
         list-style-position: inside;
     }
@@ -191,6 +192,7 @@ radical {
     background-color: var(--radical-color);
     box-shadow: 0 2px var(--radical-color-dark);
     color: var(--font-color-light);
+
     --color-text: var(--font-color-light);
 }
 
@@ -208,7 +210,7 @@ vocabulary {
 }
 
 .reading {
-    background-image: linear-gradient(to bottom, #323232, #000000);
+    background-image: linear-gradient(to bottom, #323232, #000);
     color: var(--font-color-light);
     line-height: 2rem;
 }
@@ -217,7 +219,9 @@ vocabulary {
     font-size: 5rem;
     color: var(--font-color-light);
     background-color: var(--radical-color);
+
     --color-text: var(--font-color-light);
+
     text-shadow: 2px 2px 0 #0093dd;
 }
 
@@ -261,25 +265,25 @@ vocabulary {
 }
 
 .explanation {
-    font-family: "Open Sans";
+    font-family: "Open Sans", sans-serif;
     font-size: .9rem;
-    margin: .5rem 0 .5rem 0;
+    margin: .5rem 0;
 }
 
 .mnemonic {
     font-size: .8rem;
-    font-family: "Ubuntu";
+    font-family: Ubuntu, sans-serif;
     line-height: 1.6;
-    margin: 0 0 .5rem 0;
+    margin: 0 0 .5rem;
 }
 
 .mnemonic-hint {
     font-size: .8rem;
-    font-family: "Ubuntu";
+    font-family: Ubuntu, sans-serif;
     background-color: var(--background-color-dark);
     color: var(--font-color-dark);
-    padding: .5rem 1rem 1rem 1rem;
-    margin: 0 0 .5rem 0;
+    padding: .5rem 1rem 1rem;
+    margin: 0 0 .5rem;
 }
 
 .hint {
@@ -305,7 +309,7 @@ vocabulary {
 }
 
 #context-patterns {
-    font-family: "Ubuntu";
+    font-family: Ubuntu, sans-serif;
     display: flex;
     margin: -10px .5rem .75rem 0;
 }
@@ -317,7 +321,7 @@ vocabulary {
 
 .button {
     padding: .5rem 1px .5rem .5rem;
-    margin: 0 0 4px 0;
+    margin: 0 0 4px;
     text-align: left;
     font-size: .7rem;
     background: none;
@@ -352,7 +356,7 @@ vocabulary {
 
 #context-sentences {
     font-size: .8rem;
-    font-family: "Ubuntu";
+    font-family: Ubuntu, sans-serif;
 }
 
 #patterns-of-use {
@@ -367,7 +371,7 @@ vocabulary {
 
 #box-container {
     display: flex;
-    align-items: right;
+    align-items: end;
     flex-wrap: wrap;
 }
 
@@ -376,10 +380,10 @@ vocabulary {
     color: var(--font-color-light);
     background-image: linear-gradient(to bottom, #f0a, #dd0093);
     border-top: 1px solid #f6c;
-    border-bottom: 1px solid #cc0088;
+    border-bottom: 1px solid #c08;
     border-left: 1px solid #f6c;
     text-align: center;
-    padding: 0 1rem .5rem 1rem;
+    padding: 0 1rem .5rem;
     text-shadow: 0 1px var(--kanji-color-dark);
     overflow: hidden;
 }
@@ -390,17 +394,19 @@ vocabulary {
 
 #box-meaning {
     font-size: .7rem;
-    margin: 0 -100px 0 -100px;
+    margin: 0 -100px;
 }
 
 radical-combination {
     font-size: 1.2rem;
     color: white;
+
     --color-text: white;
+
     background-color: var(--radical-color);
     box-shadow: 0 2px var(--radical-color-dark);
     padding: 5px 8px;
-    margin: 0 12px 0 -0px;
+    margin: 0 12px 0 -0;
     border-radius: .2rem;
 }
 
@@ -417,12 +423,11 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 
 .combination-plus {
     font-size: 1.25rem;
-    margin: 0 .75rem 0 .75rem;
+    margin: 0 .75rem;
 }
 
 .found-in-voc {
     font-size: 1.3rem;
-    background-image: linear-gradient(to bottom, #9B3AF8, #8631D6);
     width: 50%;
     padding: 9px;
     background-color: #a0f;
@@ -452,7 +457,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 }
 
 #section-found-in-vocabulary {
-    margin: .5rem 0 0 0;
+    margin: .5rem 0 0;
 }
 
 #input {
@@ -468,7 +473,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     height: 2em;
     border: 0;
     outline-style: none;
-    font-family: arial;
+    font-family: arial, sans-serif;
     font-size: 1rem;
     margin-top: .25em;
     background: transparent;
@@ -478,12 +483,15 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     from {
         translate: 0 0;
     }
+
     25% {
         translate: 1em 0;
     }
+
     75% {
         translate: -1em 0;
     }
+
     to {
         translate: 0 0;
     }
@@ -529,7 +537,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     display:none;
 }
 
-.replay-button:before {
+.replay-button::before {
     content: '▶';
     font-size: .9rem;
     color: var(--meaning-color);
@@ -539,6 +547,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 #question-display {
     position: relative;
 }
+
 #level {
     position: absolute;
     z-index: 999;
@@ -559,6 +568,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     border-radius: 3px;
     margin: 0 .5rem .5rem 0;
 }
+
 .mobile #level {
     font-size: .9rem;
 }
@@ -567,9 +577,11 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 #correct {
     font-size: .8rem;
 }
+
 #correct reading {
     font-size: 1rem;
 }
+
 .mobile #correct reading {
     font-size: 1.2rem;
 }
@@ -583,6 +595,7 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 .mora > * {
     margin: 0;
     border: 0 dotted currentcolor;
+
     --border-width: 1.5px;
 }
 
@@ -606,31 +619,37 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 
 /* Keisei */
 #section-phonetic-semantic {
-    margin: .5rem 0 0 0;
+    margin: .5rem 0 0;
 }
+
 #phonetic-semantic-container {
     display: flex;
     flex-direction: row;
 }
-@media (max-width: 650px) {
+
+@media (width <= 650px) {
     #phonetic-semantic-container {
         flex-direction: column;
     }
+
     #phonetic-container {
         margin-right: 0;
         margin-bottom: 1rem;
     }
 }
+
 #phonetic-container {
     display: flex;
     align-items: start;
     margin-right: 1rem;
 }
+
 #compound-container {
     display: flex;
     flex-wrap: wrap;
     align-items: start;
 }
+
 #phonetic-character {
     font-size: 3.6rem;
     color: var(--font-color-light);
@@ -639,10 +658,11 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     border-bottom:1px solid #092;
     border-left:1px solid #0c4;
     text-align: center;
-    padding: 0 1rem .5rem 1rem;
+    padding: 0 1rem .5rem;
     text-shadow: 0 1px var(--kanji-color-dark);
     overflow: hidden;
 }
+
 #radical-character {
     font-size: 3.6rem;
     color: var(--font-color-light);
@@ -651,16 +671,18 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     border-bottom:1px solid #069;
     border-left:1px solid #88d7ff;
     text-align: center;
-    padding: 0 1rem .5rem 1rem;
+    padding: 0 1rem .5rem;
     text-shadow: 0 1px var(--kanji-color-dark);
     overflow: hidden;
 }
+
 .mobile #phonetic-character {
-    padding: 0 .75rem .5rem .75rem;
+    padding: 0 .75rem .5rem;
     font-size: 2.9rem;
 }
+
 .mobile #radical-character {
-    padding: 0 .75rem .5rem .75rem;
+    padding: 0 .75rem .5rem;
     font-size: 2.9rem;
 }
 
