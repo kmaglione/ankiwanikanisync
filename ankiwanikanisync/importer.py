@@ -799,18 +799,13 @@ class WKImporter(NoteImporter):
 
 
 def ensure_media_files(col: Collection) -> None:
-    from . import __version__
-
-    is_update = config._version != __version__
-    config._version = __version__
-
     datadir = ROOT_DIR / "data"
 
     source_dir = datadir / "files"
     dest_dir = pathlib.Path(col.media.dir())
     for source_file in source_dir.iterdir():
         dest_file = dest_dir / source_file.name
-        if is_update or not dest_file.exists():
+        if not dest_file.exists() or source_file.suffix in ('.js', '.map'):
             shutil.copy(source_file, dest_file)
 
 
@@ -832,17 +827,26 @@ def get_model_data() -> ModelData:
 
     card_data = """
         <script>
-            var _ = {
+            function deepFreeze(obj) {
+                Object.freeze(obj);
+                for (const val of Object.values(obj)) {
+                    if (typeof val === "object" && val != null) {
+                        deepFreeze(val);
+                    }
+                }
+                return obj;
+            }
+            var _ = deepFreeze({
 """
     for field in [*WKImporter.FIELDS, "Card"]:
-        if field in ("raw_data", "Keisei"):
+        if field in ("raw_data", "Keisei", "Level", "card_id"):
             card_data += f'\
                 "{field}": {subs(field)},\n'
         else:
             card_data += f'\
                 "{field}": String.raw`{subs(field)}`,\n'
     card_data += """
-            }
+            });
     </script>
 """
 

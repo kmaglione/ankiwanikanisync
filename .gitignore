@@ -1,4 +1,5 @@
 .mypy_cache
+.parcel-cache
 .ruff_cache
 .venv
 bak/

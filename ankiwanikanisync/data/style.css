@@ -162,6 +162,10 @@ summary {
     font-family: var(--japanese-font);
 }
 
+.hidden {
+    display: none;
+}
+
 kanji,
 reading,
 radical,
