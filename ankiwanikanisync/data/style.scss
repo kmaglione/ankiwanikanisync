@@ -29,57 +29,63 @@
     unicode-range: U+5DE9;
 }
 
-.nightMode #card-back {
-    color: darkgray;
+.nightMode {
+    #card-back {
+        color: darkgray;
+    }
+
+    #combination {
+        color: darkgray;
+    }
+
+    &.card {
+        background-image: none;
+    }
+
+    .button {
+        background-color: var(--button-color-dark);
+    }
 }
 
-.nightMode #combination {
-    color: darkgray;
-}
+.mobile {
+    .button {
+        &:hover {
+            &:not(.clicked) {
+                background-color: var(--button-color-dark);
+            }
 
-.nightMode.card {
-    background-image: none;
-}
+            &.clicked {
+                background-color: var(--button-color-dark);
+            }
+        }
 
-.nightMode .button {
-    background-color: var(--button-color-dark);
-}
+        width: max(6rem);
+    }
 
-.mobile .button:not(.clicked):hover {
-    background-color: var(--button-color-dark);
-}
+    #box-character {
+        padding: 0 .75rem .5rem;
+        font-size: 2.9rem;
+    }
 
-.mobile .button.clicked:hover {
-    background-color: var(--button-color-dark);
-}
+    #box-meaning {
+        font-size: 20%;
+    }
 
-.mobile .button {
-    width: max(6rem);
-}
+    .found-in-voc-reading {
+        font-size: .5rem;
+        padding-top: 3px;
+        padding-bottom: 2px;
+    }
 
-.mobile #box-character {
-    padding: 0 .75rem .5rem;
-    font-size: 2.9rem;
-}
+    .found-in-voc {
+        font-size: 1.2rem;
+        padding-top: 0;
+        padding-bottom: 4px;
+    }
 
-.mobile #box-meaning {
-    font-size: 20%;
-}
-
-.mobile .found-in-voc-reading {
-    font-size: .5rem;
-    padding-top: 3px;
-    padding-bottom: 2px;
-}
-
-.mobile .found-in-voc {
-    font-size: 1.2rem;
-    padding-top: 0;
-    padding-bottom: 4px;
-}
-
-.mobile.card.nightMode {
-    color: white;
+    &.card.nightMode {
+        color: white;
+    }
 }
 
 :root {
@@ -98,8 +104,8 @@
     --reading-color-dark: #0a0a0a;
     --radical-color: #00a0f1;
     --radical-color-dark: #0077b2;
-    --vocab-color: #9e00ed;
-    --vocab-color-dark: #7600b1;
+    --vocabulary-color: #9e00ed;
+    --vocabulary-color-dark: #7600b1;
     --incorrect-color: #f03;
     --correct-color: #8c0;
     --incorrect-color-dark: #f03;
@@ -107,9 +113,7 @@
     --button-color-dark: #616161;
     --button-color-light: #E0E0E0;
     --button-color-hover: #BDBDBD;
-}
 
-:root {
     font-size: 1rem;
 }
 
@@ -176,31 +180,22 @@ vocabulary {
     border-radius: .3em;
 }
 
-kanji {
-    background-color: var(--kanji-color);
-    box-shadow: 0 2px var(--kanji-color-dark);
-    color: var(--font-color-light);
+@mixin box($name, $color-text: null) {
+    #{$name} {
+        background-color: var(--#{$name}-color);
+        box-shadow: 0 2px var(--#{$name}-color-dark);
+        color: var(--font-color-light);
+
+        @if $color-text {
+            --color-text: $color-text;
+        }
+    }
 }
 
-reading {
-    background-color: var(--reading-color);
-    box-shadow: 0 2px var(--reading-color-dark);
-    color: var(--font-color-light);
-}
-
-radical {
-    background-color: var(--radical-color);
-    box-shadow: 0 2px var(--radical-color-dark);
-    color: var(--font-color-light);
-
-    --color-text: var(--font-color-light);
-}
-
-vocabulary {
-    background-color: var(--vocab-color);
-    box-shadow: 0 2px var(--vocab-color-dark);
-    color: var(--font-color-light);
-}
+@include box(kanji);
+@include box(reading);
+@include box(radical, var(--font-color-light));
+@include box(vocabulary);
 
 .meaning {
     background-image: linear-gradient(to bottom, #efefef, #e0e0e0);
@@ -215,39 +210,29 @@ vocabulary {
     line-height: 2rem;
 }
 
-.radical {
-    font-size: 5rem;
-    color: var(--font-color-light);
-    background-color: var(--radical-color);
+@mixin box-class($name, $shadow-color, $color-text: null) {
+    .#{$name} {
+        font-size: 5rem;
+        color: var(--font-color-light);
+        background-color: var(--#{$name}-color);
+        text-shadow: 2px 2px 0 $shadow-color;
 
-    --color-text: var(--font-color-light);
-
-    text-shadow: 2px 2px 0 #0093dd;
+        @if $color-text {
+            --color-text: $color-text;
+        }
+    }
 }
 
-.kanji {
-    font-size: 5rem;
-    color: var(--font-color-light);
-    background-color: var(--kanji-color);
-    text-shadow: 2px 2px 0 #dd0093;
-}
+@include box-class(radical, #0093dd, var(--font-color-light));
+@include box-class(kanji, #dd0093);
+@include box-class(vocabulary, #9300dd);
 
-.vocabulary {
-    font-size: 5rem;
-    color: var(--font-color-light);
-    background-color: var(--vocab-color);
-    text-shadow: 2px 2px 0 #9300dd;
-}
-
-.radical a, .radical a:link, .radical a:visited,
-  .kanji a, .kanji a:link, .kanji a:visited,
-  .vocabulary a, .vocabulary a:link, .vocabulary a:visited,
-  radical a, radical a:link, radical a:visited,
-  kanji a, kanji a:link, kanji a:visited,
-  vocabulary a, vocabulary a:link, vocabulary a:visited
-{
-    color: var(--font-color-light) !important;
-    text-decoration: none !important;
+.radical, .kanji, .vocabulary,
+radical, kanji, vocabulary {
+    a, a:link, a:visited {
+        color: var(--font-color-light) !important;
+        text-decoration: none !important;
+    }
 }
 
 #meaning-title p {
@@ -258,10 +243,10 @@ vocabulary {
     text-transform: uppercase;
     font-size: .7rem;
     margin: 0;
-}
 
-#meanings p {
-    margin: 0;
+    p {
+        margin: 0;
+    }
 }
 
 .explanation {
@@ -270,20 +255,24 @@ vocabulary {
     margin: .5rem 0;
 }
 
-.mnemonic {
+%mnemonic {
     font-size: .8rem;
     font-family: Ubuntu, sans-serif;
-    line-height: 1.6;
     margin: 0 0 .5rem;
 }
 
+.mnemonic {
+    @extend %mnemonic;
+
+    line-height: 1.6;
+}
+
 .mnemonic-hint {
-    font-size: .8rem;
-    font-family: Ubuntu, sans-serif;
+    @extend %mnemonic;
+
     background-color: var(--background-color-dark);
     color: var(--font-color-dark);
     padding: .5rem 1rem 1rem;
-    margin: 0 0 .5rem;
 }
 
 .hint {
@@ -328,30 +317,32 @@ vocabulary {
     border-radius: 6px 0 0 6px;
     border: none;
     width: max(7rem);
-}
 
-.button:not(.clicked) {
-    background-color: var(--button-color-light);
-    transition-duration: 0.2s;
-}
+    &:not(.clicked) {
+        background-color: var(--button-color-light);
+        transition-duration: 0.2s;
+    }
 
-.button.clicked {
-    color: var(--font-color-light);
-    background-color: var(--button-color-dark);
-    transition-duration: 0.2s;
-    clip-path: polygon(100% 100%, 100% 85%, 90% 50%, 100% 15%, 100% 0, 0 0, 0 100%);
-}
+    &.clicked {
+        color: var(--font-color-light);
+        background-color: var(--button-color-dark);
+        transition-duration: 0.2s;
+        clip-path: polygon(100% 100%, 100% 85%, 90% 50%, 100% 15%, 100% 0, 0 0, 0 100%);
+    }
 
-.button:not(.clicked):hover {
-    background-color: var(--button-color-hover);
-}
+    &:hover {
+        &:not(.clicked) {
+            background-color: var(--button-color-hover);
+        }
 
-.button.clicked:hover {
-    background-color: var(--button-color-hover);
-}
+        &.clicked {
+            background-color: var(--button-color-hover);
+        }
+    }
 
-.button:focus {
-    outline: 0;
+    &:focus {
+        outline: 0;
+    }
 }
 
 #context-sentences {
@@ -375,21 +366,25 @@ vocabulary {
     flex-wrap: wrap;
 }
 
-#box-character {
+@mixin character($c1, $c2, $c3: $c1, $c4: $c2) {
     font-size: 3.6rem;
     color: var(--font-color-light);
-    background-image: linear-gradient(to bottom, #f0a, #dd0093);
-    border-top: 1px solid #f6c;
-    border-bottom: 1px solid #c08;
-    border-left: 1px solid #f6c;
+    background-image: linear-gradient(to bottom, $c1, $c2);
+    border-top: 1px solid $c3;
+    border-bottom: 1px solid $c4;
+    border-left: 1px solid $c3;
     text-align: center;
     padding: 0 1rem .5rem;
     text-shadow: 0 1px var(--kanji-color-dark);
     overflow: hidden;
 }
 
-#box-character a, #box-character a:link, #box-character a:visited {
-    color: var(--font-color-light) !important;
+#box-character {
+    @include character(#f0a, #dd0093, #f6c, #c08);
+
+    a, a:link, a:visited {
+        color: var(--font-color-light) !important;
+    }
 }
 
 #box-meaning {
@@ -408,10 +403,10 @@ radical-combination {
     padding: 5px 8px;
     margin: 0 12px 0 -0;
     border-radius: .2rem;
-}
 
-radical-combination a, radical-combination a:link, radical-combination a:visited {
-    color: white !important;
+    a, a:link, a:visited {
+        color: white !important;
+    }
 }
 
 #combination {
@@ -426,23 +421,25 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     margin: 0 .75rem;
 }
 
-.found-in-voc {
-    font-size: 1.3rem;
+%found-in-voc-common {
     width: 50%;
-    padding: 9px;
     background-color: #a0f;
     background-image: linear-gradient(to bottom, #a0f, #9300dd);
     border-top: 1px solid #a0f;
     border-color: #c655ff transparent #80c #c655ff;
 }
 
+.found-in-voc {
+    @extend %found-in-voc-common;
+
+    font-size: 1.3rem;
+    padding: 9px;
+}
+
 .found-in-voc-reading {
+    @extend %found-in-voc-common;
+
     font-size: .5rem;
-    width: 50%;
-    background-color: #a0f;
-    background-image: linear-gradient(to bottom, #a0f, #9300dd);
-    border-top: 1px solid #a0f;
-    border-color: #c655ff transparent #80c #c655ff;
     text-align: right;
     padding: .75rem;
 }
@@ -450,10 +447,10 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 #found-in-vocabulary-box {
     display: flex;
     color: white;
-}
 
-#found-in-vocabulary-box a, #found-in-vocabulary-box a:link, #found-in-vocabulary-box a:visited {
-    color: white !important;
+    a, a:link, a:visited {
+        color: white !important;
+    }
 }
 
 #section-found-in-vocabulary {
@@ -533,14 +530,16 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     color: var(--font-color-light);
 }
 
-.replay-button svg {
-    display:none;
-}
+.replay-button {
+    svg {
+        display:none;
+    }
 
-.replay-button::before {
-    content: '▶';
-    font-size: .9rem;
-    color: var(--meaning-color);
+    &::before {
+        content: '▶';
+        font-size: .9rem;
+        color: var(--meaning-color);
+    }
 }
 
 /* Level Indicator */
@@ -569,52 +568,54 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
     margin: 0 .5rem .5rem 0;
 }
 
-.mobile #level {
-    font-size: .9rem;
-}
-
 /* Correct Answers */
 #correct {
     font-size: .8rem;
+
+    reading {
+        font-size: 1rem;
+    }
 }
 
-#correct reading {
-    font-size: 1rem;
-}
+.mobile {
+    #level {
+        font-size: .9rem;
+    }
 
-.mobile #correct reading {
-    font-size: 1.2rem;
+    #correct reading {
+        font-size: 1.2rem;
+    }
 }
 
 /* Pitch-Accent */
 .mora {
     display: inline-block;
     margin-bottom: 0.2em;
-}
 
-.mora > * {
-    margin: 0;
-    border: 0 dotted currentcolor;
+    > * {
+        margin: 0;
+        border: 0 dotted currentcolor;
 
-    --border-width: 1.5px;
-}
+        --border-width: 1.5px;
+    }
 
-.mora > .mora-h-l {
-    border-top-width: var(--border-width);
-    border-right-width: var(--border-width);
-}
+    > .mora-h-l {
+        border-top-width: var(--border-width);
+        border-right-width: var(--border-width);
+    }
 
-.mora > .mora-l-h {
-    border-bottom-width: var(--border-width);
-    border-right-width: var(--border-width);
-}
+    > .mora-l-h {
+        border-bottom-width: var(--border-width);
+        border-right-width: var(--border-width);
+    }
 
-.mora > .mora-h {
-    border-top-width: var(--border-width);
-}
+    > .mora-h {
+        border-top-width: var(--border-width);
+    }
 
-.mora > .mora-l {
-    border-bottom-width: var(--border-width);
+    > .mora-l {
+        border-bottom-width: var(--border-width);
+    }
 }
 
 /* Keisei */
@@ -651,39 +652,23 @@ radical-combination a, radical-combination a:link, radical-combination a:visited
 }
 
 #phonetic-character {
-    font-size: 3.6rem;
-    color: var(--font-color-light);
-    background-image: linear-gradient(to bottom, #0c4, #092);
-    border-top:1px solid #0c4;
-    border-bottom:1px solid #092;
-    border-left:1px solid #0c4;
-    text-align: center;
-    padding: 0 1rem .5rem;
-    text-shadow: 0 1px var(--kanji-color-dark);
-    overflow: hidden;
+    @include character(#0c4, #092);
 }
 
 #radical-character {
-    font-size: 3.6rem;
-    color: var(--font-color-light);
-    background-image: linear-gradient(to bottom, #0af, #0093dd);
-    border-top:1px solid #88d7ff;
-    border-bottom:1px solid #069;
-    border-left:1px solid #88d7ff;
-    text-align: center;
-    padding: 0 1rem .5rem;
-    text-shadow: 0 1px var(--kanji-color-dark);
-    overflow: hidden;
+    @include character(#0af, #0093dd, #88d7ff, #069);
 }
 
-.mobile #phonetic-character {
-    padding: 0 .75rem .5rem;
-    font-size: 2.9rem;
-}
+.mobile {
+    #phonetic-character {
+        padding: 0 .75rem .5rem;
+        font-size: 2.9rem;
+    }
 
-.mobile #radical-character {
-    padding: 0 .75rem .5rem;
-    font-size: 2.9rem;
+    #radical-character {
+        padding: 0 .75rem .5rem;
+        font-size: 2.9rem;
+    }
 }
 
 /* SVG-Radicals */

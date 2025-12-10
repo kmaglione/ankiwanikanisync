@@ -2,6 +2,7 @@ import { src, dest, parallel, series, watch } from "gulp";
 import eslint from "gulp-eslint-new";
 import htmlhint from "gulp-htmlhint";
 import prettyError from "gulp-prettyerror";
+import gulpSass from "gulp-sass";
 import shell from "gulp-shell";
 import sourcemaps from "gulp-sourcemaps";
 import stylelint from "gulp-stylelint-esm";
@@ -10,6 +11,7 @@ import zip from "gulp-zip";
 
 import { deleteAsync } from "del";
 import { quote } from "shell-quote";
+import * as dartSass from "sass";
 
 import os from "node:os";
 import path from "node:path";
@@ -26,6 +28,7 @@ function quoted(strings: TemplateStringsArray, ...params: string[]) {
     return res.join("");
 }
 
+const sass = gulpSass(dartSass);
 
 const tsProject = ts.createProject("tsconfig.json");
 
@@ -45,9 +48,10 @@ const files = {
     // Note: @(data) is a hack to get the correct glob root.
     ts: ["ankiwanikanisync/@(data)/**/*.ts"],
     js: ["ankiwanikanisync/@(data)/**/*.js"],
-    css: ["ankiwanikanisync/@(data)/**/*.css"],
+    scss: ["ankiwanikanisync/@(data)/**/*.scss"],
     media: ["ankiwanikanisync/@(data)/files/**/*.(woff2|png)"],
     html: ["ankiwanikanisync/@(data)/**/*.html"],
+    dist: "dist/",
 };
 
 const watchOpts = {
@@ -72,7 +76,7 @@ export function lint_htmlhint() {
 }
 
 export function lint_stylelint() {
-    return src(files.css)
+    return src(files.scss)
         .pipe(prettyError())
         .pipe(stylelint({}));
 }
@@ -101,34 +105,43 @@ export function watch_htmlhint() {
 }
 
 export function watch_stylelint() {
-    return watch(files.css, watchOpts, lint_stylelint);
+    return watch(files.scss, watchOpts, lint_stylelint);
 }
 
 export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint);
+
+export function build_scss() {
+    return src(files.scss)
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        .pipe(sass().on("error", sass.logError))
+        .pipe(dest(files.dist))
+}
+
+export function watch_scss() {
+    return watch(files.scss, watchOpts, build_scss);
+}
 
 export function build_static() {
     return src([
         ...files.html,
         ...files.js,
-        ...files.css,
         ...files.media,
         ...files.db,
         ...files.py,
-    ]).pipe(dest("dist/"));
+    ]).pipe(dest(files.dist));
 }
 
 export function build_tf() {
     return src([
         ...files.db,
         ...files.py,
-    ]).pipe(dest("dist/"));
+    ]).pipe(dest(files.dist));
 }
 
 export function watch_static() {
     return watch([
         ...files.html,
         ...files.js,
-        ...files.css,
         ...files.media,
         ...files.db,
         ...files.py,
@@ -140,7 +153,7 @@ export function build_ts() {
                         .pipe(tsProject())
                         .js
                         .pipe(sourcemaps.write("."))
-                        .pipe(dest("dist/"));
+                        .pipe(dest(files.dist));
 }
 
 export function watch_ts() {
@@ -148,7 +161,7 @@ export function watch_ts() {
 }
 
 export function clean() {
-    return deleteAsync("dist/**/*");
+    return deleteAsync(files.dist + "**/*");
 }
 
 export const build = series(
@@ -157,6 +170,7 @@ export const build = series(
         generate_types,
     ),
     parallel(
+        build_scss,
         build_static,
         build_ts,
         lint,
@@ -187,14 +201,14 @@ function relativePath(pathStr: string): string {
 }
 
 function doInstall() {
-    return src("dist/**/*")
+    return src(files.dist + "**/*")
         .pipe(dest(relativePath(getInstallPath()) + "/"));
 }
 
 export const install = series(build, doInstall);
 
 export function export_zip() {
-    return src("dist/**/*")
+    return src(files.dist + "**/*")
         .pipe(zip("ankiwanikanisync.zip"))
         .pipe(dest("./"));
 }
@@ -202,7 +216,7 @@ export function export_zip() {
 export const dist = series(build, export_zip)
 
 export function watch_dist() {
-    return watch("dist/**/*", watchOpts, doInstall);
+    return watch(files.dist + "**/*", watchOpts, doInstall);
 }
 
 export const watch_lint = parallel(
@@ -212,6 +226,7 @@ export const watch_lint = parallel(
 );
 
 export const watch_all = parallel(
+    watch_scss,
     watch_static,
     watch_ts,
     watch_dist,
