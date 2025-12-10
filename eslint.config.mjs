@@ -1,9 +1,10 @@
-import html from "eslint-plugin-html"
-import typescriptParser from "@typescript-eslint/parser";
-import ts from 'typescript-eslint';
 import js from "@eslint/js";
-import globals from "globals";
+import typescriptParser from "@typescript-eslint/parser";
 import { defineConfig } from "eslint/config";
+import html from "eslint-plugin-html";
+import importPlugin from "eslint-plugin-import";
+import globals from "globals";
+import ts from 'typescript-eslint';
 
 const noUnusedVars = ["error", {
     "argsIgnorePattern": "^_",
@@ -11,11 +12,26 @@ const noUnusedVars = ["error", {
     "varsIgnorePattern": "^_",
 }];
 
+const jsBase = {
+    rules: {
+        "import/no-unresolved": "off",
+        "import/order": [
+            "error",
+            {
+                "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+                "alphabetize": { order: "asc" },
+                "named": true,
+                "newlines-between": "always",
+            },
+        ],
+    },
+};
+
 export default defineConfig([
     {
         files: ["**/*.{js,mjs,cjs}"],
-        plugins: { js },
-        extends: ["js/recommended"],
+        plugins: { js, import: importPlugin },
+        extends: ["js/recommended", jsBase],
         languageOptions: { globals: globals.browser },
         rules: {
             "no-unused-vars": noUnusedVars,
@@ -24,7 +40,13 @@ export default defineConfig([
     {
         files: ["**/*.{ts,mts}"],
         plugins: { js, ts },
-        extends: ["js/recommended", "ts/recommendedTypeChecked"],
+        extends: [
+            "js/recommended",
+            "ts/recommendedTypeChecked",
+            importPlugin.flatConfigs.recommended,
+            importPlugin.flatConfigs.typescript,
+            jsBase,
+        ],
         languageOptions: {
             globals: globals.browser,
             parser: typescriptParser,

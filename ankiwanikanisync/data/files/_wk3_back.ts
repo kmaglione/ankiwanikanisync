@@ -1,6 +1,6 @@
 /* globals _ */
-import { assert, chunked, escapeHTML, frag, likelyTypo, stripHTML, zip, $, $$ } from "./_wk3_util.js";
 import wanakana from "./_wanakana.min.js";
+import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, stripHTML, zip } from "./_wk3_util.js";
 
 function setLangJa(elem: Element) {
     elem.setAttribute("lang", "ja");

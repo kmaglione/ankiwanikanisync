@@ -1,6 +1,6 @@
 /* globals _ */
 import wanakana from "./_wanakana.min.js";
-import { assert, assertNever, stripHTML, $ } from "./_wk3_util.js";
+import { $, assert, assertNever, stripHTML } from "./_wk3_util.js";
 
 function map<T, U>(iter: Iterable<T>, fn: (arg: T) => U) {
     return Iterator.from(iter).map(fn);

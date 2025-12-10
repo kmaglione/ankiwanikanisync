@@ -1,4 +1,9 @@
-import { src, dest, parallel, series, watch } from "gulp";
+import os from "node:os";
+import path from "node:path";
+import process from "node:process";
+
+import { deleteAsync } from "del";
+import { dest, parallel, series, src, watch } from "gulp";
 import eslint from "gulp-eslint-new";
 import htmlhint from "gulp-htmlhint";
 import prettyError from "gulp-prettyerror";
@@ -8,14 +13,9 @@ import sourcemaps from "gulp-sourcemaps";
 import stylelint from "gulp-stylelint-esm";
 import ts from "gulp-typescript";
 import zip from "gulp-zip";
-
-import { deleteAsync } from "del";
-import { quote } from "shell-quote";
 import * as dartSass from "sass";
+import { quote } from "shell-quote";
 
-import os from "node:os";
-import path from "node:path";
-import process from "node:process";
 
 function quoted(strings: TemplateStringsArray, ...params: string[]) {
     const res = []
@@ -161,7 +161,7 @@ export function watch_ts() {
 }
 
 export function clean() {
-    return deleteAsync(files.dist + "**/*");
+    return deleteAsync(`${files.dist}**/*`);
 }
 
 export const build = series(
@@ -181,7 +181,7 @@ function getInstallPath(): string {
         return process.env.ANKIWANIKANISYNC_INSTALL_PATH;
     }
     const home = os.homedir();
-    let dir;
+    let dir: string;
     switch (os.platform()) {
         case "darwin":
             dir = path.join(home, "Library/Application Support/Anki2");
@@ -196,19 +196,20 @@ function getInstallPath(): string {
     }
     return path.join(dir, "addons21/ankiwanikanisync");
 }
+
 function relativePath(pathStr: string): string {
     return path.relative(import.meta.dirname, pathStr).replace("\\", "/");
 }
 
 function doInstall() {
-    return src(files.dist + "**/*")
-        .pipe(dest(relativePath(getInstallPath()) + "/"));
+    return src(`${files.dist}**/*`)
+        .pipe(dest(`${relativePath(getInstallPath())}/`));
 }
 
 export const install = series(build, doInstall);
 
 export function export_zip() {
-    return src(files.dist + "**/*")
+    return src(`${files.dist}**/*`)
         .pipe(zip("ankiwanikanisync.zip"))
         .pipe(dest("./"));
 }
@@ -216,7 +217,7 @@ export function export_zip() {
 export const dist = series(build, export_zip)
 
 export function watch_dist() {
-    return watch(files.dist + "**/*", watchOpts, doInstall);
+    return watch(`${files.dist}**/*`, watchOpts, doInstall);
 }
 
 export const watch_lint = parallel(
