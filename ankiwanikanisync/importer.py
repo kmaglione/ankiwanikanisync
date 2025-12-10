@@ -24,8 +24,9 @@ from typing_extensions import TypedDict
 from .collection import FieldName, format_id, wk_col
 from .config import config
 from .promise import Promise
-from .utils import query_op, report_progress, show_tooltip
-from .wk_api import (
+from .types import (
+    KeiseiCompound,
+    KeiseiJSON,
     WKAudio,
     WKMeaning,
     WKReading,
@@ -33,6 +34,9 @@ from .wk_api import (
     WKSubject,
     WKSubjectData,
     WKVocabBase,
+)
+from .utils import query_op, report_progress, show_tooltip
+from .wk_api import (
     is_WKAmalgumData,
     is_WKRadicalData,
     is_WKReadable,
@@ -133,7 +137,7 @@ class AudioDownloader:
 
 
 class KeiseiKanjiDataBase(TypedDict):
-    readings: Sequence[str]
+    readings: list[str]
     category: Literal[
         "gaiji",
         "jinmeiyou",
@@ -170,10 +174,10 @@ type KeiseiKanjiData = KeiseiKanjiDataStd | KeiseiKanjiDataPhonetic
 KeiseiPhoneticData = TypedDict(
     "KeiseiPhoneticData",
     {
-        "readings": Sequence[str],
-        "compounds": Sequence[str],
-        "non_compounds": Sequence[str],
-        "xrefs": Sequence[str],
+        "readings": list[str],
+        "compounds": list[str],
+        "non_compounds": list[str],
+        "xrefs": list[str],
         "wk-radical": str,
     },
 )
@@ -224,22 +228,6 @@ class PitchData(NamedTuple):
     accent: int
 
 
-class KeiseiCompound(TypedDict):
-    character: str
-    reading: str
-    meaning: str
-
-
-class KeiseiJSON(TypedDict, total=False):
-    compounds: list[KeiseiCompound]
-    component: str
-    kanji: tuple[str, str]
-    radical: str
-    readings: Sequence[str]
-    semantic: str
-    type: str
-
-
 class Keisei:
     def __init__(self):
         self.keisei_data = self.load()
@@ -257,7 +245,7 @@ class Keisei:
         }
 
     def get(self, subject: WKSubject) -> KeiseiJSON | None:
-        data: KeiseiJSON = {"compounds": []}
+        data: KeiseiJSON = {"type": "", "compounds": []}
 
         def split(val): return (val or "").split(", ")
 

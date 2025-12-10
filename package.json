@@ -20,6 +20,7 @@
     "@types/gulp-plumber": "^0.0.37",
     "@types/gulp-sourcemaps": "^0.0.38",
     "@types/gulp-zip": "^4.0.4",
+    "@types/shell-quote": "^1.7.5",
     "@typescript-eslint/parser": "^8.48.1",
     "del": "^8.0.1",
     "eslint": "^9.39.1",
@@ -30,14 +31,17 @@
     "gulp-exec": "^5.0.0",
     "gulp-htmlhint": "^4.0.2",
     "gulp-prettyerror": "^2.0.0",
+    "gulp-shell": "^0.8.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-stylelint-esm": "^3.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "gulp-zip": "^6.1.0",
     "htmlhint": "^1.8.0",
+    "shell-quote": "^1.8.3",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.49.0"
+    "typescript-eslint": "^8.49.0",
+    "typescript2python": "^2.0.8"
   }
 }

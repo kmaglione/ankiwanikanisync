@@ -410,7 +410,7 @@ export function setupBack() {
                     <b>${capitalize(accepted).join(", ")}</b>
                 </details>`);
         }
-        $("#section-meaning").firstElementChild.setAttribute("open", "true");
+        $<HTMLDetailsElement>("#section-meaning > details").open = true;
         break;
       }
       case "Reading": {
@@ -419,7 +419,7 @@ export function setupBack() {
         correctText.innerHTML = items.join(" ");
 
         $("#section-phonetic-semantic").after($("#section-meaning"));
-        $("#section-reading").firstElementChild.setAttribute("open", "true");
+        $<HTMLDetailsElement>("#section-reading > details").open = true;
       }
     }
 

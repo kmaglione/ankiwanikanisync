@@ -1,17 +1,4 @@
-interface KeiseiCompound {
-  character: string;
-  reading: string;
-  meaning: string;
-}
-interface KeiseiJSON {
-  compounds: KeiseiCompound[];
-  component: string;
-  kanji: string[];
-  radical: string;
-  readings: string[];
-  semantic: string;
-  type: string;
-}
+import type { KeiseiJSON, WKSubject } from "./types.js";
 export interface TemplateFields {
   Card: "Reading" | "Meaning";
   card_id: number;
@@ -47,7 +34,7 @@ export interface TemplateFields {
   Audio: string;
   Keisei: KeiseiJSON;
   last_upstream_sync_time: string;
-  raw_data: object;
+  raw_data: WKSubject;
 }
 
 type DeepReadonly_<T>

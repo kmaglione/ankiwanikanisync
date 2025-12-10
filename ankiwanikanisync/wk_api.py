@@ -1,5 +1,5 @@
 import urllib.parse
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from time import sleep
 from typing import (
@@ -18,114 +18,28 @@ from pyrate_limiter import Duration, Limiter, Rate
 from requests.adapters import HTTPAdapter, Retry
 
 from .config import config
-
-type AssignmentID = int
-type DateString = str
-type SRSID = int
-type SubjectId = int
-type SubjectType = Literal["kana_vocabulary", "kanji", "radical", "vocabulary"]
-type WKLevel = int
-
-
-# FIXME: Ideally, these should all be protocols that actually validate the data
-# that we receive from the server.
-class WKResponse(TypedDict):
-    object: str
-    url: str
-    data_updated_at: None | DateString
-
-
-class WKMeaning(TypedDict):
-    meaning: str
-    primary: bool
-    accepted_answer: bool
-
-
-class WKAuxMeaning(TypedDict):
-    meaning: str
-    type: Literal["whitelist", "blacklist"]
-
-
-class WKReading(TypedDict):
-    reading: str
-    primary: bool
-    accepted_answer: bool
-    type: Literal["kunyomi", "nanori", "onyomi"]
-
-
-class WKContextSentence(TypedDict):
-    en: str
-    ja: str
-
-
-class WKAudioMetadata(TypedDict):
-    gender: Literal["male", "female"]
-    source_id: int
-    pronunciation: str
-    voice_actor_id: int
-    voice_actor_name: str
-    voice_description: str
-
-
-class WKAudio(TypedDict):
-    url: str
-    content_type: str
-    metadata: WKAudioMetadata
-
-
-class WKSubjectDataBase(TypedDict):
-    auxiliary_meanings: Sequence[WKAuxMeaning]
-    characters: str
-    created_at: DateString
-    document_url: str
-    hidden_at: None | DateString
-    lesson_position: int
-    level: WKLevel
-    meaning_mnemonic: str
-    meanings: Sequence[WKMeaning]
-    slug: str
-    spaced_repetition_system_id: SRSID
-
-
-class WKReadable(TypedDict):
-    readings: Sequence[WKReading]
-
-
-class WKComponentData(WKSubjectDataBase):
-    amalgamation_subject_ids: Sequence[SubjectId]
-
-
-class WKRadicalData(WKComponentData):
-    character_images: Sequence[dict]
-
-
-class WKAmalgumData(TypedDict):
-    component_subject_ids: Sequence[SubjectId]
-
-
-class WKKanjiData(WKAmalgumData, WKComponentData, WKReadable):
-    meaning_hint: None | str
-    reading_hint: None | str
-    reading_mnemonic: str
-    visually_similar_subject_ids: Sequence[SubjectId]
-
-
-class WKVocabBase(WKSubjectDataBase):
-    context_sentences: Sequence[WKContextSentence]
-    parts_of_speech: Sequence[str]
-    pronunciation_audios: Sequence[WKAudio]
-
-
-class WKVocabData(WKAmalgumData, WKVocabBase, WKReadable):
-    reading_mnemonic: str
-
-
-class WKKanaVocabData(WKVocabBase):
-    pass
-
-
-type WKSubjectData = (
-    WKKanaVocabData | WKKanjiData | WKRadicalData | WKSubjectDataBase | WKVocabData
+from .types import (
+    SRSID,
+    AssignmentID,
+    DateString,
+    SubjectId,
+    SubjectType,
+    WKAmalgumData,
+    WKAssignmentsResponse,
+    WKComponentData,
+    WKKanjiData,
+    WKLevel,
+    WKRadicalData,
+    WKReadable,
+    WKSpacedRepetitionSystem,
+    WKSpacedRepetitionSystemStage,
+    WKStudyMaterialsResponse,
+    WKSubject,
+    WKSubjectData,
+    WKSubjectDataBase,
+    WKSubjectsResponse,
+    WKUser,
+    WKVocabBase,
 )
 
 
@@ -151,125 +65,6 @@ def is_WKReadable(data: WKSubjectDataBase) -> TypeGuard[WKReadable]:
 
 def is_WKVocabBase(data: WKSubjectData) -> TypeGuard[WKVocabBase]:
     return "context_sentences" in data
-
-
-class WKSubject(WKResponse):
-    id: int
-    data: WKSubjectData
-
-
-class WKSubjectsResponse(WKResponse):
-    data: Sequence[WKSubject]
-    total_count: int
-
-
-class WKAssignmentData(TypedDict):
-    available_at: None | DateString
-    burned_at: None | DateString
-    created_at: DateString
-    hidden: bool
-    passed_at: None | DateString
-    resurrected_at: None | DateString
-    srs_stage: int
-    started_at: None | DateString
-    subject_id: int
-    subject_type: SubjectType
-    unlocked_at: None | DateString
-
-
-class WKAssignment(WKResponse):
-    id: AssignmentID
-    data: WKAssignmentData
-
-
-class WKAssignmentsResponse(WKResponse):
-    data: Sequence[WKAssignment]
-    total_count: int
-
-
-class WKStudyMaterialData(TypedDict):
-    created_at: DateString
-    hidden: bool
-    meaning_note: str
-    meaning_synonyms: Sequence[str]
-    reading_note: str
-    subject_id: int
-    subject_type: SubjectType
-
-
-class WKStudyMaterial(WKResponse):
-    data: WKStudyMaterialData
-
-
-class WKStudyMaterialsResponse(WKResponse):
-    data: Sequence[WKStudyMaterial]
-    total_count: int
-
-
-class WKSubscription(TypedDict):
-    active: bool
-    max_level_granted: WKLevel
-    period_ends_at: None | DateString
-    type: Literal["free", "recurring", "lifetime"]
-
-
-class WKPreferences(TypedDict):
-    default_voice_actor_id: int
-    extra_study_autoplay_audio: bool
-    lessons_autoplay_audio: bool
-    lessons_batch_size: int
-    lessons_presentation_order: Literal["ascending_level_then_subject"]
-    reviews_autoplay_audio: bool
-    reviews_display_srs_indicator: bool
-    reviews_presentation_order: Literal["shuffled", "lower_levels_first"]
-
-
-class WKUserData(TypedDict):
-    current_vacation_started_at: DateString | None
-    level: WKLevel
-    preferences: WKPreferences
-    profile_url: str
-    started_at: DateString
-    subscription: WKSubscription
-    username: str
-
-
-class WKUser(WKResponse):
-    data: WKUserData
-
-
-class WKSRSStageBase(TypedDict):
-    position: int
-
-
-class WKSRSStageEmpty(WKSRSStageBase):
-    interval: None
-    interval_unit: None
-
-
-class WKSRSStageNonEmpty(WKSRSStageBase):
-    interval: int
-    interval_unit: Literal[
-        "milliseconds", "seconds", "minutes", "hours", "days", "weeks"
-    ]
-
-
-type WKSpacedRepetitionSystemStage = WKSRSStageNonEmpty | WKSRSStageEmpty
-
-
-class WKSpacedRepetitionSystemData(TypedDict):
-    burning_stage_position: int
-    created_at: DateString
-    description: str
-    name: str
-    passing_stage_position: int
-    stages: Sequence[WKSpacedRepetitionSystemStage]
-    starting_stage_position: int
-    unlocking_stage_position: int
-
-
-class WKSpacedRepetitionSystem(WKResponse):
-    data: WKSpacedRepetitionSystemData
 
 
 class WKAssignmentsQuery(TypedDict, total=False):

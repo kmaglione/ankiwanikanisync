@@ -41,7 +41,7 @@ export function setupFront() {
 
     if (typeans && (typeans instanceof HTMLInputElement ||
                     typeans instanceof HTMLTextAreaElement)) {
-        if (_.Card == "Reading") {
+        if (_.Card === "Reading") {
             wanakana.bind(typeans);
         }
 
@@ -51,13 +51,15 @@ export function setupFront() {
             event.target.classList.remove("shake");
         });
 
-        const meaningWhitelist = new Set(_.Meaning_Whitelist.split(", ").map(s => s.toLowerCase()));
+        const meaningWhitelist = new Set(_.Meaning_Whitelist.split(", ")
+                                          .map(s => s.toLowerCase()));
 
-        const readingWhitelist = new Set(_.Reading_Whitelist.split(", ").map(stripHTML));
+        const readingWhitelist = new Set(_.Reading_Whitelist.split(", ")
+                                          .map(stripHTML));
 
         const readingAll = new Set(_.Reading_Onyomi.split(", ")
-                                 .concat(_.Reading_Kunyomi.split(", "))
-                                 .map(stripHTML));
+                                    .concat(_.Reading_Kunyomi.split(", "))
+                                    .map(stripHTML));
 
         const readingWarning = readingAll.difference(readingWhitelist);
 

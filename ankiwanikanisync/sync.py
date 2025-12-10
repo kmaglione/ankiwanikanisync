@@ -29,6 +29,15 @@ from .config import config
 from .importer import ensure_deck, ensure_notes, sort_new_cards
 from .promise import Promise
 from .timers import timers
+from .types import (
+    DateString,
+    SubjectId,
+    WKAssignment,
+    WKAssignmentData,
+    WKAssignmentsResponse,
+    WKStudyMaterialData,
+    WKSubject,
+)
 from .utils import (
     chunked,
     collection_op,
@@ -40,16 +49,9 @@ from .utils import (
     wkparsetime,
 )
 from .wk_api import (
-    DateString,
-    SubjectId,
-    WKAssignment,
-    WKAssignmentData,
     WKAssignmentsQuery,
-    WKAssignmentsResponse,
     WKReviewDataReview,
-    WKStudyMaterialData,
     WKStudyMaterialsQuery,
-    WKSubject,
     WKSubjectsQuery,
     is_WKAmalgumData,
     is_WKComponentData,
