@@ -73,14 +73,14 @@
 
     .found-in-voc-reading {
         font-size: .5rem;
-        padding-top: 3px;
-        padding-bottom: 2px;
+        padding-top: .15rem;
+        padding-bottom: .1rem;
     }
 
     .found-in-voc {
         font-size: 1.2rem;
         padding-top: 0;
-        padding-bottom: 4px;
+        padding-bottom: .2rem;
     }
 
     &.card.nightMode {
@@ -114,7 +114,7 @@
     --button-color-light: #E0E0E0;
     --button-color-hover: #BDBDBD;
 
-    font-size: 1rem;
+    font-size: 20px;
 }
 
 .card, :lang(en) {
@@ -300,21 +300,21 @@ radical, kanji, vocabulary {
 #context-patterns {
     font-family: Ubuntu, sans-serif;
     display: flex;
-    margin: -10px .5rem .75rem 0;
+    margin: -.5rem .5rem .75rem 0;
 }
 
 #common-word-combinations {
-    box-shadow: -10px 0 5px -10px #8888;
+    box-shadow: -.5rem 0 .25rem -.5rem #8888;
     padding: 0 0 0 1rem;
 }
 
 .button {
     padding: .5rem 1px .5rem .5rem;
-    margin: 0 0 4px;
+    margin: 0 0 .2rem;
     text-align: left;
     font-size: .7rem;
     background: none;
-    border-radius: 6px 0 0 6px;
+    border-radius: .3rem 0 0 .3rem;
     border: none;
     width: max(7rem);
 
@@ -352,12 +352,12 @@ radical, kanji, vocabulary {
 
 #patterns-of-use {
     font-size: .75rem;
-    margin: 0 -30px 30px 0;
+    margin: 0 -1.5rem 1.5rem 0;
 }
 
 #common-word-combinations {
     font-size: .8rem;
-    margin: 0 30px 3px;
+    margin: 0 1.5rem .15rem;
 }
 
 #box-container {
@@ -389,7 +389,7 @@ radical, kanji, vocabulary {
 
 #box-meaning {
     font-size: .7rem;
-    margin: 0 -100px;
+    margin: 0 -5rem;
 }
 
 radical-combination {
@@ -400,8 +400,8 @@ radical-combination {
 
     background-color: var(--radical-color);
     box-shadow: 0 2px var(--radical-color-dark);
-    padding: 5px 8px;
-    margin: 0 12px 0 -0;
+    padding: .25rem .4rem;
+    margin: 0 .6rem 0 -0;
     border-radius: .2rem;
 
     a, a:link, a:visited {
@@ -433,7 +433,7 @@ radical-combination {
     @extend %found-in-voc-common;
 
     font-size: 1.3rem;
-    padding: 9px;
+    padding: .45rem;
 }
 
 .found-in-voc-reading {
@@ -561,10 +561,10 @@ radical-combination {
     height: 1.8em;
     line-height: 1.8em;
     text-align: center;
-    box-shadow: 0 -3px 0 rgb(0 0 0 / 20%) inset;
+    box-shadow: 0 -.15rem 0 rgb(0 0 0 / 20%) inset;
     text-decoration: none;
     font-size: 1.35rem;
-    border-radius: 3px;
+    border-radius: .15rem;
     margin: 0 .5rem .5rem 0;
 }
 
