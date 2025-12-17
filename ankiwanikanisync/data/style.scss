@@ -31,11 +31,7 @@
 
 .nightMode {
     #card-back {
-        color: darkgray;
-    }
-
-    #combination {
-        color: darkgray;
+        --font-color: darkgray;
     }
 
     &.card {
@@ -94,6 +90,7 @@
     --background-color-dark: #E1E1E1;
     --font-color-dark: #333;
     --font-color-light: white;
+    --font-color: #333;
     --hint-color: #555;
     --meaning-color: #777;
     --meaning-sub-color: #616161;
@@ -137,7 +134,7 @@
 #card-back {
     font-size: 1.3rem;
     text-align: left;
-    color: var(--font-color-dark);
+    color: var(--font-color);
     max-width: 76.1ch;
     padding: .5em 1em;
     margin: auto;
@@ -297,6 +294,10 @@ radical, kanji, vocabulary {
     color: var(--meaning-color);
 }
 
+.readings-primary {
+  color: var(--font-color);
+}
+
 #context-patterns {
     font-family: Ubuntu, sans-serif;
     display: flex;
@@ -414,6 +415,7 @@ radical-combination {
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
+    color: var(--font-color);
 }
 
 .combination-plus {

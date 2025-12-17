@@ -42,6 +42,10 @@ export function setupBack() {
         }
     }
 
+    for (const elem of $$(":is(#onyomi-readings, #kunyomi-readings, #nanori-readings):has( reading)")) {
+        elem.classList.add("readings-primary");
+    }
+
     /* SCRIPT: Disable unused Reading divisions. */
     hide($("#onyomi-readings"), !_.Reading_Onyomi);
     hide($("#kunyomi-readings"), !_.Reading_Kunyomi);
