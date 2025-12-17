@@ -21,6 +21,14 @@ export function* chunked<T>(array: T[], n: number): Generator<T[], void, void> {
     }
 }
 
+const SPACE = /\s+/g;
+export function split(str: string, pat: string | RegExp = SPACE): string[] {
+    if (pat === SPACE) {
+        str = str.trim();
+    }
+    return str ? str.split(pat) : [];
+}
+
 export function deepFreeze<T extends object>(obj: T): DeepReadonly<T> {
     Object.freeze(obj);
     for (const val of Object.values(obj)) {

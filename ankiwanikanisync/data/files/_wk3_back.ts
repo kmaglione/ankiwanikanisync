@@ -1,6 +1,6 @@
 /* globals _ */
 import wanakana from "./_wanakana.min.js";
-import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, stripHTML, zip } from "./_wk3_util.js";
+import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, split, stripHTML, zip } from "./_wk3_util.js";
 
 function setLangJa(elem: Element) {
     elem.setAttribute("lang", "ja");
@@ -27,7 +27,7 @@ export function setupBack() {
     /* SCRIPT: Slice meanings and insert into the Meaning Section. */
     $(`#meaning-title`).append(_.Card_Type === "Radical" ? "Name" : "Meaning");
 
-    const [primary, ...alternative] = _.Meaning.split(",");
+    const [primary, ...alternative] = split(_.Meaning, ",");
 
     {
         const div = $("#meanings");
@@ -52,11 +52,11 @@ export function setupBack() {
     hide($("#reading-hint"), !_.Reading_Hint);
 
     /* SCRIPT: Slice and add Context Patterns  */
-    const combinations = _.Context_Patterns.split("|");
+    const combinations = split(_.Context_Patterns, "|");
 
     function addCombinations(idx: number) {
         const div = $("#common-word-combinations");
-        for (const [ja, en] of chunked(combinations[idx].split(";"), 2)) {
+        for (const [ja, en] of chunked(split(combinations[idx], ";"), 2)) {
             div.append(frag(`<p class="combination">
                 ${jaTag("ja", ja)}<br>
                 ${en}
@@ -82,23 +82,23 @@ export function setupBack() {
         const element = document.createElement("div");
         element.innerHTML = `
             <button class="button" lang="ja" name="${i}">${
-                val.split(";")[0]
+                split(val, ";")[0]
             }</button><br>`;
         element.firstElementChild.addEventListener("click", onButtonClick);
         $("#patterns-of-use").appendChild(element);
     }
 
-    $(".button[name='0']").classList.add("clicked");
-
     if (combinations.length === 0) {
         $("#context-patterns").textContent = " ";
+    } else {
+        $(".button[name='0']").classList.add("clicked");
     }
 
     /* SCRIPT: Slice and add context sentences. */
     if (["Vocabulary", "Kana Vocabulary"].includes(_.Card_Type)) {
         const div = $("#context-sentences");
 
-        for (const [en, jp] of chunked(_.Context_Sentences.split("|"), 2)) {
+        for (const [en, jp] of chunked(split(_.Context_Sentences, "|"), 2)) {
             div.append(frag(`<p>${jaTag("ja", jp)}<br>${en}</p>`));
         }
     }
@@ -124,9 +124,9 @@ export function setupBack() {
     switch (_.Card_Type) {
       case "Radical": {
         const found_in = zip(
-           _.Found_in_Characters.split("、 "),
-           _.Found_in_Reading.split("、 "),
-           _.Found_in_Meaning.split("、 ")
+           split(_.Found_in_Characters, "、 "),
+           split(_.Found_in_Reading, "、 "),
+           split(_.Found_in_Meaning, "、 ")
         );
         if (found_in.length !== 0) {
             $("#box-title").textContent = "Found In Kanji";
@@ -148,9 +148,9 @@ export function setupBack() {
       }
       case "Kanji": {
         const similar = zip(
-           _.Similar_Characters.split("、 "),
-           _.Similar_Reading.split("、 "),
-           _.Similar_Meaning.split("、 ")
+           split(_.Similar_Characters, "、 "),
+           split(_.Similar_Reading, "、 "),
+           split(_.Similar_Meaning, "、 ")
         );
 
         if (similar.length !== 0) {
@@ -174,9 +174,9 @@ export function setupBack() {
       case "Vocabulary":
       case "Kana Vocabulary": {
         const comps = zip(
-           _.Components_Characters.split("、 "),
-           _.Components_Reading.split("、 "),
-           _.Components_Meaning.split("、 ")
+           split(_.Components_Characters, "、 "),
+           split(_.Components_Reading, "、 "),
+           split(_.Components_Meaning, "、 ")
         );
 
         if (comps.length !== 0) {
@@ -315,8 +315,8 @@ export function setupBack() {
 
     /* SCRIPT: Add Radical Combination Characters. */
     const comps = zip(
-       _.Components_Characters.split("、 "),
-       _.Components_Meaning.split("、 ")
+       split(_.Components_Characters, "、 "),
+       split(_.Components_Meaning, "、 ")
     )
 
     for (const [i, [char, meaning]] of comps.entries()) {
@@ -343,9 +343,9 @@ export function setupBack() {
 
     /* SCRIPT: Add Found in Vocabulary Characters. */
     const found_in = zip(
-        _.Found_in_Characters.split("、 "),
-        _.Found_in_Reading.split("、 "),
-        _.Found_in_Meaning.split("、 ")
+        split(_.Found_in_Characters, "、 "),
+        split(_.Found_in_Reading, "、 "),
+        split(_.Found_in_Meaning, "、 ")
     )
 
     for (const [char, reading, meaning] of found_in) {
@@ -382,8 +382,8 @@ export function setupBack() {
         typedAnswerLower = "";
     }
 
-    const meaningWhitelist = new Set(_.Meaning_Whitelist.toLowerCase().split(", "));
-    const readingWhitelist = new Set(_.Reading_Whitelist.toLowerCase().split(", "));
+    const meaningWhitelist = new Set(split(_.Meaning_Whitelist.toLowerCase(), ", "));
+    const readingWhitelist = new Set(split(_.Reading_Whitelist.toLowerCase(), ", "));
     let correctAnswers = new Set<string>();
     const correctText = $("#correct");
 
@@ -392,7 +392,7 @@ export function setupBack() {
         const capitalize = (iter: Iterable<string>): string[] => Array.from(iter,
             (elem: string): string => elem.replace(/(^| )\w/g, c => c.toUpperCase()));
 
-        correctAnswers = new Set(_.Meaning.toLowerCase().split(", "));
+        correctAnswers = new Set(split(_.Meaning.toLowerCase(), ", "));
         const [meaning, ...alternatives] = capitalize(correctAnswers);
 
         const accepted = meaningWhitelist.difference(correctAnswers);
@@ -459,7 +459,7 @@ export function setupBack() {
         correctAnswers = new Set(
             Array.from(correctAnswers, a => mangleAnswer(stripHTML(a))));
 
-        const answers = new Set<string>(typedAnswerLower.split(/[、,]\s*/));
+        const answers = new Set<string>(split(typedAnswerLower, /[、,]\s*/));
         if (answers.isSubsetOf(correctAnswers)) {
             answerDiv.classList.add("correct");
         } else {

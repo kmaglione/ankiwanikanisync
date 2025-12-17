@@ -1,6 +1,6 @@
 /* globals _ */
 import wanakana from "./_wanakana.min.js";
-import { $, assert, assertNever, stripHTML } from "./_wk3_util.js";
+import { $, assert, assertNever, split, stripHTML } from "./_wk3_util.js";
 
 function map<T, U>(iter: Iterable<T>, fn: (arg: T) => U) {
     return Iterator.from(iter).map(fn);
@@ -51,14 +51,14 @@ export function setupFront() {
             event.target.classList.remove("shake");
         });
 
-        const meaningWhitelist = new Set(_.Meaning_Whitelist.split(", ")
+        const meaningWhitelist = new Set(split(_.Meaning_Whitelist, ", ")
                                           .map(s => s.toLowerCase()));
 
-        const readingWhitelist = new Set(_.Reading_Whitelist.split(", ")
+        const readingWhitelist = new Set(split(_.Reading_Whitelist, ", ")
                                           .map(stripHTML));
 
-        const readingAll = new Set(_.Reading_Onyomi.split(", ")
-                                    .concat(_.Reading_Kunyomi.split(", "))
+        const readingAll = new Set(split(_.Reading_Onyomi, ", ")
+                                    .concat(split(_.Reading_Kunyomi, ", "))
                                     .map(stripHTML));
 
         const readingWarning = readingAll.difference(readingWhitelist);
@@ -108,7 +108,7 @@ export function setupFront() {
                     typeans.value = typeans.value.slice(0, -1) + "ん";
                 }
 
-                const answers = new Set(typeans.value.split(/[、,]\s*/));
+                const answers = new Set(split(typeans.value, /[、,]\s*/));
                 if (answers.size
                         && checkWarning(answers)
                         && !typeans.classList.contains("shake")) {
