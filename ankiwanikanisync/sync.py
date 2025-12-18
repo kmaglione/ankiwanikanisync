@@ -852,7 +852,7 @@ def do_process_v11():
 
 
 @collection_op
-def do_process():
+def do_process_v12():
     from .importer import Keisei, html_trans
 
     keisei = Keisei()
@@ -863,6 +863,30 @@ def do_process():
         subject: WKSubject = json.loads(note["raw_data"])
         note["Keisei"] = json.dumps(keisei.get(subject)).translate(html_trans)
         changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process():
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        subject: WKSubject = json.loads(note["raw_data"])
+
+        blacklist = [
+            item["meaning"].strip()
+            for item in subject["data"]["auxiliary_meanings"]
+            if item["type"] == "blacklist"
+        ]
+        if blacklist:
+            note["Meaning_Blacklist"] = ", ".join(blacklist)
+            changed_notes.append(note)
 
     wk_col.col.update_notes(changed_notes)
 

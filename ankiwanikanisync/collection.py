@@ -36,6 +36,7 @@ FieldName = Literal[
     "Meaning_Mnemonic",
     "Meaning_Hint",
     "Meaning_Whitelist",
+    "Meaning_Blacklist",
     "Reading",
     "Reading_Onyomi",
     "Reading_Kunyomi",

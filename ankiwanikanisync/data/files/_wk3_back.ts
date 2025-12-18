@@ -427,12 +427,21 @@ export function setupBack() {
       }
     }
 
+    let blacklist = new Set();
+    if (_.Card === "Meaning") {
+        blacklist = new Set(split(_.Meaning_Blacklist, ", ")
+                                   .map(s => s.toLowerCase()));
+    }
+
     function checkTypos(answers: Set<string>,
                         expected: Set<string>,
                         mangle = (x: string): string => x) {
         let found = 0;
         const typos = $("#typos");
         for (const ans of answers) {
+            if (blacklist.has(ans)) {
+                continue;
+            }
             for (const exp of expected) {
                 if (likelyTypo(mangle(exp), mangle(ans))) {
                     found++;

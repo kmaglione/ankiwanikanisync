@@ -462,11 +462,13 @@ class WKImporter(NoteImporter):
             return None
 
         meanings = self.get_meanings(subject)
-        meanings_whitelist = [
-            item["meaning"].strip()
-            for item in subject["data"]["auxiliary_meanings"]
-            if item["type"] == "whitelist"
-        ]
+        meanings_whitelist = []
+        meanings_blacklist = []
+        for item in subject["data"]["auxiliary_meanings"]:
+            if item["type"] == "whitelist":
+                meanings_whitelist.append(item["meaning"].strip())
+            else:
+                meanings_blacklist.append(item["meaning"].strip())
 
         readings = self.get_readings(subject)
 
@@ -495,6 +497,7 @@ class WKImporter(NoteImporter):
             "Meaning_Whitelist": ", ".join(
                 [*meanings_whitelist, *meanings, *user_study.meaning_synonyms]
             ),
+            "Meaning_Blacklist": ", ".join(meanings_blacklist),
             "Reading": get_readings("primary"),
             "Reading_Onyomi": get_readings("onyomi"),
             "Reading_Kunyomi": get_readings("kunyomi"),

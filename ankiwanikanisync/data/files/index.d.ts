@@ -13,6 +13,7 @@ export interface TemplateFields {
   Meaning_Mnemonic: string;
   Meaning_Hint: string;
   Meaning_Whitelist: string;
+  Meaning_Blacklist: string;
   Reading: string;
   Reading_Onyomi: string;
   Reading_Kunyomi: string;
