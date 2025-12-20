@@ -127,10 +127,9 @@ def note_is_wk(note: WKNote) -> bool:
 class WKCollection(object):
     CHUNK_SIZE: Final[int] = 256
 
-    @property
-    def col(self) -> Collection:
+    def __init__(self):
         assert mw.col
-        return mw.col
+        self.col = mw.col
 
     def get_note(self, nid: NoteId) -> WKNote:
         return WKNote.cast(self.col.get_note(nid))
