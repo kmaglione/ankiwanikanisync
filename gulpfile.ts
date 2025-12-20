@@ -6,10 +6,10 @@ import { deleteAsync } from "del";
 import { dest, parallel, series, src, watch } from "gulp";
 import eslint from "gulp-eslint-new";
 import htmlhint from "gulp-htmlhint";
+import preserveWhitespace from "gulp-preserve-typescript-whitespace";
 import prettyError from "gulp-prettyerror";
 import gulpSass from "gulp-sass";
 import shell from "gulp-shell";
-import sourcemaps from "gulp-sourcemaps";
 import stylelint from "gulp-stylelint-esm";
 import ts from "gulp-typescript";
 import zip from "gulp-zip";
@@ -46,7 +46,10 @@ const files = {
         "ankiwanikanisync/py.typed",
     ],
     // Note: @(data) is a hack to get the correct glob root.
-    ts: ["ankiwanikanisync/@(data)/**/*.ts"],
+    ts: [
+        "ankiwanikanisync/@(data)/**/*.ts",
+        "!**/*.d.ts",
+    ],
     js: ["ankiwanikanisync/@(data)/**/*.js"],
     scss: ["ankiwanikanisync/@(data)/**/*.scss"],
     media: ["ankiwanikanisync/@(data)/files/**/*.(woff2|png)"],
@@ -149,10 +152,10 @@ export function watch_static() {
 }
 
 export function build_ts() {
-    return src(files.ts).pipe(sourcemaps.init())
+    return src(files.ts).pipe(preserveWhitespace.saveWhitespace())
                         .pipe(tsProject())
                         .js
-                        .pipe(sourcemaps.write("."))
+                        .pipe(preserveWhitespace.restoreWhitespace())
                         .pipe(dest(files.dist));
 }
 
