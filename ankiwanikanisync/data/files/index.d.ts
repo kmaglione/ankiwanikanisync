@@ -1,4 +1,4 @@
-import type { KeiseiJSON, WKSubject } from "./types.js";
+import type { KeiseiJSON, RelatedSubject, WKSubject } from "./types.js";
 export interface TemplateFields {
   Card: "Reading" | "Meaning";
   card_id: number;
@@ -21,15 +21,9 @@ export interface TemplateFields {
   Reading_Whitelist: string;
   Reading_Mnemonic: string;
   Reading_Hint: string;
-  Components_Characters: string;
-  Components_Meaning: string;
-  Components_Reading: string;
-  Similar_Characters: string;
-  Similar_Meaning: string;
-  Similar_Reading: string;
-  Found_in_Characters: string;
-  Found_in_Meaning: string;
-  Found_in_Reading: string;
+  Comps: RelatedSubject[];
+  Similar: RelatedSubject[];
+  Found_in: RelatedSubject[];
   Context_Patterns: string;
   Context_Sentences: string;
   Audio: string;

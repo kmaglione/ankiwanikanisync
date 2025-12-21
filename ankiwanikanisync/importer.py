@@ -27,6 +27,7 @@ from .promise import Promise
 from .types import (
     KeiseiCompound,
     KeiseiJSON,
+    RelatedSubject,
     WKAudio,
     WKMeaning,
     WKReading,
@@ -247,7 +248,8 @@ class Keisei:
     def get(self, subject: WKSubject) -> KeiseiJSON | None:
         data: KeiseiJSON = {"type": "", "compounds": []}
 
-        def split(val): return (val or "").split(", ")
+        def split(val):
+            return (val or "").split(", ")
 
         match subject["object"]:
             case "radical":
@@ -352,7 +354,8 @@ class Keisei:
         if phonetic := self.keisei_data["phonetic"].get(item):
             return phonetic["readings"][0]
 
-        def split(val): return (val or "").split(", ")
+        def split(val):
+            return (val or "").split(", ")
 
         wk = self.keisei_data["wk_kanji"][item]
         return next(
@@ -509,15 +512,9 @@ class WKImporter(NoteImporter):
                 ).strip()
             ),
             "Reading_Hint": self.html_newlines(str(data.get("reading_hint") or "")),
-            "Components_Characters": "、 ".join(comps.characters),
-            "Components_Meaning": "、 ".join(comps.meanings),
-            "Components_Reading": "、 ".join(comps.readings),
-            "Similar_Characters": "、 ".join(similars.characters),
-            "Similar_Meaning": "、 ".join(similars.meanings),
-            "Similar_Reading": "、 ".join(similars.readings),
-            "Found_in_Characters": "、 ".join(amalgums.characters),
-            "Found_in_Meaning": "、 ".join(amalgums.meanings),
-            "Found_in_Reading": "、 ".join(amalgums.readings),
+            "Comps": json.dumps(comps).translate(html_trans),
+            "Similar": json.dumps(similars).translate(html_trans),
+            "Found_in": json.dumps(amalgums).translate(html_trans),
             "Context_Patterns": self.get_context_patterns(subject),
             "Context_Sentences": self.get_context_sentences(subject),
             "Keisei": json.dumps(self.keisei.get(subject)).translate(html_trans),
@@ -723,9 +720,9 @@ class WKImporter(NoteImporter):
             html.escape(f"Invalid pitch output for {key}: {self.pitch_data[key]!r}")
         )
 
-    def get_components(self, subject, key: str) -> Components:
+    def get_components(self, subject, key: str) -> list[RelatedSubject]:
         if key not in subject["data"]:
-            return Components([], [], [])
+            return []
 
         def find_primary[T: WKMeaning | WKReading](elts: Sequence[T]) -> T:
             for elt in elts:
@@ -733,23 +730,24 @@ class WKImporter(NoteImporter):
                     return elt
             raise IndexError()
 
-        res = Components([], [], [])
+        res = []
         for sub_id in subject["data"][key]:
             if subj := self.related_subjects.get(sub_id):
                 data = subj["data"]
 
                 char = self.get_character(data)
-                res.characters.append(f'<a href="{data["document_url"]}">{char}</a>')
-
-                res.meanings.append(find_primary(data["meanings"])["meaning"])
+                entry = RelatedSubject(
+                    characters=f'<a href="{data["document_url"]}">{char}</a>',
+                    meaning=find_primary(data["meanings"])["meaning"],
+                    reading="",
+                )
 
                 if is_WKReadable(data):
                     reading = find_primary(data["readings"])
-                    res.readings.append(
-                        self.apply_pitch_pattern(subj, reading["reading"])
+                    entry["reading"] = self.apply_pitch_pattern(
+                        subj, reading["reading"]
                     )
-                else:
-                    res.readings.append("")
+                res.append(entry)
         return res
 
     def get_context_sentences(self, subject: WKSubject) -> str:
@@ -796,7 +794,7 @@ def ensure_media_files(col: Collection) -> None:
     dest_dir = pathlib.Path(col.media.dir())
     for source_file in source_dir.iterdir():
         dest_file = dest_dir / source_file.name
-        if not dest_file.exists() or source_file.suffix in ('.js', '.map'):
+        if not dest_file.exists() or source_file.suffix in (".js", ".map"):
             shutil.copy(source_file, dest_file)
 
 
@@ -830,7 +828,15 @@ def get_model_data() -> ModelData:
             var _ = deepFreeze({
 """
     for field in [*WKImporter.FIELDS, "Card"]:
-        if field in ("raw_data", "Keisei", "Level", "card_id"):
+        if field in (
+            "Comps",
+            "Found_in",
+            "Keisei",
+            "Level",
+            "Similar",
+            "card_id",
+            "raw_data",
+        ):
             card_data += f'\
                 "{field}": {subs(field)},\n'
         else:

@@ -1,6 +1,7 @@
 /* globals _ */
 import wanakana from "./_wanakana.min.js";
-import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, split, stripHTML, zip } from "./_wk3_util.js";
+import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, split, stripHTML } from "./_wk3_util.js";
+import type { RelatedSubject } from "./types.js";
 
 function setLangJa(elem: Element) {
     elem.setAttribute("lang", "ja");
@@ -125,20 +126,14 @@ export function setupBack() {
     }
 
     /* SCRIPT: Populate Box Characters (Found in Kanji, Visually Similar Kanji and Kanji Composition). */
-    switch (_.Card_Type) {
-      case "Radical": {
-        const found_in = zip(
-           split(_.Found_in_Characters, "、 "),
-           split(_.Found_in_Reading, "、 "),
-           split(_.Found_in_Meaning, "、 ")
-        );
-        if (found_in.length !== 0) {
-            $("#box-title").textContent = "Found In Kanji";
+    function setRelated(title: string, related: readonly RelatedSubject[]) {
+        if (related.length !== 0) {
+            $("#box-title").textContent = title;
 
-            for (const [char, reading, meaning] of found_in) {
+            for (const {characters, reading, meaning} of related) {
                 $("#box-container").appendChild(frag(
                     `<div id="box-character" lang="ja">
-                        ${char}
+                        ${characters}
                         <div id="box-meaning">
                             ${reading}<br>
                             <span lang="en">${meaning}</span>
@@ -148,59 +143,18 @@ export function setupBack() {
         } else {
             $("#section-box").remove();
         }
+    }
+    switch (_.Card_Type) {
+      case "Radical":
+        setRelated("Found In Kanji", _.Found_in);
         break;
-      }
-      case "Kanji": {
-        const similar = zip(
-           split(_.Similar_Characters, "、 "),
-           split(_.Similar_Reading, "、 "),
-           split(_.Similar_Meaning, "、 ")
-        );
-
-        if (similar.length !== 0) {
-            $("#box-title").textContent = "Visually Similar Kanji";
-
-            for (const [char, reading, meaning] of similar) {
-                $("#box-container").appendChild(frag(
-                    `<div id="box-character" lang="ja">
-                        ${char}
-                        <div id="box-meaning">
-                            ${reading}<br>
-                            <span lang="en">${meaning.substring(0, 15)}</span>
-                        </div>
-                    </div>`));
-            }
-        } else {
-            $("#section-box").remove();
-        }
+      case "Kanji":
+        setRelated("Visually Similar Kanji", _.Similar);
         break;
-      }
       case "Vocabulary":
-      case "Kana Vocabulary": {
-        const comps = zip(
-           split(_.Components_Characters, "、 "),
-           split(_.Components_Reading, "、 "),
-           split(_.Components_Meaning, "、 ")
-        );
-
-        if (comps.length !== 0) {
-            $("#box-title").textContent = "Kanji Composition";
-
-            for (const [char, reading, meaning] of comps) {
-                $("#box-container").appendChild(frag(
-                    `<div id="box-character" lang="ja">
-                        ${char}
-                        <div id="box-meaning">
-                            ${reading}<br>
-                            <span lang="en">${meaning.substring(0, 15)}</span>
-                        </div>
-                    </div>`));
-            }
-        } else {
-            $("#section-box").remove();
-        }
+      case "Kana Vocabulary":
+        setRelated("Kanji Composition", _.Comps);
         break;
-      }
       default:
         $("#section-box").remove();
     }
@@ -318,12 +272,7 @@ export function setupBack() {
     }
 
     /* SCRIPT: Add Radical Combination Characters. */
-    const comps = zip(
-       split(_.Components_Characters, "、 "),
-       split(_.Components_Meaning, "、 ")
-    )
-
-    for (const [i, [char, meaning]] of comps.entries()) {
+    for (const [i, {characters, meaning}] of _.Comps.entries()) {
         {
             const element = document.createElement("div");
             element.style.display = "flex";
@@ -331,7 +280,7 @@ export function setupBack() {
 
             element.innerHTML = `
                 <radical-combination lang="ja">
-                    <div>${char}</div>
+                    <div>${characters}</div>
                 </radical-combination>
                 <div>
                     ${meaning.substring(0, 15)}
@@ -339,33 +288,27 @@ export function setupBack() {
             $("#combination").appendChild(element);
         }
 
-        if (i + 1 != comps.length) {
+        if (i + 1 != _.Comps.length) {
             $("#combination").appendChild(frag(
                 "<p><div class=combination-plus><b>+<b/></div></p>"));
         }
     }
 
     /* SCRIPT: Add Found in Vocabulary Characters. */
-    const found_in = zip(
-        split(_.Found_in_Characters, "、 "),
-        split(_.Found_in_Reading, "、 "),
-        split(_.Found_in_Meaning, "、 ")
-    )
-
-    for (const [char, reading, meaning] of found_in) {
+    for (const {characters, reading, meaning} of _.Found_in) {
         $("#found-in-vocabulary-container").appendChild(frag(
-            `<div id="found-in-vocabulary-box">
-                <div class="found-in-voc" lang="ja">
-                    ${char}
+            `<div id="found-in-vocabulary-box" lang="ja">
+                <div class="found-in-voc">
+                    ${characters}
                 </div>
-                <div class="found-in-voc-reading" lang="ja">
+                <div class="found-in-voc-reading">
                     ${reading}<br>
-                    ${meaning}
+                    <span lang="en">${meaning}</span>
                 </div>
             </div>`));
     }
 
-    if (found_in.length == 0) {
+    if (_.Found_in.length == 0) {
         hide($("#section-found-in-vocabulary"));
     }
 

@@ -11,7 +11,7 @@ from typing import (
     TypedDict,
 )
 
-source_hash__ = "c46885963fa0e0b526782405f672c127"
+source_hash__ = "fe6486c83cc7eeb79e383cef2bcc50ef"
 
 
 ##### BEGIN OF ts2python generated code
@@ -256,6 +256,12 @@ class WKSubject(WKResponse, TypedDict):
 class WKSubjectsResponse(WKResponse, TypedDict):
     data: List[WKSubject]
     total_count: int
+
+
+class RelatedSubject(TypedDict):
+    characters: str
+    reading: str
+    meaning: str
 
 
 class KeiseiCompound(TypedDict):

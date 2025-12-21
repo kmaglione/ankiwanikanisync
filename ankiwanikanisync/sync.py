@@ -683,6 +683,7 @@ class SyncOp(object):
         # If submitting the review might have made the note Guru, check whether
         # any new lessons have been unlocked that we can submit reviews for.
         if might_guru:
+
             @mw.taskman.run_on_main
             def runnable():
                 self.upstream_available_assignments_op(lessons=True, reviews=False)
@@ -873,7 +874,7 @@ def do_process_v12():
 
 
 @collection_op
-def do_process():
+def do_process_v13():
     changed_notes = []
     for nid in wk_col.find_notes():
         note = wk_col.get_note(nid)
@@ -887,6 +888,41 @@ def do_process():
         if blacklist:
             note["Meaning_Blacklist"] = ", ".join(blacklist)
             changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process():
+    from anki.notes import Note
+
+    from .importer import html_trans
+    from .types import RelatedSubject
+
+    def munge_field(note: Note, name: str, dest: str):
+        input = zip(
+            note[f"{name}_Characters"].split("、 "),
+            note[f"{name}_Meaning"].split("、 "),
+            note[f"{name}_Reading"].split("、 "),
+        )
+        output = [
+            RelatedSubject(characters=rel[0], meaning=rel[1], reading=rel[2])
+            for rel in input
+        ]
+        note[dest] = json.dumps(output).translate(html_trans)
+
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        munge_field(note, "Components", "Comps")
+        munge_field(note, "Found_in", "Found_in")
+        munge_field(note, "Similar", "Similar")
+        changed_notes.append(note)
 
     wk_col.col.update_notes(changed_notes)
 

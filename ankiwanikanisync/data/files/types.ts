@@ -232,6 +232,12 @@ export interface WKSubjectsResponse extends WKResponse {
     total_count: int;
 }
 
+export interface RelatedSubject {
+    characters: string;
+    reading: string;
+    meaning: string;
+}
+
 export interface KeiseiCompound {
     character: string;
     reading: string;
