@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import contextvars
 from collections.abc import Awaitable, Coroutine, Iterable, Sequence
 from enum import Enum
 from functools import partial, wraps
@@ -12,6 +14,7 @@ from typing import (
     Protocol,
     Self,
     TypeGuard,
+    TypeIs,
     cast,
     overload,
     runtime_checkable,
@@ -83,6 +86,33 @@ def run_handler(handler: PromiseHandler, result: Any) -> None:
         handler.reject(e)
 
 
+class FutureLike[T](Protocol):
+    _asyncio_future_blocking: bool
+
+    def add_done_callback(
+        self,
+        callback: Callable[[Self], None],
+        *,
+        context: contextvars.Context | None = None,
+    ) -> None: ...
+
+    def get_loop(self) -> asyncio.AbstractEventLoop: ...
+
+    def result(self) -> T: ...
+
+
+@overload
+def isfuture[T](arg: FutureLike[T]) -> TypeIs[FutureLike[T]]: ...
+
+
+@overload
+def isfuture(arg: object) -> TypeIs[FutureLike]: ...
+
+
+def isfuture(arg: Any) -> TypeIs[FutureLike]:
+    return getattr(arg, "_asyncio_future_blocking", None) is not None
+
+
 @runtime_checkable
 class PromiseLike[T](Protocol):
     """
@@ -124,6 +154,10 @@ def ispromise[T](val: PromiseLike[T]) -> TypeGuard[PromiseLike[T]]: ...
 
 
 @overload
+def ispromise[T](val: FutureLike[T]) -> TypeGuard[PromiseLike[T]]: ...
+
+
+@overload
 def ispromise(val: object) -> TypeGuard[PromiseLike]: ...
 
 
@@ -157,13 +191,15 @@ class Loop[T]:
     def loop(self, result: Any = None, *, is_rejection: bool = False) -> None:
         """
         Runs the event loop until the generator either finishes or yields a
-        PromiseLike object.
+        PromiseLike or FutureLike object.
 
         When the generator finishes, self.promise is resolved or rejected with
         the return or exception value (respectively) of the generator.
 
-        When the generator yields a PromiseLike, the loop pauses until the
-        PromiseLike resolves or rejects, and then re-enters the loop() method.
+        When the generator yields a PromiseLike or FutureLike, the loop pauses
+        until it is settled, and then re-enters the loop() method and continues
+        with its result (or exception) value as the next value fed to the
+        generator.
         """
         while True:
             try:
@@ -172,6 +208,8 @@ class Loop[T]:
                 else:
                     result = self.iter.send(result)
                 is_rejection = False
+                if not ispromise(result) and isfuture(result):
+                    result = Promise.wrap(result)
                 if ispromise(result):
                     result.then(self.loop, partial(self.loop, is_rejection=True))
                 else:
@@ -224,7 +262,7 @@ def cast_list_some[T](vals: Sequence[None | T]) -> list[T]:
     return cast(list[T], vals)
 
 
-class Promise[T](PromiseLike[T]):
+class Promise[T](PromiseLike[T], FutureLike[T]):
     """
     A helper class which is approximately equivalent to the JavaScript Promise
     object. Runs all handlers asynchronously, at the top of the Qt application
@@ -273,6 +311,7 @@ class Promise[T](PromiseLike[T]):
 
         fn(resolve, reject)
 
+    # Awaitable interface
     def __await__(self) -> Generator[Self, T, T]:
         """
         Returns a generator which yields the promise itself, and then returns
@@ -281,9 +320,41 @@ class Promise[T](PromiseLike[T]):
         feed the resolution or rejection value back into the coroutine that
         awaited on the Promise.
         """
-        return (yield self)
+        self._asyncio_future_blocking = True
+        yield self
+        return self.result()
 
+    # Future interface
+    _asyncio_future_blocking = False
 
+    def get_loop(self) -> asyncio.AbstractEventLoop:
+        return asyncio.get_running_loop()
+
+    def add_done_callback(
+        self,
+        callback: Callable[[Self], None],
+        *,
+        context: contextvars.Context | None = None,
+    ):
+        @self.finally_
+        def finally_():
+            if context:
+                context.run(callback, self)
+            else:
+                callback(self)
+
+        finally_.catch(report_error)
+
+    def result(self) -> T:
+        match self._status:
+            case Promise.Status.Fulfilled:
+                return self._result
+            case Promise.Status.Rejected:
+                raise self._result
+            case Promise.Status.Pending:
+                raise asyncio.InvalidStateError()
+
+    # Promise interface
 
     @staticmethod
     def from_awaitable[U](awaitable: Awaitable[PromiseLike[U] | U], /) -> Promise[U]:
@@ -298,11 +369,21 @@ class Promise[T](PromiseLike[T]):
         """
         return Loop(awaitable).promise
 
+    @overload
     @staticmethod
     def wrap[**P, RT](
-        func: Callable[P, Coroutine[Any, Any, PromiseLike[RT] | RT]],
+        func: Callable[P, Coroutine[Any, Any, RT]], /
+    ) -> Callable[P, Promise[RT]]: ...
+
+    @overload
+    @staticmethod
+    def wrap[U](func: FutureLike[U], /) -> PromiseLike[U]: ...
+
+    @staticmethod
+    def wrap[**P, RT, U](
+        func: Callable[P, Coroutine[Any, Any, PromiseLike[RT] | RT]] | FutureLike[U],
         /,
-    ) -> Callable[P, Promise[RT]]:
+    ) -> Callable[P, Promise[RT]] | PromiseLike[U]:
         """
         Decorator which wraps an async function so that, when called, it is
         scheduled for execution on the next tick of the event loop, and
@@ -312,6 +393,21 @@ class Promise[T](PromiseLike[T]):
         The wrapped callable is may be called from any thread, but the async
         function will always execute on the main thread.
         """
+
+        if isfuture(func):
+            if ispromise(func):
+                return func
+
+            @Promise
+            def promise(resolve: ResFn[U], reject: HandlerFn):
+                @func.add_done_callback
+                def callback(future: FutureLike[U]):
+                    try:
+                        resolve(future.result())
+                    except Exception as e:
+                        reject(e)
+
+            return promise
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> Promise:
