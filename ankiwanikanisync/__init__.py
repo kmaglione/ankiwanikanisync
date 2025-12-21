@@ -3,9 +3,14 @@ from pathlib import Path
 
 from aqt import gui_hooks
 
+from .promise import Promise
+from .promise_qt import QtScheduler
+
 sys.path.append(str(Path(__file__).parent / "deps"))
 
 __version__ = "0.1.1"
+
+Promise.set_scheduler(QtScheduler())
 
 
 class Hooks:

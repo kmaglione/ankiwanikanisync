@@ -8,6 +8,7 @@ from functools import partial, wraps
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Generator,
     Literal,
     NamedTuple,
@@ -20,50 +21,25 @@ from typing import (
     runtime_checkable,
 )
 
-from aqt.qt import QApplication, QEvent, QObject
-
 __all__ = ("Promise", "PromiseLike", "PromiseOutcome", "ispromise")
 
 
-class RunnableEvent(QEvent):
-    TYPE = QEvent.registerEventType()
+class Scheduler:
+    type Callback = Callable[[], None]
 
-    def __init__(self, callback: Callback, /) -> None:
-        super().__init__(QEvent.Type(self.TYPE))
-        self.callback = callback
+    class Cancellable(Protocol):
+        def cancel(self) -> None: ...
+        def cancelled(self) -> bool: ...
 
-
-class RunnableObject(QObject):
-    """
-    A stub object which acts as an event dispatch target for RunnableEvents in
-    order to run callables at the top of the Qt application event loop.
-    """
-
-    def event(self, event: QEvent | None) -> bool:
-        if isinstance(event, RunnableEvent):
-            event.callback()
-            return True
-        return False
-
-    def run_soon(self, callable: Callback, /) -> None:
-        """
-        Runs the given callback at the top of the Qt application event loop.
-        """
-        QApplication.postEvent(self, RunnableEvent(callable))
+    def call_soon(self, callable: Callback, /) -> Cancellable:
+        raise NotImplementedError()
 
 
-run_soon = RunnableObject().run_soon
+def call_soon(callback: Scheduler.Callback) -> None:
+    assert Promise.scheduler
+    Promise.scheduler.call_soon(callback)
 
 
-# Raises the given error object at the top of the event loop to trigger
-# default error reporting
-def report_error(error: Any):
-    @run_soon
-    def callback():
-        raise error
-
-
-type Callback = Callable[[], None]
 type HandlerFn[T, RT] = Callable[[T], RT]
 type ResFn[T: Any] = Callable[[T], None]
 
@@ -186,7 +162,7 @@ class Loop[T]:
 
         self.promise = promise
 
-        run_soon(self.loop)
+        call_soon(self.loop)
 
     def loop(self, result: Any = None, *, is_rejection: bool = False) -> None:
         """
@@ -284,6 +260,12 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
     _result: Any = None
     _handled_rejection = False
 
+    scheduler: ClassVar[Scheduler | None] = None
+
+    @classmethod
+    def set_scheduler(cls, scheduler: Scheduler):
+        cls.scheduler = scheduler
+
     def __init__(self, fn: Callable[[ResFn[T], ResFn], None], /) -> None:
         """
         Comparable in function to the JavaScript Promise constructor.
@@ -343,7 +325,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             else:
                 callback(self)
 
-        finally_.catch(report_error)
+        finally_.catch(Promise.report_error)
 
     def result(self) -> T:
         match self._status:
@@ -426,16 +408,21 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         match self._status:
             case Promise.Status.Fulfilled:
                 for handler in self._resolve_handlers:
-                    run_soon(partial(run_handler, handler, self._result))
+                    call_soon(partial(run_handler, handler, self._result))
             case Promise.Status.Rejected:
                 for handler in self._reject_handlers:
-                    run_soon(partial(run_handler, handler, self._result))
+                    call_soon(partial(run_handler, handler, self._result))
                     self._handled_rejection = True
             case _:
                 return
 
         self._resolve_handlers.clear()
         self._reject_handlers.clear()
+
+    def report_error(error: Any):
+        import traceback
+
+        traceback.print_exception(error)
 
     def __del__(self) -> None:
         """
@@ -444,7 +431,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         unhandled exception.
         """
         if self._status is Promise.Status.Rejected and not self._handled_rejection:
-            report_error(self._result)
+            Promise.report_error(self._result)
 
     @overload
     def then[RT, RU](
