@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
 from collections.abc import Awaitable, Coroutine, Iterable, Sequence
 from enum import Enum
@@ -71,6 +72,8 @@ class FutureLike[T](Protocol):
         *,
         context: contextvars.Context | None = None,
     ) -> None: ...
+
+    def cancel(self) -> None: ...
 
     def get_loop(self) -> asyncio.AbstractEventLoop: ...
 
@@ -144,6 +147,18 @@ def ispromise(val: Any) -> TypeGuard[PromiseLike]:
     return callable(getattr(val, "then", None))
 
 
+class CancelledError(BaseException):
+    pass
+
+
+class CancellationError(Exception):
+    pass
+
+
+class InvalidStateError(Exception):
+    pass
+
+
 class Loop[T]:
     """
     Acts as an event loop for a single async function. Handles the async
@@ -151,18 +166,26 @@ class Loop[T]:
     result or rejection values back into the coroutine.
     """
 
+    _cancelled: bool = False
+    _pending: Promise | None = None
+
     def __init__(self, awaitable: Awaitable[PromiseLike[T] | T], /) -> None:
         self.iter = awaitable.__await__()
         self.last_result = None
 
-        @Promise[T]
-        def promise(resolve: ResFn[T], reject: ResFn):
+        def fn(resolve: ResFn[T], reject: ResFn):
             self.resolve = resolve
             self.reject = reject
 
-        self.promise = promise
+        self.promise = Promise(fn, self.cancel)
 
         call_soon(self.loop)
+
+    def cancel(self):
+        self._cancelled = True
+        if self._pending:
+            with contextlib.suppress(Exception):
+                self._pending.cancel()
 
     def loop(self, result: Any = None, *, is_rejection: bool = False) -> None:
         """
@@ -179,7 +202,10 @@ class Loop[T]:
         """
         while True:
             try:
-                if is_rejection:
+                if self._cancelled:
+                    result = None
+                    self.iter.throw(CancelledError())
+                elif is_rejection:
                     result = self.iter.throw(result)
                 else:
                     result = self.iter.send(result)
@@ -187,12 +213,14 @@ class Loop[T]:
                 if not ispromise(result) and isfuture(result):
                     result = Promise.wrap(result)
                 if ispromise(result):
+                    self._pending = result
                     result.then(self.loop, partial(self.loop, is_rejection=True))
                 else:
+                    self._pending = None
                     continue
             except StopIteration as e:
                 self.resolve(e.value)
-            except Exception as e:
+            except (Exception, CancelledError) as e:
                 self.reject(e)
             break
 
@@ -214,12 +242,22 @@ class PromiseFulfilledOutcome[U]:
     def __init__(self, value: U):
         self.value = value
 
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, PromiseFulfilledOutcome):
+            return other.value == self.value
+        return False
+
 
 class PromiseRejectedOutcome:
     status: Literal["rejected"] = "rejected"
 
     def __init__(self, reason: Any):
         self.reason = reason
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, PromiseRejectedOutcome):
+            return other.reason == self.reason
+        return False
 
 
 type PromiseOutcome[U] = PromiseFulfilledOutcome[U] | PromiseRejectedOutcome
@@ -236,6 +274,17 @@ def cast_list_some[T](vals: Sequence[None | T]) -> list[T]:
     is a valid subtype of T.
     """
     return cast(list[T], vals)
+
+
+class PromiseWithResolvers[T]:
+    promise: Promise[T]
+    resolve: ResFn[T]
+    reject: ResFn
+
+    def __init__(self, on_cancel: Callable[[], None] | None = None):
+        self.promise = Promise[T](None, on_cancel)
+        self.resolve = self.promise._resolve
+        self.reject = self.promise._reject
 
 
 class Promise[T](PromiseLike[T], FutureLike[T]):
@@ -255,6 +304,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         Pending = 0
         Fulfilled = 1
         Rejected = 2
+        Cancelled = 3
 
     _status: Promise.Status = Status.Pending
     _result: Any = None
@@ -266,7 +316,12 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
     def set_scheduler(cls, scheduler: Scheduler):
         cls.scheduler = scheduler
 
-    def __init__(self, fn: Callable[[ResFn[T], ResFn], None], /) -> None:
+    def __init__(
+        self,
+        fn: Callable[[ResFn[T], ResFn], None] | None,
+        /,
+        on_cancel: Callable[[], None] | None = None,
+    ) -> None:
         """
         Comparable in function to the JavaScript Promise constructor.
         Immediately calls the given callable, passing callback functions which
@@ -274,24 +329,41 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         """
 
         def resolve(arg: Any) -> None:
-            if self._status is Promise.Status.Pending:
+            if self._status in (Status.Pending, Status.Cancelled):
                 if ispromise(arg):
                     arg.then(resolve, reject)
                 else:
                     self._result = arg
-                    self._status = Promise.Status.Fulfilled
+                    self._status = Status.Fulfilled
                     self._run_handlers()
 
         def reject(arg: Any) -> None:
-            if self._status is Promise.Status.Pending:
+            if self._status in (Status.Pending, Status.Cancelled):
+                if isinstance(arg, (CancelledError, asyncio.CancelledError)):
+                    # CancelledError is an instance of BaseException, but not
+                    # Exception. To prevent task cancellations from
+                    # propagating up to the top level and exiting the
+                    # application, which is presumably not the usual
+                    # intention, we convert them to CancellationErrors.
+                    try:
+                        raise CancellationError() from arg
+                    except CancellationError as e:
+                        arg = e
                 self._result = arg
-                self._status = Promise.Status.Rejected
+                self._status = Status.Rejected
                 self._run_handlers()
 
         self._resolve_handlers = list[PromiseHandler]()
         self._reject_handlers = list[PromiseHandler]()
+        self._on_cancel = on_cancel
+        self._resolve = resolve
+        self._reject = reject
 
-        fn(resolve, reject)
+        if fn:
+            try:
+                fn(resolve, reject)
+            except (Exception, CancelledError) as e:
+                reject(e)
 
     # Awaitable interface
     def __await__(self) -> Generator[Self, T, T]:
@@ -329,14 +401,51 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
 
     def result(self) -> T:
         match self._status:
-            case Promise.Status.Fulfilled:
+            case Status.Fulfilled:
                 return self._result
-            case Promise.Status.Rejected:
+            case Status.Rejected:
                 raise self._result
-            case Promise.Status.Pending:
+            case Status.Cancelled:
+                raise asyncio.CancelledError()
+            case _:
                 raise asyncio.InvalidStateError()
 
+    def exception(self) -> Any:
+        match self._status:
+            case Status.Rejected:
+                raise self._result
+            case Status.Cancelled:
+                raise asyncio.CancelledError()
+        return None
+
+    def done(self) -> bool:
+        return self._status in (Status.Fulfilled, Status.Rejected, Status.Cancelled)
+
+    def cancelled(self) -> bool:
+        return self._status is Status.Cancelled
+
     # Promise interface
+
+    def cancel(self):
+        """
+        If the promise has an on_cancel callback, calls that callback and sets
+        the Promise's state to Cancelled. Otherwise, rejects the promise with
+        a CancellationError. In the former case, the on_cancel callback is
+        responsible for resolving or rejecting the promise, or raising an
+        exception to automatically reject with that exception value.
+        """
+        if self._status is not Status.Pending:
+            return False
+
+        self._status = Status.Cancelled
+        try:
+            if self._on_cancel:
+                self._on_cancel()
+            else:
+                raise CancellationError()
+        except (Exception, CancelledError) as e:
+            self._reject(e)
+        return True
 
     @staticmethod
     def from_awaitable[U](awaitable: Awaitable[PromiseLike[U] | U], /) -> Promise[U]:
@@ -380,16 +489,15 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             if ispromise(func):
                 return func
 
-            @Promise
-            def promise(resolve: ResFn[U], reject: HandlerFn):
+            def fn(resolve: ResFn[U], reject: HandlerFn):
                 @func.add_done_callback
                 def callback(future: FutureLike[U]):
                     try:
                         resolve(future.result())
-                    except Exception as e:
+                    except (Exception, asyncio.CancelledError) as e:
                         reject(e)
 
-            return promise
+            return Promise(fn, func.cancel)
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> Promise:
@@ -406,10 +514,10 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         If the promise has not yet been settled, does nothing.
         """
         match self._status:
-            case Promise.Status.Fulfilled:
+            case Status.Fulfilled:
                 for handler in self._resolve_handlers:
                     call_soon(partial(run_handler, handler, self._result))
-            case Promise.Status.Rejected:
+            case Status.Rejected:
                 for handler in self._reject_handlers:
                     call_soon(partial(run_handler, handler, self._result))
                     self._handled_rejection = True
@@ -430,7 +538,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         if not, propagates the rejection value to the Qt runtime as an
         unhandled exception.
         """
-        if self._status is Promise.Status.Rejected and not self._handled_rejection:
+        if self._status is Status.Rejected and not self._handled_rejection:
             Promise.report_error(self._result)
 
     @overload
@@ -515,6 +623,8 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             return self
 
         return self.then(on_finally, on_finally)
+
+    with_resolvers: ClassVar = PromiseWithResolvers
 
     # We should be able to dispense with these overloads and just declare:
     #
@@ -619,3 +729,6 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
                 promise.then(resolved, rejected)
 
         return promise
+
+
+Status = Promise.Status
