@@ -6,10 +6,21 @@ export type SubjectId = int;
 export type SubjectType = "kana_vocabulary" | "kanji" | "radical" | "vocabulary";
 export type WKLevel = int;
 
+export interface WKResponsePages {
+    per_page: int;
+    next_url: string | null;
+    previous_url: string | null;
+}
+
 export interface WKResponse {
   object: string;
   url: string;
   data_updated_at: DateString | null;
+}
+
+export interface WKCollectionResponse extends WKResponse {
+  pages: WKResponsePages;
+  total_count: int;
 }
 
 export interface WKMeaning {
@@ -23,11 +34,13 @@ export interface WKAuxMeaning {
   type: "whitelist" | "blacklist";
 }
 
+type WKReadingType = "kunyomi" | "nanori" | "onyomi";
+
 export interface WKReading {
   reading: string;
   primary: boolean;
   accepted_answer: boolean;
-  type: "kunyomi" | "nanori" | "onyomi";
+  type?: WKReadingType;
 }
 
 export interface WKContextSentence {
@@ -91,9 +104,8 @@ export interface WKAssignment extends WKResponse {
     data: WKAssignmentData;
 }
 
-export interface WKAssignmentsResponse extends WKResponse {
+export interface WKAssignmentsResponse extends WKCollectionResponse {
     data: WKAssignment[]
-    total_count: int
 }
 
 export interface WKStudyMaterialData {
@@ -107,19 +119,21 @@ export interface WKStudyMaterialData {
 }
 
 export interface WKStudyMaterial extends WKResponse {
+    id: int,
     data: WKStudyMaterialData;
 }
 
-export interface WKStudyMaterialsResponse extends WKResponse {
+export interface WKStudyMaterialsResponse extends WKCollectionResponse {
     data: WKStudyMaterial[];
-    total_count: int;
 }
+
+export type WKSubscriptionType = "free" | "recurring" | "lifetime";
 
 export interface WKSubscription {
     active: boolean;
     max_level_granted: WKLevel;
     period_ends_at: null | DateString;
-    type: "free" | "recurring" | "lifetime";
+    type: WKSubscriptionType;
 }
 
 export interface WKPreferences {
@@ -156,9 +170,11 @@ export interface WKSRSStageEmpty extends WKSRSStageBase {
     interval_unit: null;
 }
 
+export type IntervalUnit = "milliseconds" | "seconds" | "minutes" | "hours" | "days" | "weeks";
+
 export interface WKSRSStageNonEmpty extends WKSRSStageBase {
     interval: int;
-    interval_unit: "milliseconds" | "seconds" | "minutes" | "hours" | "days" | "weeks";
+    interval_unit: IntervalUnit;
 }
 
 export type WKSpacedRepetitionSystemStage = WKSRSStageNonEmpty | WKSRSStageEmpty
@@ -213,23 +229,22 @@ export interface WKVocabData extends WKAmalgumData, WKVocabBase, WKReadable {
   reading_mnemonic: string;
 }
 
-export type WKKanaVocabData = WKVocabBase;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface WKKanaVocabData extends WKVocabBase {}
 
 export type WKSubjectData =
   | WKKanaVocabData
   | WKKanjiData
   | WKRadicalData
-  | WKSubjectDataBase
   | WKVocabData;
 
-export interface WKSubject extends WKResponse {
+export interface WKSubject<T = WKSubjectData> extends WKResponse {
     id: int;
-    data: WKSubjectData;
+    data: T;
 }
 
-export interface WKSubjectsResponse extends WKResponse {
+export interface WKSubjectsResponse extends WKCollectionResponse {
     data: WKSubject[];
-    total_count: int;
 }
 
 export interface RelatedSubject {

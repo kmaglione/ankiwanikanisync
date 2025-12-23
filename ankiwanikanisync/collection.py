@@ -7,7 +7,7 @@ from functools import reduce
 from typing import Final, Literal, cast
 
 from anki.cards import Card, CardId
-from anki.collection import Collection, OpChangesWithCount, SearchNode
+from anki.collection import OpChangesWithCount, SearchNode
 from anki.consts import (
     CARD_TYPE_LRN,
     CARD_TYPE_NEW,
@@ -18,6 +18,7 @@ from anki.consts import (
 )
 from anki.notes import Note, NoteId
 from aqt import mw
+from typing_extensions import TypedDict
 
 from .config import config
 from .utils import chunked, collection_op, compose, query_op, report_progress
@@ -54,6 +55,38 @@ FieldName = Literal[
     "last_upstream_sync_time",
     "raw_data",
 ]
+
+
+class FieldDict(TypedDict, total=False, closed=True):
+    card_id: str
+    sort_id: str
+    components: str
+    Level: str
+    DocumentURL: str
+    Characters: str
+    Card_Type: str
+    Word_Type: str
+    Meaning: str
+    Meaning_Mnemonic: str
+    Meaning_Hint: str
+    Meaning_Whitelist: str
+    Meaning_Blacklist: str
+    Reading: str
+    Reading_Onyomi: str
+    Reading_Kunyomi: str
+    Reading_Nanori: str
+    Reading_Whitelist: str
+    Reading_Mnemonic: str
+    Reading_Hint: str
+    Comps: str
+    Similar: str
+    Found_in: str
+    Context_Patterns: str
+    Context_Sentences: str
+    Audio: str
+    Keisei: str
+    last_upstream_sync_time: str
+    raw_data: str
 
 
 # This is a fairly ugly hack for the sake of type checking. This class is
@@ -120,6 +153,15 @@ def note_is_wk(note: WKNote) -> bool:
 
 class WKCollection(object):
     CHUNK_SIZE: Final[int] = 256
+    JSON_FIELDS: Final[tuple[FieldName, ...]] = (
+        "Comps",
+        "Found_in",
+        "Keisei",
+        "Level",
+        "Similar",
+        "card_id",
+        "raw_data",
+    )
 
     def __init__(self):
         assert mw.col

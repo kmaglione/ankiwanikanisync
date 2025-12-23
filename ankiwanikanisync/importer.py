@@ -368,6 +368,9 @@ class Keisei:
         return 100
 
 
+type Pitch = Literal["l-h", "h-l", "l", "h"]
+
+
 class WKImporter(NoteImporter):
     # Don't include the _tags key
     FIELDS: Final[Sequence[str]] = get_args(FieldName)
@@ -687,7 +690,7 @@ class WKImporter(NoteImporter):
         return {key: val[0] + val[1] for key, val in res.items()}
 
     def apply_pitch_internal(self, reading: str, accent: int) -> str:
-        def mora(class_: str, *text: str) -> str:
+        def mora(class_: Pitch, *text: str) -> str:
             return f'<span class="mora-{class_}">{"".join(text)}</span>'
 
         moras = re.findall(r".[ょゃゅョャュぁぃぅぇぉァィゥェゥ]?", reading)
@@ -828,15 +831,7 @@ def get_model_data() -> ModelData:
             var _ = deepFreeze({
 """
     for field in [*WKImporter.FIELDS, "Card"]:
-        if field in (
-            "Comps",
-            "Found_in",
-            "Keisei",
-            "Level",
-            "Similar",
-            "card_id",
-            "raw_data",
-        ):
+        if field in wk_col.JSON_FIELDS:
             card_data += f'\
                 "{field}": {subs(field)},\n'
         else:
@@ -1053,7 +1048,6 @@ def assign_subdecks(col, deck_name: str) -> None:
     if moves:
         for did in moves:
             col.set_deck(moves[did], did)
-        col.save()
 
 
 def ensure_audio():

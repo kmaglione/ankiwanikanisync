@@ -2,20 +2,14 @@
 # compatibility level: Python 3.14 and above
 
 
+from typing import List, Literal, NotRequired, Tuple
 
-from typing import (
-    List,
-    Literal,
-    NotRequired,
-    Tuple,
-    TypedDict,
-)
+from typing_extensions import TypedDict
 
-source_hash__ = "fe6486c83cc7eeb79e383cef2bcc50ef"
+source_hash__ = "61a8016419667c8e5505c735169c150c"
 
 
 ##### BEGIN OF ts2python generated code
-
 
 
 type AssignmentID = int
@@ -31,13 +25,47 @@ type SubjectType = Literal["kana_vocabulary", "kanji", "radical", "vocabulary"]
 type WKLevel = int
 
 
+class WKResponsePages(TypedDict):
+    per_page: int
+    next_url: str | None
+    previous_url: str | None
+
+
+class WKResponsePagesPartial(TypedDict, total=False):
+    per_page: int
+    next_url: str | None
+    previous_url: str | None
+
+
 class WKResponse(TypedDict):
     object: str
     url: str
     data_updated_at: DateString | None
 
 
+class WKResponsePartial(TypedDict, total=False):
+    object: str
+    url: str
+    data_updated_at: DateString | None
+
+
+class WKCollectionResponse(WKResponse, TypedDict):
+    pages: WKResponsePages
+    total_count: int
+
+
+class WKCollectionResponsePartial(WKResponsePartial, TypedDict, total=False):
+    pages: WKResponsePages
+    total_count: int
+
+
 class WKMeaning(TypedDict):
+    meaning: str
+    primary: bool
+    accepted_answer: bool
+
+
+class WKMeaningPartial(TypedDict, total=False):
     meaning: str
     primary: bool
     accepted_answer: bool
@@ -48,14 +76,34 @@ class WKAuxMeaning(TypedDict):
     type: Literal["whitelist", "blacklist"]
 
 
+class WKAuxMeaningPartial(TypedDict, total=False):
+    meaning: str
+    type: Literal["whitelist", "blacklist"]
+
+
+type WKReadingType = Literal["kunyomi", "nanori", "onyomi"]
+
+
 class WKReading(TypedDict):
     reading: str
     primary: bool
     accepted_answer: bool
-    type: Literal["kunyomi", "nanori", "onyomi"]
+    type: NotRequired[WKReadingType]
+
+
+class WKReadingPartial(TypedDict, total=False):
+    reading: str
+    primary: bool
+    accepted_answer: bool
+    type: NotRequired[WKReadingType]
 
 
 class WKContextSentence(TypedDict):
+    en: str
+    ja: str
+
+
+class WKContextSentencePartial(TypedDict, total=False):
     en: str
     ja: str
 
@@ -69,7 +117,22 @@ class WKAudioMetadata(TypedDict):
     voice_description: str
 
 
+class WKAudioMetadataPartial(TypedDict, total=False):
+    gender: Literal["male", "female"]
+    source_id: int
+    pronunciation: str
+    voice_actor_id: int
+    voice_actor_name: str
+    voice_description: str
+
+
 class WKAudio(TypedDict):
+    url: str
+    content_type: str
+    metadata: WKAudioMetadata
+
+
+class WKAudioPartial(TypedDict, total=False):
     url: str
     content_type: str
     metadata: WKAudioMetadata
@@ -89,7 +152,25 @@ class WKSubjectDataBase(TypedDict):
     spaced_repetition_system_id: SRSID
 
 
+class WKSubjectDataBasePartial(TypedDict, total=False):
+    auxiliary_meanings: List[WKAuxMeaning]
+    characters: str
+    created_at: DateString
+    document_url: str
+    hidden_at: DateString | None
+    lesson_position: int
+    level: WKLevel
+    meaning_mnemonic: str
+    meanings: List[WKMeaning]
+    slug: str
+    spaced_repetition_system_id: SRSID
+
+
 class WKReadable(TypedDict):
+    readings: List[WKReading]
+
+
+class WKReadablePartial(TypedDict, total=False):
     readings: List[WKReading]
 
 
@@ -97,7 +178,25 @@ class WKComponentData(WKSubjectDataBase, TypedDict):
     amalgamation_subject_ids: List[SubjectId]
 
 
+class WKComponentDataPartial(WKSubjectDataBasePartial, TypedDict, total=False):
+    amalgamation_subject_ids: List[SubjectId]
+
+
 class WKAssignmentData(TypedDict):
+    available_at: None | DateString
+    burned_at: None | DateString
+    created_at: DateString
+    hidden: bool
+    passed_at: None | DateString
+    resurrected_at: None | DateString
+    srs_stage: int
+    started_at: None | DateString
+    subject_id: int
+    subject_type: SubjectType
+    unlocked_at: None | DateString
+
+
+class WKAssignmentDataPartial(TypedDict, total=False):
     available_at: None | DateString
     burned_at: None | DateString
     created_at: DateString
@@ -116,9 +215,17 @@ class WKAssignment(WKResponse, TypedDict):
     data: WKAssignmentData
 
 
-class WKAssignmentsResponse(WKResponse, TypedDict):
+class WKAssignmentPartial(WKResponsePartial, TypedDict, total=False):
+    id: AssignmentID
+    data: WKAssignmentData
+
+
+class WKAssignmentsResponse(WKCollectionResponse, TypedDict):
     data: List[WKAssignment]
-    total_count: int
+
+
+class WKAssignmentsResponsePartial(WKCollectionResponsePartial, TypedDict, total=False):
+    data: List[WKAssignment]
 
 
 class WKStudyMaterialData(TypedDict):
@@ -131,23 +238,65 @@ class WKStudyMaterialData(TypedDict):
     subject_type: SubjectType
 
 
+class WKStudyMaterialDataPartial(TypedDict, total=False):
+    created_at: DateString
+    hidden: bool
+    meaning_note: str
+    meaning_synonyms: List[str]
+    reading_note: str
+    subject_id: int
+    subject_type: SubjectType
+
+
 class WKStudyMaterial(WKResponse, TypedDict):
+    id: int
     data: WKStudyMaterialData
 
 
-class WKStudyMaterialsResponse(WKResponse, TypedDict):
+class WKStudyMaterialPartial(WKResponsePartial, TypedDict, total=False):
+    id: int
+    data: WKStudyMaterialData
+
+
+class WKStudyMaterialsResponse(WKCollectionResponse, TypedDict):
     data: List[WKStudyMaterial]
-    total_count: int
+
+
+class WKStudyMaterialsResponsePartial(
+    WKCollectionResponsePartial, TypedDict, total=False
+):
+    data: List[WKStudyMaterial]
+
+
+type WKSubscriptionType = Literal["free", "recurring", "lifetime"]
 
 
 class WKSubscription(TypedDict):
     active: bool
     max_level_granted: WKLevel
     period_ends_at: None | DateString
-    type: Literal["free", "recurring", "lifetime"]
+    type: WKSubscriptionType
+
+
+class WKSubscriptionPartial(TypedDict, total=False):
+    active: bool
+    max_level_granted: WKLevel
+    period_ends_at: None | DateString
+    type: WKSubscriptionType
 
 
 class WKPreferences(TypedDict):
+    default_voice_actor_id: int
+    extra_study_autoplay_audio: bool
+    lessons_autoplay_audio: bool
+    lessons_batch_size: int
+    lessons_presentation_order: Literal["ascending_level_then_subject"]
+    reviews_autoplay_audio: bool
+    reviews_display_srs_indicator: bool
+    reviews_presentation_order: Literal["shuffled", "lower_levels_first"]
+
+
+class WKPreferencesPartial(TypedDict, total=False):
     default_voice_actor_id: int
     extra_study_autoplay_audio: bool
     lessons_autoplay_audio: bool
@@ -168,11 +317,29 @@ class WKUserData(TypedDict):
     username: str
 
 
+class WKUserDataPartial(TypedDict, total=False):
+    current_vacation_started_at: DateString | None
+    level: WKLevel
+    preferences: WKPreferences
+    profile_url: str
+    started_at: DateString
+    subscription: WKSubscription
+    username: str
+
+
 class WKUser(WKResponse, TypedDict):
     data: WKUserData
 
 
+class WKUserPartial(WKResponsePartial, TypedDict, total=False):
+    data: WKUserData
+
+
 class WKSRSStageBase(TypedDict):
+    position: int
+
+
+class WKSRSStageBasePartial(TypedDict, total=False):
     position: int
 
 
@@ -181,11 +348,24 @@ class WKSRSStageEmpty(WKSRSStageBase, TypedDict):
     interval_unit: None
 
 
+class WKSRSStageEmptyPartial(WKSRSStageBasePartial, TypedDict, total=False):
+    interval: None
+    interval_unit: None
+
+
+type IntervalUnit = Literal[
+    "milliseconds", "seconds", "minutes", "hours", "days", "weeks"
+]
+
+
 class WKSRSStageNonEmpty(WKSRSStageBase, TypedDict):
     interval: int
-    interval_unit: Literal[
-        "milliseconds", "seconds", "minutes", "hours", "days", "weeks"
-    ]
+    interval_unit: IntervalUnit
+
+
+class WKSRSStageNonEmptyPartial(WKSRSStageBasePartial, TypedDict, total=False):
+    interval: int
+    interval_unit: IntervalUnit
 
 
 type WKSpacedRepetitionSystemStage = WKSRSStageNonEmpty | WKSRSStageEmpty
@@ -202,11 +382,30 @@ class WKSpacedRepetitionSystemData(TypedDict):
     unlocking_stage_position: int
 
 
+class WKSpacedRepetitionSystemDataPartial(TypedDict, total=False):
+    burning_stage_position: int
+    created_at: DateString
+    description: str
+    name: str
+    passing_stage_position: int
+    stages: List[WKSpacedRepetitionSystemStage]
+    starting_stage_position: int
+    unlocking_stage_position: int
+
+
 class WKSpacedRepetitionSystem(WKResponse, TypedDict):
     data: WKSpacedRepetitionSystemData
 
 
+class WKSpacedRepetitionSystemPartial(WKResponsePartial, TypedDict, total=False):
+    data: WKSpacedRepetitionSystemData
+
+
 class WKCharacterImageMetadata(TypedDict):
+    inline_styles: NotRequired[bool]
+
+
+class WKCharacterImageMetadataPartial(TypedDict, total=False):
     inline_styles: NotRequired[bool]
 
 
@@ -216,7 +415,17 @@ class WKCharacterImage(TypedDict):
     metadata: WKCharacterImageMetadata
 
 
-class WKRadicalData(WKComponentData, TypedDict):
+class WKCharacterImagePartial(TypedDict, total=False):
+    url: str
+    content_type: str
+    metadata: WKCharacterImageMetadata
+
+
+class WKRadicalData(WKComponentData, TypedDict, closed=True):
+    character_images: List[WKCharacterImage]
+
+
+class WKRadicalDataPartial(WKComponentDataPartial, TypedDict, total=False):
     character_images: List[WKCharacterImage]
 
 
@@ -224,7 +433,24 @@ class WKAmalgumData(TypedDict):
     component_subject_ids: List[SubjectId]
 
 
-class WKKanjiData(WKAmalgumData, WKComponentData, WKReadable, TypedDict):
+class WKAmalgumDataPartial(TypedDict, total=False):
+    component_subject_ids: List[SubjectId]
+
+
+class WKKanjiData(WKAmalgumData, WKComponentData, WKReadable, TypedDict, closed=True):
+    meaning_hint: str | None
+    reading_hint: str | None
+    reading_mnemonic: str
+    visually_similar_subject_ids: List[SubjectId]
+
+
+class WKKanjiDataPartial(
+    WKAmalgumDataPartial,
+    WKComponentDataPartial,
+    WKReadablePartial,
+    TypedDict,
+    total=False,
+):
     meaning_hint: str | None
     reading_hint: str | None
     reading_mnemonic: str
@@ -237,28 +463,62 @@ class WKVocabBase(WKSubjectDataBase, TypedDict):
     pronunciation_audios: List[WKAudio]
 
 
-class WKVocabData(WKAmalgumData, WKVocabBase, WKReadable, TypedDict):
+class WKVocabBasePartial(WKSubjectDataBasePartial, TypedDict, total=False):
+    context_sentences: List[WKContextSentence]
+    parts_of_speech: List[str]
+    pronunciation_audios: List[WKAudio]
+
+
+class WKVocabData(WKAmalgumData, WKVocabBase, WKReadable, TypedDict, closed=True):
     reading_mnemonic: str
 
 
-type WKKanaVocabData = WKVocabBase
+class WKVocabDataPartial(
+    WKAmalgumDataPartial, WKVocabBasePartial, WKReadablePartial, TypedDict, total=False
+):
+    reading_mnemonic: str
 
-type WKSubjectData = (
-    WKKanaVocabData | WKKanjiData | WKRadicalData | WKSubjectDataBase | WKVocabData
+
+# eslint-disable-next-line @typescript-eslint/no-empty-object-type
+
+
+class WKKanaVocabData(WKVocabBase, TypedDict, closed=True):
+    pass
+
+
+class WKKanaVocabDataPartial(WKVocabBasePartial, TypedDict, total=False):
+    pass
+
+
+type WKSubjectData = WKKanaVocabData | WKKanjiData | WKRadicalData | WKVocabData
+type WKSubjectDataPartial = (
+    WKKanaVocabDataPartial
+    | WKKanjiDataPartial
+    | WKRadicalDataPartial
+    | WKVocabDataPartial
 )
 
 
-class WKSubject(WKResponse, TypedDict):
+class WKSubject[T = WKSubjectData](WKResponse, TypedDict):
     id: int
-    data: WKSubjectData
+    data: T
 
 
-class WKSubjectsResponse(WKResponse, TypedDict):
+class WKSubjectsResponse(WKCollectionResponse, TypedDict):
     data: List[WKSubject]
-    total_count: int
+
+
+class WKSubjectsResponsePartial(WKCollectionResponsePartial, TypedDict, total=False):
+    data: List[WKSubject]
 
 
 class RelatedSubject(TypedDict):
+    characters: str
+    reading: str
+    meaning: str
+
+
+class RelatedSubjectPartial(TypedDict, total=False):
     characters: str
     reading: str
     meaning: str
@@ -270,7 +530,23 @@ class KeiseiCompound(TypedDict):
     meaning: str
 
 
+class KeiseiCompoundPartial(TypedDict, total=False):
+    character: str
+    reading: str
+    meaning: str
+
+
 class KeiseiJSON(TypedDict):
+    compounds: NotRequired[List[KeiseiCompound]]
+    component: NotRequired[str]
+    kanji: NotRequired[Tuple[str, str]]
+    radical: NotRequired[str]
+    readings: NotRequired[List[str]]
+    semantic: NotRequired[str]
+    type: str
+
+
+class KeiseiJSONPartial(TypedDict, total=False):
     compounds: NotRequired[List[KeiseiCompound]]
     component: NotRequired[str]
     kanji: NotRequired[Tuple[str, str]]

@@ -308,7 +308,7 @@ class SyncOp(object):
                 with contextlib.suppress(json.decoder.JSONDecodeError):
                     self.subjects[subject_id] = json.loads(note["raw_data"])
             if subject_id not in self.subjects:
-                self.subjects[subject_id] = wk.api_req("subjects", str(subject_id))
+                self.subjects[subject_id] = wk.api_req("subjects", subject_id)
         return self.subjects[subject_id]
 
     def fetch_subjects(self, subject_ids: Iterable[SubjectId]) -> None:

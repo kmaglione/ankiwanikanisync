@@ -234,7 +234,7 @@ class WKAPI:
         self,
         ep: Literal["spaced_repetition_systems"],
         /,
-        query: str,
+        query: int | str,
         *,
         timeout: int = ...,
     ) -> WKSpacedRepetitionSystem: ...
@@ -255,7 +255,7 @@ class WKAPI:
         self,
         ep: Literal["subjects"],
         /,
-        query: str,
+        query: int | str,
         *,
         timeout: int = ...,
     ) -> WKSubject: ...
@@ -276,7 +276,7 @@ class WKAPI:
         self,
         ep: Any,
         /,
-        query: None | str | Mapping[str, Any] = ...,
+        query: None | int | str | Mapping[str, Any] = ...,
         *,
         full: bool = ...,
         data=...,
@@ -288,7 +288,7 @@ class WKAPI:
         self,
         ep,
         /,
-        query: None | str | Mapping[str, Any] = None,
+        query: None | int | str | Mapping[str, Any] = None,
         *,
         full: bool = True,
         data=None,
@@ -306,7 +306,7 @@ class WKAPI:
 
         self._do_limit(api_key)
 
-        if isinstance(query, str):
+        if isinstance(query, (int, str)):
             ep += f"/{query}"
         elif query is not None:
             ep += "?" + urllib.parse.urlencode(
