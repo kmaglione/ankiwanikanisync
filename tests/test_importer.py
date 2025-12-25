@@ -1,0 +1,662 @@
+from __future__ import annotations
+
+import asyncio
+import json
+from contextlib import contextmanager
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Sequence, cast, get_args
+
+import pytest
+from anki.notes import Note
+from pyfakefs.fake_filesystem import FakeFilesystem
+
+from ankiwanikanisync.types import (
+    WKAudio,
+    WKMeaning,
+    WKReading,
+    WKReadingType,
+    WKSubject,
+    WKSubjectDataBase,
+)
+
+from .conftest import aqt
+from .fixtures import SubSession
+from .utils import cleanup_after, get_note, iso_reltime, lazy
+
+if TYPE_CHECKING:
+    from anki.collection import Collection
+    from aqt.qt import QAction
+
+    from ankiwanikanisync.collection import WKCollection
+    from ankiwanikanisync.importer import Pitch
+
+cleanup = cleanup_after("function")
+
+
+def pitchify(*moras: tuple[Pitch, str]) -> str:
+    def mora(class_: str, *text: str) -> str:
+        return f'<span class="mora-{class_}">{"".join(text)}</span>'
+
+    return f'<span class="mora">{
+        "".join(mora(pitch, chars) for (pitch, chars) in moras)
+    }</span>'
+
+
+def meaning(meaning: str, primary: bool = True) -> WKMeaning:
+    return WKMeaning(meaning=meaning, primary=primary, accepted_answer=True)
+
+
+def reading(
+    reading: str, primary: bool = True, type_: WKReadingType | None = None
+) -> WKReading:
+    res = WKReading(reading=reading, primary=primary, accepted_answer=True)
+    if type_:
+        res["type"] = type_
+    return res
+
+
+@pytest.mark.asyncio
+async def test_import_fields(
+    session_mock: SubSession, wk_col: WKCollection, subtests: pytest.Subtests
+):
+    from ankiwanikanisync.collection import format_id
+    from ankiwanikanisync.importer import audio_filename
+
+    def make_url(type_: str, slug: str) -> str:
+        return f"https://www.wanikani.com/{type_}/{slug}"
+
+    def make_link(type_: str, chars: str) -> str:
+        return f'<a href="{make_url(type_, chars)}">{chars}</a>'
+
+    def get_url[T: WKSubjectDataBase](subj: WKSubject[T]):
+        return make_url(subj["object"], subj["data"]["slug"])
+
+    def get_link[T: WKSubjectDataBase](subj: WKSubject[T]):
+        return f'<a href="{get_url(subj)}">{subj["data"]["characters"]}</a>'
+
+    def user_note(note: str) -> str:
+        return f'<p class="explanation">User Note</p>{note}'
+
+    Reading_Mnemonic = "Phasellus egestas purus in tristique sodales."
+
+    def make_expected[T: WKSubjectDataBase](
+        subj: WKSubject[T],
+    ) -> dict[str, str | object]:
+        res: dict[str, str | object] = {
+            "card_id": subj["id"],
+            "Level": subj["data"]["level"],
+            "DocumentURL": get_url(subj),
+            "Characters": subj["data"]["characters"],
+            "Card_Type": subj["object"].replace("_", " ").title(),
+            "Meaning_Blacklist": "Baz",
+            "Meaning_Mnemonic": "Lorem ipsem",
+            "Word_Type": "",
+            "Meaning_Hint": "",
+            "Reading": "",
+            "Reading_Onyomi": "",
+            "Reading_Kunyomi": "",
+            "Reading_Nanori": "",
+            "Reading_Whitelist": "",
+            "Reading_Mnemonic": "",
+            "Reading_Hint": "",
+            "Context_Patterns": "",
+            "Context_Sentences": "",
+            "Comps": [],
+            "Similar": [],
+            "Found_in": [],
+            "Audio": "",
+            "Keisei": None,
+            "components": "",
+            "last_upstream_sync_time": "",
+            "raw_data": subj,
+        }
+
+        if subj["object"] in ("vocabulary", "kana_vocabulary"):
+            res["Context_Sentences"] = (
+                "Lorem ipsum dolor sit amet.|こんにちは、とても痛いですね。"
+            )
+            res["Word_Type"] = "noun, の adjective"
+
+        if subj["object"] == "vocabulary":
+            res["Reading_Mnemonic"] = Reading_Mnemonic
+
+        if comps := cast(list[int], subj["data"].get("component_subject_ids")):
+            res["components"] = " ".join(map(format_id, comps))
+
+        if audios := cast(list[WKAudio], subj["data"].get("pronunciation_audios")):
+            res["Audio"] = "".join(
+                f"[sound:{audio_filename(audio)}]"
+                for audio in audios
+                if audio["content_type"] == "audio/mpeg"
+            )
+
+        return res
+
+    radical1 = session_mock.add_subject(
+        "radical",
+        characters="大",
+        meanings=[meaning("Big")],
+    )
+    radical1_expected = make_expected(radical1) | {
+        "Meaning_Whitelist": "Quux, Big",
+        "Meaning": "Big",
+        "Found_in": [
+            {
+                "characters": make_link("kanji", "美"),
+                "meaning": "Beauty",
+                "reading": "び",
+            }
+        ],
+        "Keisei": {
+            "type": "phonetic",
+            "compounds": [
+                {"character": "戻", "reading": "れい", "meaning": "Return"},
+                {"character": "泰", "reading": "たい", "meaning": "Peace"},
+            ],
+            "radical": "Big",
+            "kanji": ["Big", "だい"],
+            "component": "大",
+            "readings": ["だい", "たい"],
+        },
+    }
+
+    radical2 = session_mock.add_subject(
+        "radical",
+        characters="口",
+        meanings=[meaning("Mouth")],
+    )
+    radical2_expected = make_expected(radical2) | {
+        "Meaning": "Mouth",
+        "Meaning_Whitelist": "Quux, Mouth",
+        "Found_in": [
+            {
+                "characters": make_link("kanji", "右"),
+                "meaning": "Right",
+                "reading": "ゆう",
+            }
+        ],
+        "Keisei": {
+            "type": "phonetic",
+            "compounds": [
+                {"character": "句", "reading": "く", "meaning": "Paragraph"},
+                {"character": "勾", "reading": "-", "meaning": "Non-WK"},
+            ],
+            "radical": "Mouth",
+            "kanji": ["Mouth", "こう"],
+            "component": "口",
+            "readings": ["こう", "く"],
+        },
+    }
+
+    kanji1 = session_mock.add_subject(
+        "kanji",
+        characters="美",
+        component_subject_ids=[radical1["id"]],
+        meanings=[
+            meaning("Beauty"),
+            meaning("Beautiful", False),
+        ],
+        readings=[
+            reading("び", True, "onyomi"),
+            reading("み", False, "onyomi"),
+            reading("うつく", False, "kunyomi"),
+        ],
+    )
+    radical1["data"]["amalgamation_subject_ids"] = [kanji1["id"]]
+    kanji1_expected = make_expected(kanji1) | {
+        "Meaning": "Beauty, Beautiful",
+        "Meaning_Whitelist": "Quux, Beauty, Beautiful",
+        "Reading_Onyomi": "<reading>び</reading>, み",
+        "Reading_Kunyomi": "うつく",
+        "Reading_Whitelist": "び, み, うつく",
+        "Reading_Mnemonic": "dolor sit amet",
+        "Comps": [
+            {
+                "characters": get_link(radical1),
+                "meaning": "Big",
+                "reading": "",
+            }
+        ],
+        "Found_in": [
+            {
+                "characters": make_link("vocabulary", "美しい"),
+                "meaning": "Beautiful",
+                "reading": pitchify(("l-h", "う"), ("h-l", "つくし"), ("l", "い")),
+            }
+        ],
+        "Keisei": {"type": "comp_indicative"},
+    }
+
+    kanji2 = session_mock.add_subject(
+        "kanji",
+        characters="右",
+        component_subject_ids=[radical2["id"]],
+        meanings=[meaning("Right")],
+        readings=[
+            reading("ゆう", True, "onyomi"),
+            reading("う", False, "onyomi"),
+            reading("みぎ", False, "kunyomi"),
+        ],
+    )
+    radical2["data"]["amalgamation_subject_ids"] = [kanji2["id"]]
+    kanji2_expected = make_expected(kanji2) | {
+        "Meaning": "Right",
+        "Meaning_Whitelist": "Quux, Right",
+        "Reading_Onyomi": "<reading>ゆう</reading>, う",
+        "Reading_Kunyomi": "みぎ",
+        "Reading_Whitelist": "ゆう, う, みぎ",
+        "Reading_Mnemonic": "dolor sit amet",
+        "Comps": [
+            {
+                "characters": get_link(radical2),
+                "meaning": "Mouth",
+                "reading": "",
+            }
+        ],
+        "Found_in": [
+            {
+                "characters": make_link("vocabulary", "左右"),
+                "meaning": "Left And Right",
+                "reading": pitchify(("h-l", "さ"), ("l", "ゆう")),
+            },
+            {
+                "characters": '<a href="https://www.wanikani.com/vocabulary/右">右</a>',
+                "meaning": "Right",
+                "reading": '<span class="mora"><span class="mora-l-h">み</span><span '
+                'class="mora-h">ぎ</span></span>',
+            },
+        ],
+        "Keisei": {
+            "type": "phonetic",
+            "compounds": [{"character": "佑", "reading": "-", "meaning": "Non-WK"}],
+            "radical": "Right",
+            "kanji": ["Right", "う"],
+            "component": "右",
+            "readings": ["う", "ゆう"],
+        },
+    }
+
+    kanji3 = session_mock.add_subject(
+        "kanji",
+        characters="左",
+        meanings=[meaning("Left")],
+        readings=[
+            reading("さ", True, "onyomi"),
+            reading("ひだり", False, "kunyomi"),
+        ],
+    )
+
+    vocab1 = session_mock.add_subject(
+        "vocabulary",
+        characters="左右",
+        component_subject_ids=[kanji2["id"], kanji3["id"]],
+        meanings=[
+            meaning("Left And Right"),
+            meaning("Both Ways", False),
+            meaning("Influence", False),
+            meaning("Control", False),
+        ],
+        readings=[reading("さゆう")],
+    )
+    kanji2["data"]["amalgamation_subject_ids"] = [vocab1["id"]]
+    kanji3["data"]["amalgamation_subject_ids"] = [vocab1["id"]]
+    vocab1_expected = make_expected(vocab1) | {
+        "Meaning": "Left And Right, Both Ways, Influence, Control",
+        "Meaning_Whitelist": "Quux, Left And Right, Both Ways, Influence, Control",
+        "Reading": f"<reading>{pitchify(('h-l', 'さ'), ('l', 'ゆう'))}</reading>",
+        "Reading_Whitelist": pitchify(("h-l", "さ"), ("l", "ゆう")),
+        "Comps": [
+            {
+                "characters": get_link(kanji2),
+                "meaning": "Right",
+                "reading": "ゆう",
+            },
+            {
+                "characters": get_link(kanji3),
+                "meaning": "Left",
+                "reading": "さ",
+            },
+        ],
+    }
+
+    vocab2 = session_mock.add_subject(
+        "vocabulary",
+        characters="美しい",
+        component_subject_ids=[kanji1["id"]],
+        meanings=[meaning("Beautiful")],
+        readings=[reading("うつくしい")],
+    )
+    kanji1["data"]["amalgamation_subject_ids"] = [vocab2["id"]]
+
+    vocab2_study_materials = session_mock.add_study_materials(
+        subject_id=vocab2["id"],
+        meaning_note="Foo",
+        meaning_synonyms=["Bar"],
+        reading_note="Baz",
+    )
+
+    vocab2_expected = make_expected(vocab2) | {
+        "Meaning": "Beautiful",
+        "Meaning_Mnemonic": f"Lorem ipsem{user_note('Foo')}",
+        "Meaning_Whitelist": "Quux, Beautiful, Bar",
+        "Reading": f"<reading>{
+            pitchify(('l-h', 'う'), ('h-l', 'つくし'), ('l', 'い'))
+        }</reading>",
+        "Reading_Whitelist": pitchify(("l-h", "う"), ("h-l", "つくし"), ("l", "い")),
+        "Reading_Mnemonic": Reading_Mnemonic + user_note("Baz"),
+        "Comps": [
+            {
+                "characters": get_link(kanji1),
+                "meaning": "Beauty",
+                "reading": "び",
+            }
+        ],
+    }
+
+    vocab3 = session_mock.add_subject(
+        "kana_vocabulary",
+        characters="これ",
+        meanings=[meaning("This One")],
+    )
+    vocab3_expected = make_expected(vocab3) | {
+        "Meaning": "This One",
+        "Meaning_Whitelist": "Quux, This One",
+        "Reading": f"<reading>{pitchify(('l-h', 'こ'), ('h', 'れ'))}</reading>",
+    }
+
+    vocab4 = session_mock.add_subject(
+        "vocabulary",
+        characters="右",
+        component_subject_ids=[kanji2["id"]],
+        meanings=[meaning("Right")],
+        readings=[reading("みぎ")],
+    )
+    kanji2["data"]["amalgamation_subject_ids"].append(vocab4["id"])
+    vocab4_expected = make_expected(vocab4) | {
+        "Meaning": "Right",
+        "Meaning_Whitelist": "Quux, Right",
+        "Reading": f"<reading>{pitchify(('l-h', 'み'), ('h', 'ぎ'))}</reading>",
+        "Reading_Whitelist": pitchify(("l-h", "み"), ("h", "ぎ")),
+        "Reading_Onyomi": "<reading>ゆう</reading>, う",
+        "Reading_Kunyomi": "みぎ",
+        "Comps": [
+            {
+                "characters": get_link(kanji2),
+                "meaning": "Right",
+                "reading": "ゆう",
+            },
+        ],
+    }
+
+    await lazy.sync.do_sync()
+
+    if TYPE_CHECKING:
+        # Print the fields of all notes for updating test
+        for nid in wk_col.find_notes():
+            print("")
+            note = wk_col.get_note(nid)
+            assert note
+            for k, v in note.items():
+                if k in wk_col.JSON_FIELDS:
+                    v = json.loads(v)
+                print(f"  {k!r}: {v!r},")
+
+    def check_expected(expected: dict[str, Any], name: str):
+        note = cast(Note, wk_col.get_note_for_subject(int(expected["card_id"])))
+        actual = dict[str, Any]()
+        for key in expected:
+            actual[key] = note[key]
+            if key in wk_col.JSON_FIELDS:
+                actual[key] = json.loads(note[key])
+
+        with subtests.test(msg="check_expected", name=name):
+            assert expected == actual
+
+    check_expected(radical1_expected, "radical1")
+    check_expected(radical2_expected, "radical2")
+    check_expected(kanji1_expected, "kanji1")
+    check_expected(kanji2_expected, "kanji2")
+    check_expected(vocab1_expected, "vocab1")
+    check_expected(vocab2_expected, "vocab2")
+    check_expected(vocab3_expected, "vocab3")
+    check_expected(vocab4_expected, "vocab4")
+
+    with subtests.test(msg="get_components(kanji2)"):
+        comps = [int(n["card_id"]) for n in wk_col.get_components(get_note(vocab1))]
+        assert sorted(comps) == sorted([kanji2["id"], kanji3["id"]])
+
+    vocab3["data_updated_at"] = iso_reltime()
+    vocab3["data"]["meanings"][0]["meaning"] = "This"
+    vocab3_expected["Meaning"] = "This"
+    vocab3_expected["Meaning_Whitelist"] = "Quux, This"
+
+    vocab2_study_materials["data_updated_at"] = iso_reltime()
+    vocab2_study_materials["data"]["meaning_synonyms"] = ["Baz"]
+    vocab2_expected["Meaning_Whitelist"] = "Quux, Beautiful, Baz"
+
+    session_mock.add_study_materials(
+        subject_id=vocab1["id"],
+        meaning_note="A",
+        meaning_synonyms=["B"],
+        reading_note="C",
+    )
+    if TYPE_CHECKING:
+        assert isinstance(vocab1_expected["Meaning_Mnemonic"], str)
+        assert isinstance(vocab1_expected["Reading_Mnemonic"], str)
+        assert isinstance(vocab1_expected["Meaning_Whitelist"], str)
+    vocab1_expected["Meaning_Mnemonic"] += user_note("A")
+    vocab1_expected["Reading_Mnemonic"] += user_note("C")
+    vocab1_expected["Meaning_Whitelist"] += ", B"
+
+    await aqt.mw.taskman.pending_ops_completed()
+    await lazy.sync.do_sync()
+
+    check_expected(vocab3_expected, "vocab3 after update")
+    check_expected(vocab2_expected, "vocab2 after update")
+    check_expected(vocab1_expected, "vocab1 after update")
+
+
+@pytest.mark.asyncio
+async def test_import_audio(session_mock: SubSession, wk_col: WKCollection):
+    from ankiwanikanisync.importer import AudioDownloader, audio_filename
+
+    vocab = session_mock.add_subject(
+        "vocabulary",
+        characters="左右",
+        readings=[reading("さゆう")],
+    )
+
+    media = Path(wk_col.col.media.dir())
+    audios = [
+        audio
+        for audio in vocab["data"]["pronunciation_audios"]
+        if audio["content_type"] == "audio/mpeg"
+    ]
+
+    with session_mock.base_session.audio_lock:
+        await lazy.sync.do_sync()
+
+        # Give the audio downloader task a bit of time to complete a download,
+        # to make sure the locking is working as expected.
+        await asyncio.sleep(1)
+
+        # Make sure that audio download is blocked during sync and that it
+        # doesn't interfere with completion. Audios should be downloaded
+        # afterwards.
+        for audio in audios:
+            path = media / audio_filename(audio)
+            assert not path.exists(), "Audio should not be fetched while lock held"
+
+        note = get_note(vocab)
+        assert note.has_tag(AudioDownloader.WK_AUDIO_INCOMPLETE_TAG), (
+            "Incomplete note should still have audio incomplete tag"
+        )
+
+    await aqt.mw.taskman.pending_ops_completed()
+
+    for audio in audios:
+        path = media / audio_filename(audio)
+        assert path.exists(), "Audio should have been downloaded"
+        with path.open("r") as f:
+            assert f.read() == audio["url"], (
+                "Audio contents should match URL for audio/mpeg source"
+            )
+
+    note = get_note(vocab)
+    assert not note.has_tag(AudioDownloader.WK_AUDIO_INCOMPLETE_TAG), (
+        "Audio incomplete tag should be removed when download is complete"
+    )
+
+
+@pytest.mark.asyncio
+async def test_import_radical_image(session_mock: SubSession, wk_col: WKCollection):
+    SVG = "<svg>Hallo</svg>"
+    SVG_FILENAME = "svg/hallo.svg"
+    SVG_URL = f"{session_mock.BASE_URL}/{SVG_FILENAME}"
+
+    PNG_FILENAME = "png/hello.png"
+    PNG_URL = f"{session_mock.BASE_URL}/{PNG_FILENAME}"
+
+    session_mock.get(SVG_FILENAME, text=SVG)
+    session_mock.get(PNG_FILENAME, text="image/png")
+
+    radical = session_mock.add_subject(
+        "radical",
+        characters="",
+        character_images=[
+            {
+                "content_type": "image/png",
+                "url": PNG_URL,
+                "metadata": {},
+            },
+            {
+                "content_type": "image/svg+xml",
+                "url": SVG_URL,
+                "metadata": {},
+            },
+        ],
+        slug="Big",
+        meanings=[meaning("Big")],
+    )
+
+    await lazy.sync.do_sync()
+
+    note = get_note(radical)
+
+    assert note["DocumentURL"] == "https://www.wanikani.com/radical/Big"
+    assert note["Characters"] == f"<wk-radical-svg>{SVG}</wk-radical-svg>"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def ensure_deck(col: Collection):
+    from ankiwanikanisync.importer import ensure_deck
+
+    ensure_deck(col, lazy.config.DECK_NAME)
+
+
+def test_ensure_deck(wk_col: WKCollection):
+    expected = ["Default", lazy.config.DECK_NAME]
+    for level in range(1, 61):
+        level_name = f"{lazy.config.DECK_NAME}::Level {level:02d}"
+        expected.append(level_name)
+
+        for i, subj_type in enumerate(("Radicals", "Kanji", "Vocab")):
+            expected.append(f"{level_name}::{i + 1} - {subj_type}")
+
+    actual = sorted([deck.name for deck in wk_col.col.decks.all_names_and_ids()])
+
+    assert expected == actual
+
+    def get_deck(name: str):
+        deck = wk_col.col.decks.by_name(name)
+        assert deck
+        return deck
+
+    model = wk_col.col.models.by_name(lazy.config.NOTE_TYPE_NAME)
+    assert model
+
+    default = get_deck(expected[0])
+    root = get_deck(expected[1])
+    assert default["conf"] != root["conf"]
+    assert model["did"] == root["id"]
+
+    for name in expected[1:]:
+        deck = get_deck(name)
+        assert deck["conf"] == root["conf"]
+        assert deck["mid"] == model["id"]
+
+
+@contextmanager
+def template_fields_test(fs: FakeFilesystem, col: Collection):
+    import ankiwanikanisync
+    from ankiwanikanisync.importer import do_update_html
+
+    res = Path(ankiwanikanisync.__file__).parent / "data"
+    for fn, contents in {
+        "common_back.html": "Common Back",
+        "common_front.html": "Common Front",
+        "meaning_back.html": "Meaning Back :: __COMMON_BACK__",
+        "meaning_front.html": "Meaning Front {{card_id}} :: __COMMON_FRONT__",
+        "reading_back.html": "Reading Back :: __COMMON_BACK__",
+        "reading_front.html": "Reading Front {{card_id}} :: __COMMON_FRONT__",
+        "style.css": "Style",
+    }.items():
+        fs.create_file(str(res / fn), contents=contents)
+
+    fs.create_dir(str(res / "files"))
+
+    yield
+
+    model = col.models.by_name(lazy.config.NOTE_TYPE_NAME)
+    assert model
+
+    cards = {tmpl["name"]: tmpl for tmpl in model["tmpls"]}
+
+    for card in ("Meaning", "Reading"):
+        assert cards[card]["qfmt"] == f"{card} Front {{{{card_id}}}} :: Common Front"
+        assert cards[card]["afmt"] == f"{card} Back :: Common Back"
+
+    assert model["css"] == "Style"
+
+    fs.pause()
+    do_update_html()
+
+
+def test_model_templates(fs: FakeFilesystem, col: Collection):
+    from ankiwanikanisync.importer import ensure_deck
+
+    if model := col.models.by_name(lazy.config.NOTE_TYPE_NAME):
+        col.models.remove(model["id"])
+
+    with template_fields_test(fs, col):
+        ensure_deck(col, lazy.config.DECK_NAME)
+
+
+def test_update_html(
+    fs: FakeFilesystem, tools_menu: dict[str, QAction], col: Collection
+):
+    with template_fields_test(fs, col):
+        tools_menu["Overwrite Card HTML"].triggered.emit()
+
+
+def test_update_fields(col: Collection):
+    from ankiwanikanisync.collection import FieldName
+
+    FIELDS: Sequence[str] = get_args(FieldName)
+
+    model = col.models.by_name(lazy.config.NOTE_TYPE_NAME)
+    assert model
+
+    fields = col.models.field_map(model)
+    col.models.reposition_field(model, fields[FIELDS[0]][1], 10)
+    col.models.remove_field(model, fields[FIELDS[-1]][1])
+    col.models.update_dict(model)
+
+    lazy.sync.ensure_deck(col, lazy.config.DECK_NAME)
+
+    model = col.models.by_name(lazy.config.NOTE_TYPE_NAME)
+    assert model
+    field_names = col.models.field_names(model)
+
+    assert field_names[0] == FIELDS[0]
+    assert FIELDS[-1] in field_names
