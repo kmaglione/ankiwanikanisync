@@ -1,4 +1,5 @@
 import csv
+import functools
 import html
 import json
 import lzma
@@ -368,6 +369,38 @@ class Keisei:
         return 100
 
 
+@functools.cache
+def get_keisei() -> Keisei:
+    return Keisei()
+
+
+@functools.cache
+def get_pitch_data() -> dict[PitchKey, list[PitchData]]:
+    pitchfile = ROOT_DIR / "pitch" / "accent_data.csv.xz"
+    res = {}
+    with lzma.open(pitchfile, mode="rt", encoding="utf-8", newline="") as f:
+        for row in csv.reader(f, delimiter=","):
+            orths = row[0].split("|")
+
+            hiras = [h.split("-") for h in row[1].split("|")]
+            accents = [list(map(int, a.split("-"))) for a in row[2].split("|")]
+
+            data = list(zip(hiras, accents))
+
+            assert hiras and len(hiras) == len(accents)
+            assert all(len(hira) == len(acc) for (hira, acc) in data)
+
+            for hira, acc in data:
+                pitch_data = list(PitchData(*el) for el in zip(hira, acc))
+                for orth in orths:
+                    key = PitchKey(orth, "".join(hira))
+                    if key not in res:
+                        res[key] = pitch_data
+
+    return res
+
+
+
 type Pitch = Literal["l-h", "h-l", "l", "h"]
 
 
@@ -396,8 +429,8 @@ class WKImporter(NoteImporter):
             Rate(100, Duration.MINUTE), raise_when_fail=False, max_delay=250
         )
 
-        self.pitch_data = self.load_pitch_data()
-        self.keisei = Keisei()
+        self.pitch_data = get_pitch_data()
+        self.keisei = get_keisei()
 
         self.radical_svg_cache: dict[str, str] = {}
 
@@ -410,30 +443,6 @@ class WKImporter(NoteImporter):
             assert self.limiter.max_delay
             sleep(self.limiter.max_delay / 1000)
         raise ImportCancelledException("The import was cancelled.")
-
-    def load_pitch_data(self) -> dict[PitchKey, list[PitchData]]:
-        pitchfile = ROOT_DIR / "pitch" / "accent_data.csv.xz"
-        res = {}
-        with lzma.open(pitchfile, mode="rt", encoding="utf-8", newline="") as f:
-            for row in csv.reader(f, delimiter=","):
-                orths = row[0].split("|")
-
-                hiras = [h.split("-") for h in row[1].split("|")]
-                accents = [list(map(int, a.split("-"))) for a in row[2].split("|")]
-
-                data = list(zip(hiras, accents))
-
-                assert hiras and len(hiras) == len(accents)
-                assert all(len(hira) == len(acc) for (hira, acc) in data)
-
-                for hira, acc in data:
-                    pitch_data = list(PitchData(*el) for el in zip(hira, acc))
-                    for orth in orths:
-                        key = PitchKey(orth, "".join(hira))
-                        if key not in res:
-                            res[key] = pitch_data
-
-        return res
 
     def fields(self) -> int:
         return len(self.model["flds"]) + 1  # Final unnamed field is _tags

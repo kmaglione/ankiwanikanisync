@@ -24,6 +24,7 @@ dev = [
     "pyrate-limiter (>=3.9.0,<4.0.0)",
     "types-requests (>=2.32.4.20250913,<3.0.0.0)",
     "ts2python>=0.8.2",
+    "line-profiler>=5.0.0",
 ]
 
 [tool.mypy]
