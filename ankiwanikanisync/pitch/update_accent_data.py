@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import xml.etree.ElementTree as ET
+import pickle
 import requests
 import tarfile
 import json
 import sys
 import re
+from typing import NamedTuple
 
 # Needed by requests to decode 10ten data
 try:
@@ -134,21 +136,34 @@ def combine_data(data1, data2):
             res[orth][hira] = accent
     return res
 
+class HashableDict[K, V](dict[K, V]):
+    def __hash__(self) -> int:  # type: ignore[override]
+        return hash(tuple(sorted(self.items())))
+
 def print_data(data):
-    comb_data = dict()
+    comb_data = dict[HashableDict[str, str], list[str]]()
     for orth, hiras in data.items():
-        if "|" in orth:
-            raise Exception(f"Invalid character in orth {orth}")
-        hira_slug = f'{"|".join(hiras.keys())},{"|".join(hiras.values())}'
-        if hira_slug not in comb_data:
-            comb_data[hira_slug] = []
-        comb_data[hira_slug].append(orth)
-    for hira_slug, orths in comb_data.items():
-        orths_slug = "|".join(orths)
-        if "," in orths_slug:
-            print(f'"{orths_slug}",{hira_slug}')
-        else:
-            print(f'{orths_slug},{hira_slug}')
+        comb_data.setdefault(HashableDict(hiras), []).append(orth)
+
+    res = {}
+    for hiras, orths in comb_data.items():
+        for hira_str, acc_str in hiras.items():
+            hira = hira_str.split("-")
+            acc = list(map(int, acc_str.split("-")))
+
+            pitch_data = list(zip(hira, acc))
+            for orth in orths:
+                key = (orth, "".join(hira))
+                if key not in res:
+                    res[key] = pitch_data
+
+    res_dict = {}
+    for k, v in sorted(list(res.items()), key=lambda i: (i[0][1], i[0][0])):
+        res_dict[k] = v
+
+    with open(sys.argv[1], "wb") as f:
+        pickle.dump(res_dict, f)
+
 
 if __name__ == "__main__":
     print("Fetching 10ten...", file=sys.stderr)

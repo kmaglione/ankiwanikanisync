@@ -39,13 +39,13 @@ const files = {
     types_base: "ankiwanikanisync/",
     py: [
         "ankiwanikanisync/**/*.py",
-        "!ankiwanikanisync/pitch/update_accent_data.py",
+        "!ankiwanikanisync/pitch/*.py",
     ],
     py_tests: [
         "tests/**/*.py",
     ],
     db: [
-        "ankiwanikanisync/**/*.(json|csv).xz",
+        "ankiwanikanisync/**/*.(json|csv|pickle).xz",
         "ankiwanikanisync/config.json",
         "ankiwanikanisync/manifest.json",
         "ankiwanikanisync/py.typed",

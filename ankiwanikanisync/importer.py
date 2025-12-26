@@ -1,9 +1,9 @@
-import csv
 import functools
 import html
 import json
 import lzma
 import pathlib
+import pickle
 import re
 import shutil
 from collections.abc import Mapping, Sequence
@@ -220,14 +220,9 @@ def permissive_dict[T: str, U](val: dict[T, U]) -> dict[str, U]:
     return cast(dict[str, U], val)
 
 
-class PitchKey(NamedTuple):
-    orth: str
-    reading: str
-
-
-class PitchData(NamedTuple):
-    reading: str
-    accent: int
+def read_json_xz(file: pathlib.Path) -> Any:
+    with lzma.open(file, mode="rt", encoding="utf-8") as f:
+        return json.load(f)
 
 
 class Keisei:
@@ -235,10 +230,6 @@ class Keisei:
         self.keisei_data = self.load()
 
     def load(self) -> KeiseiData:
-        def read_json_xz(file: pathlib.Path) -> Any:
-            with lzma.open(file, mode="rt", encoding="utf-8") as f:
-                return json.load(f)
-
         keiseidir = ROOT_DIR / "keisei"
         return {
             "kanji": read_json_xz(keiseidir / "kanji.json.xz"),
@@ -374,31 +365,15 @@ def get_keisei() -> Keisei:
     return Keisei()
 
 
+type PitchKey = tuple[str, str]
+type PitchData = tuple[str, int]
+
+
 @functools.cache
 def get_pitch_data() -> dict[PitchKey, list[PitchData]]:
-    pitchfile = ROOT_DIR / "pitch" / "accent_data.csv.xz"
-    res = {}
-    with lzma.open(pitchfile, mode="rt", encoding="utf-8", newline="") as f:
-        for row in csv.reader(f, delimiter=","):
-            orths = row[0].split("|")
-
-            hiras = [h.split("-") for h in row[1].split("|")]
-            accents = [list(map(int, a.split("-"))) for a in row[2].split("|")]
-
-            data = list(zip(hiras, accents))
-
-            assert hiras and len(hiras) == len(accents)
-            assert all(len(hira) == len(acc) for (hira, acc) in data)
-
-            for hira, acc in data:
-                pitch_data = list(PitchData(*el) for el in zip(hira, acc))
-                for orth in orths:
-                    key = PitchKey(orth, "".join(hira))
-                    if key not in res:
-                        res[key] = pitch_data
-
-    return res
-
+    pitchfile = ROOT_DIR / "pitch" / "accent_data.pickle.xz"
+    with lzma.open(pitchfile, mode="rb") as f:
+        return pickle.load(f)
 
 
 type Pitch = Literal["l-h", "h-l", "l", "h"]
@@ -718,12 +693,12 @@ class WKImporter(NoteImporter):
         if subject["object"] in ("radical", "kanji"):
             return reading
 
-        key = PitchKey(subject["data"]["characters"].strip(), reading)
+        key = (subject["data"]["characters"].strip(), reading)
         if key not in self.pitch_data:
             return reading
 
         if res := "".join(
-            self.apply_pitch_internal(part.reading, part.accent)
+            self.apply_pitch_internal(part[0], part[1])
             for part in self.pitch_data[key]
         ):
             return f'<span class="mora">{res}</span>'
