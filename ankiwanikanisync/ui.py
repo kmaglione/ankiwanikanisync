@@ -65,12 +65,15 @@ class BrowserMenu(object):
 browser_menu = None
 
 
-def init():
-    init_tools_menu()
-    install_play_all_audio()
-
+def init_browser_menu():
     global browser_menu
     browser_menu = BrowserMenu()
+
+
+def init():
+    init_tools_menu()
+    init_browser_menu()
+    install_play_all_audio()
 
     timers.start_timers()
     ensure_audio()
