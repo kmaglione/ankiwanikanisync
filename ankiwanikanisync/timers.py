@@ -30,6 +30,11 @@ class Timers:
 
         self.start_reviews_timer()
 
+    def stop_timers(self):
+        self.submit_lessons_timer.stop()
+        self.sync_due_timer.stop()
+        self.submit_reviews_timer.stop()
+
     def submit_reviews_at(self, time: datetime):
         now = datetime.now(timezone.utc)
         remaining = self.submit_reviews_timer.remainingTime()
