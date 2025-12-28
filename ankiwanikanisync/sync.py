@@ -2,6 +2,7 @@ import contextlib
 import json
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timedelta, timezone
+from enum import IntEnum, auto
 from typing import Literal, NamedTuple
 
 import requests.exceptions
@@ -284,6 +285,13 @@ def ts_to_datetime(ts):
     return datetime.fromtimestamp(ts).astimezone()
 
 
+class Reason(IntEnum):
+    LAST_REVIEW_AFTER_WK_AVAILABLE = auto()
+    NO_WK_REVIEWS = auto()
+    NEXT_ANKI_DUE_AFTER_NEXT_WK_DUE = auto()
+    SUBSEQUENT_ANKI_DUE_AFTER_NEXT_WK_DUE = auto()
+
+
 class SyncOp(object):
     """"""
 
@@ -492,6 +500,7 @@ class SyncOp(object):
 
         result: dict[str, int] = {}
         due_dates: list[DueDate] = []
+        reasons = list[Reason]()
         for card in note.cards():
             # Don't attempt an upstream sync for any new cards
             if card.type == CARD_TYPE_NEW:
@@ -541,11 +550,13 @@ class SyncOp(object):
                 not assignment.available_at
                 or last_review_time >= assignment.available_at
             ):
+                reasons.append(Reason.LAST_REVIEW_AFTER_WK_AVAILABLE)
                 continue
 
             # If the subject has never been reviewed on WaniKani, accept the
             # card.
             if stage.position == 0:
+                reasons.append(Reason.NO_WK_REVIEWS)
                 continue
 
             # If the card is in a learning queue, just wait for the next
@@ -564,6 +575,7 @@ class SyncOp(object):
         result["timestamp"] = review_ts
 
         if not due_dates:
+            result["reason"] = min(reasons)
             return result
 
         # Figure out approximately when the next WaniKani due date would be
@@ -583,6 +595,7 @@ class SyncOp(object):
         # submit the review now.
         next_due = min(due_dates)
         if next_wk_due < next_due.due_date:
+            result["reason"] = Reason.NEXT_ANKI_DUE_AFTER_NEXT_WK_DUE
             return result
 
         # If WaniKani's next due date would come *after* any of our subsequent
@@ -591,6 +604,7 @@ class SyncOp(object):
             if due_date + timedelta(days=ivl) < next_wk_due:
                 return None
 
+        result["reason"] = Reason.SUBSEQUENT_ANKI_DUE_AFTER_NEXT_WK_DUE
         return result
 
     def upstream_assignment(self, assignment: Assignment, note: WKNote) -> bool:
