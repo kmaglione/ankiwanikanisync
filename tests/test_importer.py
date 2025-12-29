@@ -99,8 +99,8 @@ async def test_import_fields(
             "Reading_Whitelist": "",
             "Reading_Mnemonic": "",
             "Reading_Hint": "",
-            "Context_Patterns": "",
-            "Context_Sentences": "",
+            "Context_Patterns": {},
+            "Context_Sentences": [],
             "Comps": [],
             "Similar": [],
             "Found_in": [],
@@ -112,9 +112,12 @@ async def test_import_fields(
         }
 
         if subj["object"] in ("vocabulary", "kana_vocabulary"):
-            res["Context_Sentences"] = (
-                "Lorem ipsum dolor sit amet.|こんにちは、とても痛いですね。"
-            )
+            res["Context_Sentences"] = [
+                {
+                    "en": "Lorem ipsum dolor sit amet.",
+                    "ja": "こんにちは、とても痛いですね。",
+                }
+            ]
             res["Word_Type"] = "noun, の adjective"
 
         if subj["object"] == "vocabulary":
@@ -481,11 +484,18 @@ async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSes
 
     assert ContextDownloader.WK_CONTEXT_INCOMPLETE_TAG not in note.tags
 
-    assert note["Context_Patterns"] == (
-        "右の〜;右のボタン;right button;右のグラフ;graph on the right"
-        ";右のアイコン;right icon"
-        "|右〜;右上;upper right;右ひざ;right knee;右下;lower right"
-    )
+    assert json.loads(note["Context_Patterns"]) == {
+        "右の〜": [
+            {"ja": "右のボタン", "en": "right button"},
+            {"ja": "右のグラフ", "en": "graph on the right"},
+            {"ja": "右のアイコン", "en": "right icon"},
+        ],
+        "右〜": [
+            {"ja": "右上", "en": "upper right"},
+            {"ja": "右ひざ", "en": "right knee"},
+            {"ja": "右下", "en": "lower right"},
+        ],
+    }
 
 
 @pytest.mark.asyncio

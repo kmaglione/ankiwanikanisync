@@ -37,10 +37,6 @@
     &.card {
         background-image: none;
     }
-
-    .button {
-        background-color: var(--button-color-dark);
-    }
 }
 
 .mobile {
@@ -316,17 +312,21 @@ radical, kanji, vocabulary {
     font-size: .7rem;
     background: none;
     border-radius: .3rem 0 0 .3rem;
-    border: none;
+    border: 1px solid var(--background-color);
+    background-color: var(--background-color);
     width: max(7rem);
 
     &:not(.clicked) {
-        background-color: var(--button-color-light);
+        --background-color: var(--button-color-light);
+
+        color: var(--button-color-dark);
         transition-duration: 0.2s;
     }
 
     &.clicked {
+        --background-color: var(--button-color-dark);
+
         color: var(--font-color-light);
-        background-color: var(--button-color-dark);
         transition-duration: 0.2s;
         clip-path: polygon(100% 100%, 100% 85%, 90% 50%, 100% 15%, 100% 0, 0 0, 0 100%);
     }

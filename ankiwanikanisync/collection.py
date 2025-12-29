@@ -155,6 +155,8 @@ class WKCollection(object):
     CHUNK_SIZE: Final[int] = 256
     JSON_FIELDS: Final[tuple[FieldName, ...]] = (
         "Comps",
+        "Context_Patterns",
+        "Context_Sentences",
         "Found_in",
         "Keisei",
         "Level",

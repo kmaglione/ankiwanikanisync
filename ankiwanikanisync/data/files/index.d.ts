@@ -1,4 +1,4 @@
-import type { KeiseiJSON, RelatedSubject, WKSubject } from "./types.js";
+import type { KeiseiJSON, RelatedSubject, WKContextSentence, WKSubject } from "./types.js";
 export interface TemplateFields {
   Card: "Reading" | "Meaning";
   card_id: number;
@@ -24,8 +24,8 @@ export interface TemplateFields {
   Comps: RelatedSubject[];
   Similar: RelatedSubject[];
   Found_in: RelatedSubject[];
-  Context_Patterns: string;
-  Context_Sentences: string;
+  Context_Patterns: Record<string, WKContextSentence[]>;
+  Context_Sentences: WKContextSentence[];
   Audio: string;
   Keisei: KeiseiJSON;
   last_upstream_sync_time: string;

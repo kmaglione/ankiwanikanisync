@@ -31,6 +31,7 @@ from .types import (
     KeiseiJSON,
     RelatedSubject,
     WKAudio,
+    WKContextSentence,
     WKMeaning,
     WKReading,
     WKStudyMaterialData,
@@ -53,6 +54,10 @@ ROOT_DIR: Final = pathlib.Path(__file__).parent.resolve()
 # Escape HTML metacharacters in JSON strings to prevent the importer from
 # mangling them.
 html_trans: Final = str.maketrans({"<": r"\u003c", ">": r"\u003e", "&": r"\u0026"})
+
+
+def to_json(val: object) -> str:
+    return json.dumps(val, ensure_ascii=False).translate(html_trans)
 
 
 class ImportCancelledException(Exception):
@@ -160,20 +165,19 @@ class ContextDownloader(Downloader):
         req = self.session.get(document_url)
         req.raise_for_status()
 
-        res = []
+        res = dict[str, list[WKContextSentence]]()
         try:
             parser = WKContextParser()
             parser.feed(req.text)
 
             for id in parser.patterns:
-                val = parser.patterns[id]
-                for collo in parser.collos[id]:
-                    val += f";{collo.ja};{collo.en}"
-                res.append(val)
+                res[parser.patterns[id]] = [
+                    {"en": c.en, "ja": c.ja} for c in parser.collos[id]
+                ]
         except Exception as e:
             print(f"Failed parsing context: {e!r}")
 
-        self.results[note_id] = "|".join(res)
+        self.results[note_id] = to_json(res)
 
         if len(self.results) >= 64:
             self.flush()
@@ -560,7 +564,7 @@ class WKImporter(NoteImporter):
         field_values: FieldsDict = {
             "card_id": str(subject["id"]),
             "sort_id": str(self.get_sort_id(subject)),
-            "raw_data": json.dumps(subject).translate(html_trans),
+            "raw_data": to_json(subject),
             "Level": str(data["level"]),
             "DocumentURL": data["document_url"],
             "Characters": self.get_character(data),
@@ -585,11 +589,12 @@ class WKImporter(NoteImporter):
                 ).strip()
             ),
             "Reading_Hint": self.html_newlines(str(data.get("reading_hint") or "")),
-            "Comps": json.dumps(comps).translate(html_trans),
-            "Similar": json.dumps(similars).translate(html_trans),
-            "Found_in": json.dumps(amalgums).translate(html_trans),
-            "Context_Sentences": self.get_context_sentences(subject),
-            "Keisei": json.dumps(self.keisei.get(subject)).translate(html_trans),
+            "Comps": to_json(comps),
+            "Similar": to_json(similars),
+            "Found_in": to_json(amalgums),
+            "Context_Patterns": "{}",
+            "Context_Sentences": to_json(self.get_context_sentences(subject)),
+            "Keisei": to_json(self.keisei.get(subject)),
         }
 
         if is_WKAmalgumData(data):
@@ -760,8 +765,7 @@ class WKImporter(NoteImporter):
             return reading
 
         if res := "".join(
-            self.apply_pitch_internal(part[0], part[1])
-            for part in self.pitch_data[key]
+            self.apply_pitch_internal(part[0], part[1]) for part in self.pitch_data[key]
         ):
             return f'<span class="mora">{res}</span>'
 
@@ -799,13 +803,10 @@ class WKImporter(NoteImporter):
                 res.append(entry)
         return res
 
-    def get_context_sentences(self, subject: WKSubject) -> str:
+    def get_context_sentences(self, subject: WKSubject) -> list[WKContextSentence]:
         if is_WKVocabBase(subject["data"]):
-            return "|".join(
-                f"{sentence['en']}|{sentence['ja']}"
-                for sentence in subject["data"]["context_sentences"]
-            )
-        return ""
+            return subject["data"]["context_sentences"]
+        return []
 
     def ensure_audio(self, data: WKVocabBase) -> str:
         audios = data["pronunciation_audios"]

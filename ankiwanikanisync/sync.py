@@ -912,7 +912,7 @@ def do_process_v13():
 
 
 @collection_op
-def do_process():
+def do_process_v14():
     from anki.notes import Note
 
     from .importer import html_trans
@@ -937,6 +937,81 @@ def do_process():
         munge_field(note, "Found_in", "Found_in")
         munge_field(note, "Similar", "Similar")
         changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process_v15():
+    from .importer import html_trans
+    from .wk_api import is_WKVocabBase
+
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        subject: WKSubject = json.loads(note["raw_data"])
+
+        val = (
+            subject["data"]["context_sentences"]
+            if is_WKVocabBase(subject["data"])
+            else []
+        )
+
+        note["Context_Patterns"] = "{}"
+        note["Context_Sentences"] = json.dumps(val, ensure_ascii=False).translate(
+            html_trans
+        )
+        changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process_v16():
+    from .importer import ContextDownloader, ensure_context
+
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        if note["Card_Type"] in ("Vocabulary", "Kana Vocabulary"):
+            note.add_tag(ContextDownloader.WK_CONTEXT_INCOMPLETE_TAG)
+            changed_notes.append(note)
+
+    wk_col.col.update_notes(changed_notes)
+
+    ensure_context()
+
+    result = OpChangesWithCount()
+    result.count = len(changed_notes)
+    result.changes.note = True
+    return result
+
+
+@collection_op
+def do_process():
+    from .collection import FieldName
+
+    changed_notes = []
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        changes = 0
+        fields: list[FieldName] = ["Comps", "Similar", "Found_in"]
+        for field in fields:
+            if note[field] == '[{"characters": "", "meaning": "", "reading": ""}]':
+                note[field] = "[]"
+                changes += 1
+        if changes:
+            changed_notes.append(note)
 
     wk_col.col.update_notes(changed_notes)
 

@@ -1,6 +1,6 @@
 /* globals _ */
 import wanakana from "./_wanakana.min.js";
-import { $$, $, assert, chunked, escapeHTML, frag, likelyTypo, split, stripHTML } from "./_wk3_util.js";
+import { $$, $, assert, escapeHTML, frag, likelyTypo, split, stripHTML } from "./_wk3_util.js";
 import type { RelatedSubject } from "./types.js";
 
 function setLangJa(elem: Element) {
@@ -57,18 +57,17 @@ export function setupBack() {
     hide($("#reading-hint"), !_.Reading_Hint);
 
     /* SCRIPT: Slice and add Context Patterns  */
-    const combinations = split(_.Context_Patterns, "|");
+    const combinations = _.Context_Patterns;
 
-    function addCombinations(idx: number) {
+    function addCombinations(name: string) {
         const div = $("#common-word-combinations");
-        for (const [ja, en] of chunked(split(combinations[idx], ";"), 2)) {
+        for (const {ja, en} of combinations[name]) {
             div.append(frag(`<p class="combination">
                 ${jaTag("ja", ja)}<br>
                 ${en}
             </p>`))
         }
     }
-    addCombinations(0);
 
     function onButtonClick(event: Event) {
         for (const elem of $$(".button")){
@@ -80,31 +79,32 @@ export function setupBack() {
         for (const elem of $$(".combination")) {
             elem.remove();
         }
-        addCombinations(+event.target.getAttribute("name"));
+        addCombinations(event.target.getAttribute("name"));
     }
 
-    for (const [i, val] of combinations.entries()){
+    const names = Object.keys(combinations);
+    for (const name of names){
         const element = document.createElement("div");
         element.innerHTML = `
-            <button class="button" lang="ja" name="${i}">${
-                split(val, ";")[0]
+            <button class="button" lang="ja" name="${name}">${
+                name
             }</button><br>`;
         element.firstElementChild.addEventListener("click", onButtonClick);
         $("#patterns-of-use").appendChild(element);
     }
 
-    if (combinations.length === 0) {
+    if (names.length === 0) {
         $("#context-patterns").textContent = " ";
     } else {
-        $(".button[name='0']").classList.add("clicked");
+        $(`.button[name='${names[0]}']`).click();
     }
 
     /* SCRIPT: Slice and add context sentences. */
     if (["Vocabulary", "Kana Vocabulary"].includes(_.Card_Type)) {
         const div = $("#context-sentences");
 
-        for (const [en, jp] of chunked(split(_.Context_Sentences, "|"), 2)) {
-            div.append(frag(`<p>${jaTag("ja", jp)}<br>${en}</p>`));
+        for (const {en, ja} of _.Context_Sentences) {
+            div.append(frag(`<p>${jaTag("ja", ja)}<br>${en}</p>`));
         }
     }
 
