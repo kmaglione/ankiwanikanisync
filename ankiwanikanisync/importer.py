@@ -22,6 +22,7 @@ from aqt.operations.tag import remove_tags_from_notes
 from pyrate_limiter import Duration, Limiter, Rate
 from typing_extensions import TypedDict
 
+from . import hooks
 from .collection import FieldName, format_id, wk_col
 from .config import config
 from .promise import Promise
@@ -62,25 +63,32 @@ def audio_filename(audio: WKAudio) -> str:
     return f"wk3_{audio['metadata']['source_id']}.mp3"
 
 
-class AudioDownloader:
-    WK_AUDIO_INCOMPLETE_TAG: Final = "WkAudioIncomplete"
+class Downloader:
+    limiter: Final = Limiter(
+        Rate(10, 5 * Duration.SECOND), raise_when_fail=False, max_delay=10000
+    )
 
     def __init__(self, col: Collection) -> None:
         self.col = col
         self.session = wk.session
-        self.limiter = Limiter(
-            Rate(100, Duration.MINUTE), raise_when_fail=False, max_delay=250
-        )
-
-        self.dest_dir = pathlib.Path(self.col.media.dir())
-        self.note_ids = list[NoteId]()
 
     def do_limit(self, name: str) -> bool:
-        while True:
+        while not hooks.anki_closing:
             if self.limiter.try_acquire(name):
                 return True
             assert self.limiter.max_delay
             sleep(self.limiter.max_delay / 1000)
+        raise ImportCancelledException("The import was cancelled.")
+
+
+class AudioDownloader(Downloader):
+    WK_AUDIO_INCOMPLETE_TAG: Final = "WkAudioIncomplete"
+
+    def __init__(self, col: Collection) -> None:
+        super().__init__(col)
+
+        self.dest_dir = pathlib.Path(self.col.media.dir())
+        self.note_ids = list[NoteId]()
 
     def process_note(self, note_id: NoteId, audios: Sequence[WKAudio]) -> None:
         for audio in audios:
@@ -135,7 +143,85 @@ class AudioDownloader:
     @Promise.wrap
     async def process_notes(self) -> None:
         notes = await self.collect_notes_op()
-        self.process_notes_op(notes)
+        await self.process_notes_op(notes)
+
+
+class ContextDownloader(Downloader):
+    WK_CONTEXT_INCOMPLETE_TAG: Final = "WkContextIncomplete"
+
+    def __init__(self, col: Collection) -> None:
+        super().__init__(col)
+
+        self.results = dict[NoteId, str]()
+
+    def process_note(self, note_id: NoteId, document_url: str) -> None:
+        self.do_limit("wk_import")
+
+        req = self.session.get(document_url)
+        req.raise_for_status()
+
+        res = []
+        try:
+            parser = WKContextParser()
+            parser.feed(req.text)
+
+            for id in parser.patterns:
+                val = parser.patterns[id]
+                for collo in parser.collos[id]:
+                    val += f";{collo.ja};{collo.en}"
+                res.append(val)
+        except Exception as e:
+            print(f"Failed parsing context: {e!r}")
+
+        self.results[note_id] = "|".join(res)
+
+        if len(self.results) >= 64:
+            self.flush()
+
+    def flush(self):
+        if self.results:
+            results = self.results
+            self.results = {}
+
+            @mw.taskman.run_on_main
+            def update_results():
+                self.update_results(results)
+
+    @query_op
+    def update_results(self, results: dict[NoteId, str]):
+        changed_notes = []
+        for note_id, ctx in results.items():
+            note = wk_col.get_note(note_id)
+            note["Context_Patterns"] = ctx
+            note.remove_tag(self.WK_CONTEXT_INCOMPLETE_TAG)
+            changed_notes.append(note)
+
+        wk_col.col.update_notes(changed_notes)
+
+    # Note: This operation can take a very long time, so it's important that
+    # it run in an op without access to the Anki collection so that it does
+    # not block other functionality. It only needs access to the network and
+    # the filesystem.
+    @query_op(without_collection=True)
+    def process_notes_op(self, notes: Mapping[NoteId, str]) -> None:
+        for note_id, document_url in notes.items():
+            self.process_note(note_id, document_url)
+        self.flush()
+
+    @query_op
+    def collect_notes_op(self) -> Mapping[NoteId, str]:
+        query = SearchNode(tag=self.WK_CONTEXT_INCOMPLETE_TAG)
+        notes = {}
+        for note_id in wk_col.find_notes(query):
+            data = json.loads(wk_col.get_note(note_id)["raw_data"])
+            notes[note_id] = data["data"]["document_url"]
+
+        return notes
+
+    @Promise.wrap
+    async def process_notes(self) -> None:
+        notes = await self.collect_notes_op()
+        await self.process_notes_op(notes)
 
 
 class KeiseiKanjiDataBase(TypedDict):
@@ -502,7 +588,6 @@ class WKImporter(NoteImporter):
             "Comps": json.dumps(comps).translate(html_trans),
             "Similar": json.dumps(similars).translate(html_trans),
             "Found_in": json.dumps(amalgums).translate(html_trans),
-            "Context_Patterns": self.get_context_patterns(subject),
             "Context_Sentences": self.get_context_sentences(subject),
             "Keisei": json.dumps(self.keisei.get(subject)).translate(html_trans),
         }
@@ -530,6 +615,12 @@ class WKImporter(NoteImporter):
             tags.append(AudioDownloader.WK_AUDIO_INCOMPLETE_TAG)
             field_values["Audio"] = self.ensure_audio(data)
             field_values["Word_Type"] = ", ".join(data["parts_of_speech"])
+
+        if self.fetch_patterns and subject["object"] in (
+            "vocabulary",
+            "kana_vocabulary",
+        ):
+            tags.append(ContextDownloader.WK_CONTEXT_INCOMPLETE_TAG)
 
         field_values["_tags"] = " ".join(tags)
 
@@ -603,35 +694,6 @@ class WKImporter(NoteImporter):
                 else:
                     res.append(meaning["meaning"])
         return res
-
-    def get_context_patterns(self, subject: WKSubject) -> str:
-        if not self.fetch_patterns or subject["object"] in (
-            "radical",
-            "kanji",
-        ):
-            return ""
-
-        res = []
-        try:
-            self.do_limit("wk_import")
-
-            req = self.session.get(subject["data"]["document_url"])
-            req.raise_for_status()
-
-            parser = WKContextParser()
-            parser.feed(req.text)
-
-            for id in parser.patterns:
-                val = parser.patterns[id]
-                for collo in parser.collos[id]:
-                    val += f";{collo.ja};{collo.en}"
-                res.append(val)
-        except ImportCancelledException:
-            raise
-        except Exception as e:
-            print(f"Failed parsing context: {e!r}")
-
-        return "|".join(res)
 
     def get_readings(self, subject: WKSubject) -> dict[str, list[str]]:
         data = subject["data"]
@@ -1039,6 +1101,11 @@ def ensure_audio():
     audio_downloader.process_notes()
 
 
+def ensure_context():
+    context_downloader = ContextDownloader(wk_col.col)
+    context_downloader.process_notes()
+
+
 def ensure_notes(
     col: Collection,
     subjects: Sequence[WKSubject],
@@ -1068,5 +1135,6 @@ def ensure_notes(
     wk_col.update_suspended_cards()
 
     ensure_audio()
+    ensure_context()
 
     return len(subjects) > 0

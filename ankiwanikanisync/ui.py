@@ -5,7 +5,7 @@ from aqt.browser.browser import Browser
 from aqt.qt import QAction, QMenu, qconnect
 
 from .collection import wk_col
-from .importer import do_update_html, ensure_audio
+from .importer import do_update_html, ensure_audio, ensure_context
 from .play_all_audio import install_play_all_audio
 from .sync import do_clear_cache, do_process, do_sync, do_update_intervals
 from .timers import timers
@@ -77,3 +77,4 @@ def init():
 
     timers.start_timers()
     ensure_audio()
+    ensure_context()

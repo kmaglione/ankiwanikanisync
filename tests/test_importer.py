@@ -21,7 +21,7 @@ from ankiwanikanisync.types import (
 
 from .conftest import aqt
 from .fixtures import SubSession
-from .utils import cleanup_after, get_note, iso_reltime, lazy
+from .utils import SaveAttr, cleanup_after, get_note, iso_reltime, lazy, open_fixture
 
 if TYPE_CHECKING:
     from anki.collection import Collection
@@ -454,6 +454,38 @@ async def test_import_fields(
     check_expected(vocab3_expected, "vocab3 after update")
     check_expected(vocab2_expected, "vocab2 after update")
     check_expected(vocab1_expected, "vocab1 after update")
+
+
+@pytest.mark.asyncio
+async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSession):
+    from ankiwanikanisync.importer import ContextDownloader
+
+    save_attr(lazy.config, "FETCH_CONTEXT_PATTERNS")
+    lazy.config.FETCH_CONTEXT_PATTERNS = True
+
+    ctx_url = "ctxt_patterns_migi.html"
+    with open_fixture(ctx_url, "r") as f:
+        ctx_data = f.read()
+    session_mock.get(ctx_url, text=ctx_data)
+
+    vocab = session_mock.add_subject(
+        "vocabulary",
+        characters="右",
+        document_url=f"{session_mock.BASE_URL}/{ctx_url}",
+    )
+
+    await lazy.sync.do_sync()
+    await aqt.mw.taskman.pending_ops_completed()
+
+    note = get_note(vocab)
+
+    assert ContextDownloader.WK_CONTEXT_INCOMPLETE_TAG not in note.tags
+
+    assert note["Context_Patterns"] == (
+        "右の〜;右のボタン;right button;右のグラフ;graph on the right"
+        ";右のアイコン;right icon"
+        "|右〜;右上;upper right;右ひざ;right knee;右下;lower right"
+    )
 
 
 @pytest.mark.asyncio
