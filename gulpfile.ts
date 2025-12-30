@@ -4,7 +4,8 @@ import path from "node:path";
 import process from "node:process";
 
 import { deleteAsync } from "del";
-import { dest, parallel, series, src, watch } from "gulp";
+import { dest, lastRun, parallel, series, src, watch } from "gulp";
+import changed from "gulp-changed";
 import eslint from "gulp-eslint-new";
 import htmlhint from "gulp-htmlhint";
 import preserveWhitespace from "gulp-preserve-typescript-whitespace";
@@ -70,28 +71,29 @@ export function lint_eslint() {
     return src([
         ...files.js,
         ...files.ts,
-    ]).pipe(prettyError())
+    ], { since: lastRun(lint_eslint) })
+      .pipe(prettyError())
       .pipe(eslint())
       .pipe(eslint.format())
       .pipe(eslint.failAfterError());
 }
 
 export function lint_htmlhint() {
-    return src(files.html)
+    return src(files.html, { since: lastRun(lint_htmlhint) })
       .pipe(prettyError())
       .pipe(htmlhint(".htmlhintrc"))
       .pipe(htmlhint.failAfterError());
 }
 
 export function lint_stylelint() {
-    return src(files.scss)
+    return src(files.scss, { since: lastRun(lint_stylelint) })
         .pipe(prettyError())
         .pipe(stylelint({}));
 }
 
-export const lint_zmypy = shell.task([
-    "zmypy"
-]);
+export function lint_zmypy() {
+    return shell.task(["zmypy"])();
+}
 
 export async function generate_types() {
     const srcs = [files.types_ts, "munge_types.py", "gulpfile.ts"];
@@ -134,10 +136,11 @@ export function watch_zmypy() {
     return watch([...files.py, ...files.py_tests], watchOpts, lint_zmypy);
 }
 
-export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint);
+export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint, lint_zmypy);
 
 export function build_scss() {
     return src(files.scss)
+        .pipe(changed(files.dist, { extension: ".css" }))
         // eslint-disable-next-line @typescript-eslint/unbound-method
         .pipe(sass().on("error", sass.logError))
         .pipe(dest(files.dist))
@@ -178,7 +181,8 @@ export function watch_static() {
 }
 
 export function build_ts() {
-    return src(files.ts).pipe(preserveWhitespace.saveWhitespace())
+    return src(files.ts).pipe(changed(files.dist, { extension: ".js" }))
+                        .pipe(preserveWhitespace.saveWhitespace())
                         .pipe(tsProject())
                         .js
                         .pipe(preserveWhitespace.restoreWhitespace())
@@ -203,6 +207,14 @@ export const build = series(
         build_static,
         build_ts,
         lint,
+    ));
+
+export const build_quick = series(
+    generate_types,
+    parallel(
+        build_scss,
+        build_static,
+        build_ts,
     ));
 
 function getInstallPath(): string {
@@ -231,11 +243,15 @@ function relativePath(pathStr: string): string {
 }
 
 function doInstall() {
-    return src(`${files.dist}**/*`)
-        .pipe(dest(`${relativePath(getInstallPath())}/`));
+    const destDir = `${relativePath(getInstallPath())}/`;
+    return src(`${files.dist}**/*`, { encoding: false })
+        .pipe(changed(destDir))
+        .pipe(dest(destDir));
 }
 
 export const install = series(build, doInstall);
+
+export const install_quick = series(build_quick, doInstall);
 
 export function export_zip() {
     return src(`${files.dist}**/*`)
