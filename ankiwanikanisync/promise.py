@@ -283,8 +283,38 @@ class PromiseWithResolvers[T]:
 
     def __init__(self, on_cancel: Callable[[], None] | None = None):
         self.promise = Promise[T](None, on_cancel)
-        self.resolve = self.promise._resolve
-        self.reject = self.promise._reject
+        self.resolve = self.promise._resolvers.resolve
+        self.reject = self.promise._resolvers.reject
+
+
+class PromiseResolvers[T]:
+    def __init__(self, promise: Promise[T]):
+        self.promise: Promise[T] | None = promise
+
+    def resolve(self, arg: Any) -> None:
+        if not self.promise:
+            return
+        if self.promise._status in (Status.Pending, Status.Cancelled):
+            if ispromise(arg):
+                arg.then(self.resolve, self.reject)
+            else:
+                self.promise._settle(arg, Status.Fulfilled)
+
+    def reject(self, arg: Any) -> None:
+        if not self.promise:
+            return
+        if self.promise._status in (Status.Pending, Status.Cancelled):
+            if isinstance(arg, (CancelledError, asyncio.CancelledError)):
+                # CancelledError is an instance of BaseException, but not
+                # Exception. To prevent task cancellations from
+                # propagating up to the top level and exiting the
+                # application, which is presumably not the usual
+                # intention, we convert them to CancellationErrors.
+                try:
+                    raise CancellationError() from arg
+                except CancellationError as e:
+                    arg = e
+            self.promise._settle(arg, Status.Rejected)
 
 
 class Promise[T](PromiseLike[T], FutureLike[T]):
@@ -328,42 +358,18 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
         resolve or reject the returned promise when called.
         """
 
-        def resolve(arg: Any) -> None:
-            if self._status in (Status.Pending, Status.Cancelled):
-                if ispromise(arg):
-                    arg.then(resolve, reject)
-                else:
-                    self._result = arg
-                    self._status = Status.Fulfilled
-                    self._run_handlers()
-
-        def reject(arg: Any) -> None:
-            if self._status in (Status.Pending, Status.Cancelled):
-                if isinstance(arg, (CancelledError, asyncio.CancelledError)):
-                    # CancelledError is an instance of BaseException, but not
-                    # Exception. To prevent task cancellations from
-                    # propagating up to the top level and exiting the
-                    # application, which is presumably not the usual
-                    # intention, we convert them to CancellationErrors.
-                    try:
-                        raise CancellationError() from arg
-                    except CancellationError as e:
-                        arg = e
-                self._result = arg
-                self._status = Status.Rejected
-                self._run_handlers()
+        resolvers = PromiseResolvers(self)
 
         self._resolve_handlers = list[PromiseHandler]()
         self._reject_handlers = list[PromiseHandler]()
         self._on_cancel = on_cancel
-        self._resolve = resolve
-        self._reject = reject
+        self._resolvers = resolvers
 
         if fn:
             try:
-                fn(resolve, reject)
+                fn(resolvers.resolve, resolvers.reject)
             except (Exception, CancelledError) as e:
-                reject(e)
+                resolvers.reject(e)
 
     # Awaitable interface
     def __await__(self) -> Generator[Self, T, T]:
@@ -444,7 +450,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             else:
                 raise CancellationError()
         except (Exception, CancelledError) as e:
-            self._reject(e)
+            self._resolvers.reject(e)
         return True
 
     @staticmethod
@@ -526,6 +532,13 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
 
         self._resolve_handlers.clear()
         self._reject_handlers.clear()
+
+    def _settle(self, result: Any, status: Status):
+        assert self._status in (Status.Pending, Status.Cancelled)
+        self._result = result
+        self._status = status
+        self._run_handlers()
+        self._resolvers.promise = None
 
     def report_error(error: Any):
         import traceback

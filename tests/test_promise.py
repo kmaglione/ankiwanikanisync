@@ -1,3 +1,4 @@
+# ruff: noqa: RUF029
 import gc
 import unittest.mock
 from typing import Any, Awaitable, Never
@@ -217,11 +218,9 @@ async def test_promise_unhandled_rejection_reported(report_error: MagicMock):
     assert not report_error.called
 
     gc.collect()
-
     assert not report_error.called
 
     promise = None  # noqa: F841
-    gc.collect()
 
     report_error.assert_called_once_with(error)
 
