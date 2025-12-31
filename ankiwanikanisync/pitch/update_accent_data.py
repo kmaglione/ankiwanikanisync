@@ -1,21 +1,32 @@
 #!/usr/bin/env python3
-import xml.etree.ElementTree as ET
-import pickle
-import requests
-import tarfile
+from __future__ import annotations
+
 import json
-import sys
+import pickle
 import re
-from typing import NamedTuple
+import sys
+import tarfile
+import xml.etree.ElementTree as ET
+from collections import defaultdict
+from typing import TYPE_CHECKING, Sequence
+
+import requests
+
+if TYPE_CHECKING:
+    from .tenten_types import WordRecord
+else:
+    from tenten_types import WordRecord
 
 # Needed by requests to decode 10ten data
 try:
-    import brotli
+    import brotli  # type: ignore[import-not-found] # noqa: F401
 except ImportError:
-    import brotlicffi
+    import brotlicffi  # type: ignore[import-not-found] # noqa: F401
+
+type AccentsDict = dict[str, dict[tuple[str, ...], Sequence[int]]]
 
 
-def fetch_10ten_data():
+def fetch_10ten_data() -> AccentsDict:
     s = requests.Session()
     req = s.get("https://data.10ten.life/jpdict/reader/version-en.json")
     req.raise_for_status()
@@ -26,61 +37,65 @@ def fetch_10ten_data():
     patch = version_info["words"][major]["patch"]
     parts = version_info["words"][major]["parts"]
 
-    res = dict()
+    res: AccentsDict = defaultdict(dict)
 
     # format from: https://github.com/birchill/jpdict-idb/blob/main/src/words.ts
     for part in range(1, parts + 1):
-        req = s.get(f"https://data.10ten.life/jpdict/reader/words/en/{major}.{minor}.{patch}-{part}.jsonl")
+        req = s.get(
+            f"https://data.10ten.life/jpdict/reader/words/en/{major}.{minor}.{patch}-{part}.jsonl"
+        )
         req.raise_for_status()
         for line in req.iter_lines():
-            data = json.loads(line)
-            if "type" in data and data["type"] == "header":
+            line_data = json.loads(line)
+            if "type" in line_data and line_data["type"] == "header":
                 continue
-            if "rm" not in data or "k" not in data or "r" not in data:
+            if any(k not in line_data for k in ("rm", "k", "r")):
                 continue
 
-            k = data["k"]
-            r = data["r"]
-            rm = data["rm"]
+            data: WordRecord = line_data
 
             rn = []
             rmn = []
-            for i in range(0, min(len(r), len(rm))):
-                if not rm[i] or "a" not in rm[i]:
+            for r, rm in zip(data["r"], data["rm"]):
+                if not rm or "a" not in rm:
                     continue
 
-                if "app" in rm[i] and rm[i]["app"] == 0:
+                if "app" in rm and rm["app"] == 0:
                     continue
 
-                a = rm[i]["a"]
+                a = rm["a"]
                 if isinstance(a, int):
-                    rmn.append(str(a))
+                    rmn.append(a)
                 else:
-                    rmn.append(str(a[0]["i"]))
+                    rmn.append(a[0]["i"])
 
-                rn.append(r[i])
+                rn.append(r)
 
             if not rn:
                 continue
 
-            for reading in k:
-                if reading not in res:
-                    res[reading] = dict()
+            for reading in data["k"]:
                 for pair in zip(rn, rmn):
-                    if pair[0] not in res[reading]:
-                        res[reading][pair[0]] = str(pair[1])
+                    if (pair[0],) not in res[reading]:
+                        res[reading][pair[0],] = [pair[1]]
 
     return res
 
-def fetch_wadoku_data():
-    req = requests.get("https://www.wadoku.de/downloads/xml-export/wadoku-xml-latest.tar.xz", stream=True)
+
+def fetch_wadoku_data() -> AccentsDict:
+    req = requests.get(
+        "https://www.wadoku.de/downloads/xml-export/wadoku-xml-latest.tar.xz",
+        stream=True,
+    )
     req.raise_for_status()
 
     tree = None
     with tarfile.open(fileobj=req.raw, mode="r|xz") as tf:
         for member in tf:
             if member.name.endswith("/wadoku.xml"):
-                with tf.extractfile(member) as contents:
+                f = tf.extractfile(member)
+                assert f
+                with f as contents:
                     tree = ET.parse(contents)
                 break
     if tree is None:
@@ -91,66 +106,74 @@ def fetch_wadoku_data():
     ns = {"": "http://www.wadoku.de/xml/entry"}
     hira_reg = re.compile(r"(\[Akz\]|[ぁ-ゔゞ゛゜ー])")
 
-    res = dict()
+    res: AccentsDict = defaultdict(dict)
 
     for child in root.findall("entry", ns):
-        orths = [orth.text for orth in child.findall("form/orth", ns) if orth is not None and orth.text]
+        orths = [
+            orth.text for orth in child.findall("form/orth", ns) if orth and orth.text
+        ]
         if not orths:
             continue
 
-        hatsu = child.find("form/reading/hatsuon", ns).text
-        hiras = "".join(hira_reg.findall(hatsu)).split("[Akz]")
+        elem = child.find("form/reading/hatsuon", ns)
+        assert elem and elem.text
+        hatsu = elem.text
+        hiras = tuple("".join(hira_reg.findall(hatsu)).split("[Akz]"))
 
         # There can be multiple accent values, first one seems to be default though.
         accent_elem = child.find("form/reading/accent", ns)
         if accent_elem is None:
             continue
-        sub_accents = accent_elem.text.split("—")
+        assert accent_elem.text
+        sub_accents = tuple(map(int, accent_elem.text.split("—")))
 
         if len(sub_accents) == 1 and len(hiras) > 1:
-            # Sometimes there's multiple accent patterns, but the default spans the whole reading
-            hiras = ["".join(hiras)]
+            # Sometimes there's multiple accent patterns, but the default
+            # spans the whole reading
+            hiras = ("".join(hiras),)
         elif len(sub_accents) != len(hiras):
             # Invalid config, should not happen
-            raise Exception(f"Invalid accent config for {repr(orths)}: {repr(sub_accents)} / {repr(hiras)}")
+            raise Exception(
+                f"Invalid accent config for {orths!r}: {sub_accents!r} / {hiras!r}"
+            )
 
         for orth in orths:
-            if orth not in res:
-                res[orth] = dict()
-            hira_str = "-".join(hiras)
-            if hira_str not in res[orth]:
-                res[orth][hira_str] = "-".join(sub_accents)
+            if hiras not in res[orth]:
+                res[orth][hiras] = sub_accents
 
     return res
 
-def combine_data(data1, data2):
-    res = data1.copy()
+
+def combine_data(data1: AccentsDict, data2: AccentsDict) -> AccentsDict:
+    res: AccentsDict = defaultdict(dict)
+    res.update(data1)
     for orth, hiras in data2.items():
         for hira, accent in hiras.items():
             if orth in res and hira in res[orth]:
                 if accent != res[orth][hira]:
-                    print(f"Found discrepancy for {orth}/{hira}: 10ten: {res[orth][hira]}, Wadoku: {accent}", file=sys.stderr)
+                    print(
+                        f"Found discrepancy for {orth}/{hira}: "
+                        f"10ten: {res[orth][hira]}, Wadoku: {accent}",
+                        file=sys.stderr,
+                    )
                 continue
-            if orth not in res:
-                res[orth] = dict()
             res[orth][hira] = accent
     return res
+
 
 class HashableDict[K, V](dict[K, V]):
     def __hash__(self) -> int:  # type: ignore[override]
         return hash(tuple(sorted(self.items())))
 
-def print_data(data):
-    comb_data = dict[HashableDict[str, str], list[str]]()
+
+def print_data(data: AccentsDict):
+    comb_data = defaultdict[dict[tuple[str, ...], Sequence[int]], list[str]](list[str])
     for orth, hiras in data.items():
-        comb_data.setdefault(HashableDict(hiras), []).append(orth)
+        comb_data[HashableDict(hiras)].append(orth)
 
     res = {}
     for hiras, orths in comb_data.items():
-        for hira_str, acc_str in hiras.items():
-            hira = hira_str.split("-")
-            acc = list(map(int, acc_str.split("-")))
-
+        for hira, acc in hiras.items():
             pitch_data = list(zip(hira, acc))
             for orth in orths:
                 key = (orth, "".join(hira))
