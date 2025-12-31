@@ -7,7 +7,7 @@ from aqt.qt import QAction, QMenu, qconnect
 from .collection import wk_col
 from .importer import do_update_html, ensure_audio, ensure_context
 from .play_all_audio import install_play_all_audio
-from .sync import do_clear_cache, do_process, do_sync, do_update_intervals
+from .sync import do_clear_cache, do_sync, do_update_intervals
 from .timers import timers
 
 
@@ -25,8 +25,6 @@ def init_tools_menu():
     add_action("Sync Notes", do_sync)
 
     add_action("Sync Due Dates", do_update_intervals)
-
-    add_action("Reprocess Notes", do_process)
 
     # add_action("Review Mature Cards", do_autoreview)
 

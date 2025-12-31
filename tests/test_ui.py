@@ -14,7 +14,6 @@ def test_tools_menu(tools_menu: dict[str, QAction]):
     assert list(tools_menu.keys()) == [
         "Sync Notes",
         "Sync Due Dates",
-        "Reprocess Notes",
         "Clear Cache",
         "Overwrite Card HTML",
     ]
