@@ -180,7 +180,7 @@ vocabulary {
         color: var(--font-color-light);
 
         @if $color-text {
-            --color-text: $color-text;
+            --color-text: #{$color-text};
         }
     }
 }
@@ -211,7 +211,7 @@ vocabulary {
         text-shadow: 2px 2px 0 $shadow-color;
 
         @if $color-text {
-            --color-text: $color-text;
+            --color-text: #{$color-text};
         }
     }
 }
