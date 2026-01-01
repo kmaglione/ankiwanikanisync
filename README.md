@@ -43,9 +43,9 @@ This is where you control most actions. The menu items should be self explanator
 Configuration
 -------------
 
-[!IMPORTANT]
-The `WK_API_KEY` config value must be configured in order for this add-on to
-work.
+> [!IMPORTANT]
+ The `WK_API_KEY` config value must be configured in order for this add-on to
+ work.
 
 All configuration values are documented within the config JSON.
 
