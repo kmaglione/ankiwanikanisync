@@ -674,11 +674,13 @@ def test_model_templates(fs: FakeFilesystem, col: Collection):
         ensure_deck(col, lazy.config.DECK_NAME)
 
 
-def test_update_html(
+@pytest.mark.asyncio
+async def test_update_html(
     fs: FakeFilesystem, tools_menu: dict[str, QAction], col: Collection
 ):
     with template_fields_test(fs, col):
         tools_menu["Overwrite Card HTML"].triggered.emit()
+        await aqt.mw.taskman.pending_ops_completed()
 
 
 def test_update_fields(col: Collection):

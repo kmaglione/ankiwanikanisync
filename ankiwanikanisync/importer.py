@@ -1029,6 +1029,11 @@ def do_update_html() -> None:
     wk_col.col.models.update_dict(model)
 
 
+@query_op
+def update_html():
+    do_update_html()
+
+
 def sort_new_cards(col: Collection) -> None:
     card_ids = wk_col.find_cards("is:new")
 

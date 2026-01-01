@@ -8,7 +8,7 @@ from .promise_qt import QtScheduler
 
 sys.path.append(str(Path(__file__).parent / "deps"))
 
-__version__ = "0.1.1"
+__version__ = "0.2"
 
 Promise.set_scheduler(QtScheduler())
 
@@ -24,9 +24,15 @@ class Hooks:
         gui_hooks.main_window_did_init.append(self.on_init)
 
     def on_init(self):
-        from . import ui
+        from . import importer, ui
+        from .config import config
 
         ui.init()
+
+        if config._version != __version__:
+            importer.update_html()
+
+            config._version = __version__
 
     def on_load(self):
         self.just_loaded = True

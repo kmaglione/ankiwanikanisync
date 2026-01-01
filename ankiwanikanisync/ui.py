@@ -5,7 +5,7 @@ from aqt.browser.browser import Browser
 from aqt.qt import QAction, QMenu, qconnect
 
 from .collection import wk_col
-from .importer import do_update_html, ensure_audio, ensure_context
+from .importer import ensure_audio, ensure_context, update_html
 from .play_all_audio import install_play_all_audio
 from .sync import do_clear_cache, do_sync, do_update_intervals
 from .timers import timers
@@ -34,7 +34,7 @@ def init_tools_menu():
 
     menu.addSeparator()
 
-    add_action("Overwrite Card HTML", do_update_html)
+    add_action("Overwrite Card HTML", update_html)
 
 
 class BrowserMenu(object):
