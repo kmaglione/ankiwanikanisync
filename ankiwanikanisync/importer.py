@@ -464,7 +464,6 @@ type PitchKey = tuple[str, str]
 type PitchData = tuple[str, int]
 
 
-@functools.cache
 def get_pitch_data() -> dict[PitchKey, list[PitchData]]:
     pitchfile = ROOT_DIR / "pitch" / "accent_data.pickle.xz"
     with lzma.open(pitchfile, mode="rb") as f:

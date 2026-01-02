@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import importlib
 import json
 import traceback
@@ -120,7 +121,11 @@ def save_attr() -> Generator[SaveAttr]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def base_session_mock() -> Generator[BaseSession]:
+def base_session_mock(col) -> Generator[BaseSession]:
+    from ankiwanikanisync import importer
+
+    importer.get_pitch_data = functools.cache(importer.get_pitch_data)
+
     with BaseSession() as mock:
         yield mock
 
