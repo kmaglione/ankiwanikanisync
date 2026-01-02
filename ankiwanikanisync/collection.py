@@ -7,7 +7,7 @@ from functools import reduce
 from typing import Final, Literal, cast
 
 from anki.cards import Card, CardId
-from anki.collection import OpChangesWithCount, SearchNode
+from anki.collection import Collection, OpChangesWithCount, SearchNode
 from anki.consts import (
     CARD_TYPE_LRN,
     CARD_TYPE_NEW,
@@ -119,6 +119,9 @@ def format_id(id_: SubjectId) -> str:
     Formats a SubjectId as a fixed-with hexidecimal integer. Allows dependency
     list fields to be searched using simple substring queries without having
     to check for surrounding spaces or start/end of line.
+
+    >>> format_id(42)
+    '0000002a'
     """
     return f"{id_:08x}"
 
@@ -128,6 +131,23 @@ def search_node(**kwargs: str) -> SearchNode:
     Returns a SearchNode representing an exact string match query of the fields
     specified in the keyword arguments. If multiple keywords are provided,
     all fields must match.
+
+    >>> search_node(bar="foo", quux="baz")
+    group {
+      nodes {
+        field {
+          field_name: "bar"
+          text: "foo"
+        }
+      }
+      nodes {
+        field {
+          field_name: "quux"
+          text: "baz"
+        }
+      }
+    }
+    <BLANKLINE>
     """
     return wk_col.col.group_searches(
         *(
@@ -165,9 +185,10 @@ class WKCollection(object):
         "raw_data",
     )
 
-    def __init__(self):
+    @property
+    def col(self) -> Collection:
         assert mw.col
-        self.col = mw.col
+        return mw.col
 
     def get_note(self, nid: NoteId) -> WKNote:
         return WKNote.cast(self.col.get_note(nid))
