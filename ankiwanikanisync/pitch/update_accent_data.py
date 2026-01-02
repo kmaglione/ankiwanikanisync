@@ -9,7 +9,7 @@ import sys
 import tarfile
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import requests
 from requests.adapters import HTTPAdapter, Retry
@@ -32,6 +32,12 @@ session = requests.Session()
 session.mount(
     "https://", HTTPAdapter(max_retries=Retry(total=50, backoff_factor=0.5))
 )
+
+dedups = dict[object, object]()
+
+
+def dedup[T](val: T) -> T:
+    return cast(T, dedups.setdefault(val, val))
 
 
 def fetch_10ten_data() -> AccentsDict:
@@ -84,7 +90,7 @@ def fetch_10ten_data() -> AccentsDict:
             for reading in data["k"]:
                 for pair in zip(rn, rmn):
                     if (pair[0],) not in res[reading]:
-                        res[reading][pair[0],] = pair[1],
+                        res[dedup(reading)][dedup(pair[0]),] = pair[1],
 
     return res
 
@@ -125,7 +131,7 @@ def fetch_wadoku_data() -> AccentsDict:
         elem = child.find("form/reading/hatsuon", ns)
         assert elem is not None and elem.text
         hatsu = elem.text
-        hiras = tuple("".join(hira_reg.findall(hatsu)).split("[Akz]"))
+        hiras = tuple(map(dedup, "".join(hira_reg.findall(hatsu)).split("[Akz]")))
 
         # There can be multiple accent values, first one seems to be default though.
         accent_elem = child.find("form/reading/accent", ns)
@@ -137,7 +143,7 @@ def fetch_wadoku_data() -> AccentsDict:
         if len(sub_accents) == 1 and len(hiras) > 1:
             # Sometimes there's multiple accent patterns, but the default
             # spans the whole reading
-            hiras = ("".join(hiras),)
+            hiras = dedup("".join(hiras)),
         elif len(sub_accents) != len(hiras):
             # Invalid config, should not happen
             raise Exception(
@@ -146,7 +152,7 @@ def fetch_wadoku_data() -> AccentsDict:
 
         for orth in orths:
             if hiras not in res[orth]:
-                res[orth][hiras] = sub_accents
+                res[dedup(orth)][hiras] = sub_accents
 
     return res
 
@@ -181,17 +187,15 @@ def print_data(data: AccentsDict):
     res = {}
     for hiras, orths in comb_data.items():
         for hira, acc in hiras.items():
-            pitch_data = list(zip(hira, acc))
+            pitch_data = dedup(tuple(zip(hira, acc)))
             for orth in orths:
-                key = (orth, "".join(hira))
+                key = (orth, dedup("".join(hira)))
                 if key not in res:
                     res[key] = pitch_data
 
-    res_dict = {}
-    for k, v in sorted(list(res.items()), key=lambda i: (i[0][1], i[0][0])):
-        res_dict[k] = v
+    res_dict = dict(sorted(list(res.items()), key=lambda i: (i[0][1], i[0][0])))
 
-    with lzma.open(sys.argv[1], "wb") as f:
+    with lzma.open(sys.argv[1], "wb", preset=9 | lzma.PRESET_EXTREME) as f:
         pickle.dump(res_dict, f)
 
 
