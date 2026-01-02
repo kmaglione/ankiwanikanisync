@@ -1,3 +1,4 @@
+# ruff: noqa: RUF029
 from collections.abc import Awaitable
 from typing import (  # noqa: F401
     Any,

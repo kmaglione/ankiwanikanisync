@@ -19,7 +19,14 @@ from ankiwanikanisync.types import (
 )
 
 from .fixtures import SubSession
-from .utils import NoteMatcher, cleanup_after, cleanup_collection, get_note, lazy, make_card_review
+from .utils import (
+    NoteMatcher,
+    cleanup_after,
+    cleanup_collection,
+    get_note,
+    lazy,
+    make_card_review,
+)
 
 if TYPE_CHECKING:
     from ankiwanikanisync.collection import WKCollection
