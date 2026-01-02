@@ -26,6 +26,7 @@ dev = [
     "ts2python>=0.8.2",
     "line-profiler>=5.0.0",
     "brotli>=1.2.0",
+    "ruff>=0.14.10",
 ]
 
 [tool.mypy]
@@ -89,6 +90,14 @@ line-length = 88
 indent-width = 4
 
 target-version = "py313"
+
+exclude = [
+    ".venv",
+    "ankiwanikanisync/deps",
+    "bak",
+    "dist",
+    "node_modules",
+]
 
 [tool.ruff.lint]
 preview = true
