@@ -460,6 +460,23 @@ async def test_import_fields(
 
 
 @pytest.mark.asyncio
+async def test_import_sanitize(session_mock: SubSession):
+    unsan = r"` \` ${ \ "[:-1]
+    vocab = session_mock.add_subject(
+        "vocabulary",
+        meaning_mnemonic=unsan,
+        context_sentences=[{"en": unsan, "ja": ""}],
+    )
+
+    await lazy.sync.do_sync()
+    note = get_note(vocab)
+
+    assert note["Meaning_Mnemonic"] == r"\` \\\` \${ \\ "[:-1]
+
+    assert json.loads(note["Context_Sentences"]) == [{"en": unsan, "ja": ""}]
+
+
+@pytest.mark.asyncio
 async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSession):
     from ankiwanikanisync.importer import ContextDownloader
 

@@ -97,7 +97,7 @@ export function lint_zmypy() {
 }
 
 export async function generate_types() {
-    const srcs = [files.types_ts, "munge_types.py", "gulpfile.ts"];
+    const srcs = [files.types_ts, "scripts/munge_types.py", "gulpfile.ts"];
     const src_st = await Promise.all(srcs.map(f => fs.stat(f)));
     const dest_st = await fs.stat(files.types_py);
     if (src_st.every(st => st.mtime <= dest_st.mtime)) {
@@ -109,7 +109,7 @@ export async function generate_types() {
         quoted`ts2python -c3.14 -atoplevel -o ${files.types_base} ${files.types_ts}`,
         quoted`ruff format ${files.types_py}`,
         quoted`ruff check --fix ${files.types_py}`,
-        quoted`python munge_types.py ${files.types_py}`,
+        quoted`python scripts/munge_types.py ${files.types_py}`,
         quoted`ruff format ${files.types_py}`,
     ])();
 }

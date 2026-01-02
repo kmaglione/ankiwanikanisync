@@ -65,9 +65,37 @@ ROOT_DIR: Final = pathlib.Path(__file__).parent.resolve()
 # mangling them.
 html_trans: Final = str.maketrans({"<": r"\u003c", ">": r"\u003e", "&": r"\u0026"})
 
+san_re = re.compile(r"(\\*)(`|\$\{|$)")
+
 
 def to_json(val: object) -> str:
+    r"""
+    >>> to_json(r"<img>")
+    '"\\u003cimg\\u003e"'
+
+    >>> to_json(r"嬉しい")
+    '"嬉しい"'
+    """
     return json.dumps(val, ensure_ascii=False).translate(html_trans)
+
+
+def sanitize(val: str) -> str:
+    r"""
+    >>> sanitize(r"`")
+    '\\`'
+
+    >>> sanitize(r"\`")
+    '\\\\\\`'
+
+    >>> sanitize(r"\\")
+    '\\\\\\\\'
+
+    >>> sanitize(r"${")
+    '\\${'
+    """
+    def repl(m: re.Match) -> str:
+        return f'{m[1]}{m[1]}{fr"\{m[2]}" if m[2] else ""}'
+    return san_re.sub(repl, val)
 
 
 class ImportCancelledException(Exception):
@@ -633,10 +661,14 @@ class WKImporter(NoteImporter):
 
         field_values["_tags"] = " ".join(tags)
 
+        def field_value(field: str) -> str:
+            val = permissive_dict(field_values).get(field, "")
+            if field not in wk_col.JSON_FIELDS:
+                val = sanitize(val)
+            return val
+
         note = ForeignNote()
-        note.fields = [
-            permissive_dict(field_values).get(field, "") for field in self.mapping
-        ]
+        note.fields = list(map(field_value, self.mapping))
         return note
 
     def get_user_study(self, subject: WKSubject) -> UserStudy:

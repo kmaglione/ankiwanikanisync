@@ -40,6 +40,7 @@ exclude = [
 [tool.pytest]
 asyncio_mode = "auto"
 addopts = [
+    "--doctest-modules",
     # We need "dist" to appear before "." in `sys.path` so that our add-on
     # modules are imported from dist/ rather than ankiwanikanisync/, where
     # they wouldn't have access to generated resource files. Since our tests
@@ -48,6 +49,13 @@ addopts = [
     "--import-mode=append",
     # Two workers empirically runs the fastest
     "-n2",
+]
+norecursedirs = [
+    "ankiwanikanisync",
+    "bak",
+    "dist/ankiwanikanisync/deps",
+    "node_modules",
+    "scripts",
 ]
 pythonpath = [
     # For our built add-on. If loaded directly from source, it doesn't have
