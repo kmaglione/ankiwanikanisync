@@ -1,16 +1,18 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 from __future__ import annotations
 
 import json
+import lzma
 import pickle
 import re
 import sys
 import tarfile
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
 if TYPE_CHECKING:
     from .tenten_types import WordRecord
@@ -23,12 +25,17 @@ try:
 except ImportError:
     import brotlicffi  # type: ignore[import-not-found] # noqa: F401
 
-type AccentsDict = dict[str, dict[tuple[str, ...], Sequence[int]]]
+type HirasDict = dict[tuple[str, ...], tuple[int, ...]]
+type AccentsDict = dict[str, HirasDict]
+
+session = requests.Session()
+session.mount(
+    "https://", HTTPAdapter(max_retries=Retry(total=50, backoff_factor=0.5))
+)
 
 
 def fetch_10ten_data() -> AccentsDict:
-    s = requests.Session()
-    req = s.get("https://data.10ten.life/jpdict/reader/version-en.json")
+    req = session.get("https://data.10ten.life/jpdict/reader/version-en.json")
     req.raise_for_status()
     version_info = req.json()
 
@@ -41,7 +48,7 @@ def fetch_10ten_data() -> AccentsDict:
 
     # format from: https://github.com/birchill/jpdict-idb/blob/main/src/words.ts
     for part in range(1, parts + 1):
-        req = s.get(
+        req = session.get(
             f"https://data.10ten.life/jpdict/reader/words/en/{major}.{minor}.{patch}-{part}.jsonl"
         )
         req.raise_for_status()
@@ -77,13 +84,13 @@ def fetch_10ten_data() -> AccentsDict:
             for reading in data["k"]:
                 for pair in zip(rn, rmn):
                     if (pair[0],) not in res[reading]:
-                        res[reading][pair[0],] = [pair[1]]
+                        res[reading][pair[0],] = pair[1],
 
     return res
 
 
 def fetch_wadoku_data() -> AccentsDict:
-    req = requests.get(
+    req = session.get(
         "https://www.wadoku.de/downloads/xml-export/wadoku-xml-latest.tar.xz",
         stream=True,
     )
@@ -110,13 +117,13 @@ def fetch_wadoku_data() -> AccentsDict:
 
     for child in root.findall("entry", ns):
         orths = [
-            orth.text for orth in child.findall("form/orth", ns) if orth and orth.text
+            orth.text for orth in child.findall("form/orth", ns) if orth.text
         ]
         if not orths:
             continue
 
         elem = child.find("form/reading/hatsuon", ns)
-        assert elem and elem.text
+        assert elem is not None and elem.text
         hatsu = elem.text
         hiras = tuple("".join(hira_reg.findall(hatsu)).split("[Akz]"))
 
@@ -167,7 +174,7 @@ class HashableDict[K, V](dict[K, V]):
 
 
 def print_data(data: AccentsDict):
-    comb_data = defaultdict[dict[tuple[str, ...], Sequence[int]], list[str]](list[str])
+    comb_data = defaultdict[HirasDict, list[str]](list[str])
     for orth, hiras in data.items():
         comb_data[HashableDict(hiras)].append(orth)
 
@@ -184,7 +191,7 @@ def print_data(data: AccentsDict):
     for k, v in sorted(list(res.items()), key=lambda i: (i[0][1], i[0][0])):
         res_dict[k] = v
 
-    with open(sys.argv[1], "wb") as f:
+    with lzma.open(sys.argv[1], "wb") as f:
         pickle.dump(res_dict, f)
 
 

@@ -25,6 +25,7 @@ dev = [
     "types-requests (>=2.32.4.20250913,<3.0.0.0)",
     "ts2python>=0.8.2",
     "line-profiler>=5.0.0",
+    "brotli>=1.2.0",
 ]
 
 [tool.mypy]

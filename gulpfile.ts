@@ -114,6 +114,12 @@ export async function generate_types() {
     ])();
 }
 
+export function update_accent_data() {
+    return shell.task([
+        quoted`uv run ./update_accent_data.py accent_data.pickle.xz`,
+    ], { cwd: "./ankiwanikanisync/pitch/" })();
+}
+
 export function watch_types() {
     return watch([files.types_ts], watchOpts, generate_types);
 }
