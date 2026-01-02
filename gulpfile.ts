@@ -69,6 +69,7 @@ const watchOpts = {
 
 export function lint_eslint() {
     return src([
+        ...files.html,
         ...files.js,
         ...files.ts,
     ], { since: lastRun(lint_eslint) })
@@ -119,6 +120,7 @@ export function watch_types() {
 
 export function watch_eslint() {
     return watch([
+        ...files.html,
         ...files.js,
         ...files.ts,
     ], watchOpts, lint_eslint);

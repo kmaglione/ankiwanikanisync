@@ -42,5 +42,7 @@ export type DeepReadonly<T>
     : DeepReadonly_<T>;
 
 declare global {
-  var _: DeepReadonly<TemplateFields>;
+  const _: DeepReadonly<TemplateFields>;
+
+  function pycmd(arg: string): boolean;
 }

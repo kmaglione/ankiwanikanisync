@@ -12,6 +12,11 @@ const noUnusedVars = ["error", {
     "varsIgnorePattern": "^_",
 }];
 
+const allGlobals = {
+    ...globals.browser,
+    pycmd: "readonly",
+};
+
 const jsBase = {
     rules: {
         "import/no-unresolved": "off",
@@ -32,7 +37,7 @@ export default defineConfig([
         files: ["**/*.{js,mjs,cjs}"],
         plugins: { js, import: importPlugin },
         extends: ["js/recommended", jsBase],
-        languageOptions: { globals: globals.browser },
+        languageOptions: { globals: allGlobals },
         rules: {
             "no-unused-vars": noUnusedVars,
         },
@@ -48,7 +53,7 @@ export default defineConfig([
             jsBase,
         ],
         languageOptions: {
-            globals: globals.browser,
+            globals: allGlobals,
             parser: typescriptParser,
             parserOptions: {
                 projectService: true,
@@ -64,7 +69,7 @@ export default defineConfig([
         files: ["**/*.html"],
         plugins: { js, html },
         extends: ["js/recommended"],
-        languageOptions: { globals: globals.browser },
+        languageOptions: { globals: allGlobals },
         rules: {
             "no-constant-binary-expression": "off",
             "no-constant-condition": "off",
