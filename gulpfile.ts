@@ -262,7 +262,7 @@ export const install = series(build, doInstall);
 export const install_quick = series(build_quick, doInstall);
 
 export function export_zip() {
-    return src(`${files.dist}**/*`)
+    return src(`${files.dist}**/*`, { encoding: false })
         .pipe(zip("ankiwanikanisync.zip"))
         .pipe(dest("./"));
 }
