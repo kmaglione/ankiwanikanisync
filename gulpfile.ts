@@ -14,7 +14,7 @@ import gulpSass from "gulp-sass";
 import shell from "gulp-shell";
 import stylelint from "gulp-stylelint-esm";
 import ts from "gulp-typescript";
-import zip from "gulp-zip";
+import zip from "gulp-zip-plus";
 import * as dartSass from "sass";
 import { quote } from "shell-quote";
 
@@ -261,9 +261,13 @@ export const install = series(build, doInstall);
 
 export const install_quick = series(build_quick, doInstall);
 
+function shouldCompress(path: string): boolean {
+    return !path.endsWith(".xz");
+}
+
 export function export_zip() {
     return src(`${files.dist}**/*`, { encoding: false })
-        .pipe(zip("ankiwanikanisync.zip"))
+        .pipe(zip("ankiwanikanisync.zip", { compress: shouldCompress }))
         .pipe(dest("./"));
 }
 

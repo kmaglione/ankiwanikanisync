@@ -26,9 +26,6 @@ importers:
       '@types/gulp-sass':
         specifier: ^6.0.0
         version: 6.0.0
-      '@types/gulp-zip':
-        specifier: ^4.0.4
-        version: 4.0.4
       '@types/shell-quote':
         specifier: ^1.7.5
         version: 1.7.5
@@ -89,9 +86,9 @@ importers:
       gulp-typescript:
         specifier: 6.0.0-alpha.1
         version: 6.0.0-alpha.1(typescript@5.9.3)
-      gulp-zip:
-        specifier: ^6.1.0
-        version: 6.1.0(gulp@5.0.1)
+      gulp-zip-plus:
+        specifier: ^1.0.1
+        version: 1.0.1(gulp@5.0.1)
       htmlhint:
         specifier: ^1.8.0
         version: 1.8.0
@@ -430,9 +427,6 @@ packages:
 
   '@types/gulp-sass@6.0.0':
     resolution: {integrity: sha512-i+aa3mmC7Xoi5Al8zsFGKtYnk7AulMvQeluO3CRiRvqvYg1eyra6xerfxobXjmHGlJsWnNx71OTQa3yH33FH4w==}
-
-  '@types/gulp-zip@4.0.4':
-    resolution: {integrity: sha512-iwWKFLIO90D5EtNCqUyiN4IhDA4OEPHdMUfj2l+upEl8nGxCrzPxIKZmpib8l0MqtuHI6FVZDAoDOnrCO9Kp3A==}
 
   '@types/gulp@4.0.18':
     resolution: {integrity: sha512-IqkYa4sXkwH2uwqO2aXYOoAisJpLX13BPaS6lmEAoG4BbgOay3qqGQFsT9LMSSQVMQlEKU7wTUW0sPV46V0olw==}
@@ -1625,8 +1619,8 @@ packages:
     peerDependencies:
       typescript: '~2.7.1 || >=2.8.0-dev || >=2.9.0-dev || ~3.0.0 || >=3.0.0-dev || >=3.1.0-dev || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.7.0-dev '
 
-  gulp-zip@6.1.0:
-    resolution: {integrity: sha512-couiqfO4CSM4q3oKnihLhYq5mVmwyXfgLP/0eeM7oVlN+psn45vfvJHcCL3AkPgTi4NojnUFV2IozYqZClIujQ==}
+  gulp-zip-plus@1.0.1:
+    resolution: {integrity: sha512-usasP0lSg1yl6tBaI1bkXtLZRLCQBHIArlDQU+TFch7nCpGBshtDEarpT1emML+e0ILyBfEDandI0Io9Nnh6EQ==}
     engines: {node: '>=18'}
     peerDependencies:
       gulp: '>=4'
@@ -3281,10 +3275,6 @@ snapshots:
       '@sass/types': 1.97.1
       '@types/node': 25.0.3
 
-  '@types/gulp-zip@4.0.4':
-    dependencies:
-      '@types/node': 25.0.3
-
   '@types/gulp@4.0.18':
     dependencies:
       '@types/node': 25.0.3
@@ -4723,7 +4713,7 @@ snapshots:
       vinyl: 2.2.1
       vinyl-fs: 3.0.3
 
-  gulp-zip@6.1.0(gulp@5.0.1):
+  gulp-zip-plus@1.0.1(gulp@5.0.1):
     dependencies:
       get-stream: 9.0.1
       gulp-plugin-extras: 1.1.0
