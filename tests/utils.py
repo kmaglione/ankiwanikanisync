@@ -145,6 +145,37 @@ def iso_reltime(*args, **kwargs) -> str:
 
 
 class ApproxDatetime:
+    """
+    Helper for asserting the approximate values of datetime objects. The
+    equality overload will return true if the datetime object being compared
+    against is within 10 seconds of the datetime passed to the constructor.
+    The subject of the comparison may also be a date/time string in ISO format
+    or a timestamp number in seconds since the Epoch.
+
+    >>> dt = datetime.fromtimestamp(100).astimezone(timezone.utc)
+
+    >>> ApproxDatetime(dt) == 101
+    True
+
+    >>> ApproxDatetime(dt) == 99
+    True
+
+    >>> ApproxDatetime(dt) == 111
+    False
+
+    >>> ApproxDatetime(dt) == '1970-01-01T00:01:41+00:00'
+    True
+
+    >>> ApproxDatetime(dt) == '1970-01-01T00:00:00+00:00'
+    False
+
+    >>> ApproxDatetime(reltime(seconds=10)) == reltime(seconds=11)
+    True
+
+    >>> ApproxDatetime(reltime(seconds=10)) == reltime(seconds=100)
+    False
+    """
+
     DELTA: Final = timedelta(seconds=10)
 
     def __init__(self, dt: datetime):
@@ -154,9 +185,12 @@ class ApproxDatetime:
         return f"{self.datetime!r} ± {self.DELTA!r}"
 
     def __eq__(self, other: object):
-        if isinstance(other, str):
-            with suppress(Exception):
-                other = datetime.fromisoformat(other)
+        match other:
+            case str():
+                with suppress(Exception):
+                    other = datetime.fromisoformat(other)
+            case int() | float():
+                other = datetime.fromtimestamp(other).astimezone(timezone.utc)
 
         return isinstance(other, datetime) and (
             self.datetime - self.DELTA <= other <= self.datetime + self.DELTA
@@ -165,10 +199,39 @@ class ApproxDatetime:
 
 @forward_args(reltime)
 def approx_reltime(*args, **kwargs):
+    """
+    >>> approx_reltime(seconds=1) == reltime()
+    True
+
+    >>> approx_reltime(seconds=20) == reltime()
+    False
+    """
     return ApproxDatetime(reltime(*args, **kwargs))
 
 
 class PartialDict[K, V](dict[K, V]):
+    """
+    An assertion helper for testing that all keys in the given `PartialDict`
+    are present, and have equal values, in a dict that it is compared against.
+    May be compared using either the <= operator (for direct use in
+    assertions) or the == operator (when part of a more complex object
+    hierarchy).
+
+    >>> PartialDict({'a': 1}) <= {'a': 1, 'b': 2}
+    True
+
+    >>> PartialDict({'a': 1}) <= {'a': 2, 'b': 2}
+    False
+
+    >>> PartialDict({'a': 1}) <= {'b': 2}
+    False
+
+    >>> [42, PartialDict({'a': 1})] == [42, {'a': 1, 'b': 2}]
+    True
+
+    >>> [42, PartialDict({'a': 1})] == [42, {'b': 2}]
+    False
+    """
     def __le__(self, other: object) -> bool:
         if isinstance(other, dict):
             return self.items() <= other.items()
@@ -263,6 +326,10 @@ def update_note(note: WKNote, **kwargs: Unpack[FieldDict]):
 
 
 class CardMatcher:
+    """
+    An assertion helper which returns true when compared against a Card object
+    with the same ID as the one passed to the constructor.
+    """
     def __init__(self, card: WKCard):
         self.card = card
 
@@ -271,6 +338,10 @@ class CardMatcher:
 
 
 class NoteMatcher:
+    """
+    An assertion helper which returns true when compared against a Note object
+    with the same ID as the one passed to the constructor.
+    """
     def __init__(self, note: WKNote):
         self.note = note
 
@@ -371,6 +442,24 @@ def read_fixture_json(name: str) -> object:
 
 
 class saving_attr[T]:
+    """
+    >>> class Foo:
+    ...     foo = 42
+
+    >>> foo = Foo()
+
+    >>> with saving_attr(foo, "foo"):
+    ...     foo.foo = 12
+    ...     foo.foo
+    12
+
+    >>> foo.foo
+    42
+
+    >>> with saving_attr(foo, "foo") as val:
+    ...     val
+    42
+    """
     def __init__(self, obj: object, attr: str):
         self._obj = obj
         self._attr = attr
@@ -384,6 +473,24 @@ class saving_attr[T]:
 
 
 class SaveAttr:
+    """
+    >>> class Foo:
+    ...     foo = 42
+    ...     bar = 12
+
+    >>> foo = Foo()
+
+    >>> with SaveAttr() as save:
+    ...     save(foo, "foo")
+    ...     save(foo, "bar")
+    ...     foo.foo = 1
+    ...     foo.bar = 2
+    ...     foo.foo, foo.bar
+    (1, 2)
+
+    >>> foo.foo, foo.bar
+    (42, 12)
+    """
     def __init__(self):
         self.saved = list[tuple[object, str, Any]]()
 

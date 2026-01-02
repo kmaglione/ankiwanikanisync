@@ -29,6 +29,10 @@ CHUNK_SIZE: Final = 1024
 def chunked[T](
     seq: Sequence[T], /, chunk_size: int = CHUNK_SIZE
 ) -> Generator[tuple[int, Sequence[T]], None, None]:
+    """
+    >>> list(chunked([1, 2, 3, 4, 5], chunk_size=2))
+    [(0, [1, 2]), (2, [3, 4]), (4, [5])]
+    """
     for i in range(0, len(seq), chunk_size):
         yield i, seq[i : i + chunk_size]
 
@@ -36,6 +40,14 @@ def chunked[T](
 def maybe_chunked[T](
     desc: str, seq: Sequence[T] | None, /, chunk_size: int = CHUNK_SIZE
 ) -> Generator[Sequence[T] | None, None, None]:
+    """
+    >>> list(maybe_chunked("", [1, 2, 3, 4, 5], chunk_size=2))
+    [[1, 2], [3, 4], [5]]
+
+    >>> list(maybe_chunked("", None, chunk_size=2))
+    [None]
+    """
+
     if seq is None:
         report_progress(f"Fetching all {desc}...", 0, 0)
         yield None

@@ -89,6 +89,16 @@ def isfuture(arg: object) -> TypeIs[FutureLike]: ...
 
 
 def isfuture(arg: Any) -> TypeIs[FutureLike]:
+    """
+    >>> isfuture(Promise.resolve(True))
+    True
+
+    >>> isfuture(asyncio.Future())
+    True
+
+    >>> isfuture({})
+    False
+    """
     return getattr(arg, "_asyncio_future_blocking", None) is not None
 
 
@@ -144,6 +154,20 @@ def ispromise(val: object) -> TypeGuard[PromiseLike]: ...
 # using `isinstance(val, PromiseLike)`, since the latter is notoriously
 # inefficient.
 def ispromise(val: Any) -> TypeGuard[PromiseLike]:
+    """
+    >>> ispromise(Promise.resolve(True))
+    True
+
+    >>> class Thenable:
+    ...     def then(*args):
+    ...         return Thenable()
+
+    >>> ispromise(Thenable())
+    True
+
+    >>> ispromise({})
+    False
+    """
     return callable(getattr(val, "then", None))
 
 

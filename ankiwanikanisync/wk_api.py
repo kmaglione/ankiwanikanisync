@@ -157,7 +157,28 @@ class WKReqCancelledException(Exception):
     pass
 
 
-def param_to_str(val):
+def param_to_str(val: object) -> str:
+    """
+    >>> param_to_str("str")
+    'str'
+
+    >>> param_to_str(True)
+    'true'
+
+    >>> param_to_str(False)
+    'false'
+
+    >>> from datetime import timezone
+
+    >>> param_to_str(datetime.fromtimestamp(0).astimezone(timezone.utc))
+    '1970-01-01T00:00:00+00:00'
+
+    >>> param_to_str(42)
+    '42'
+
+    >>> param_to_str([42, True, "str"])
+    '42,true,str'
+    """
     if isinstance(val, str):
         return val
     if isinstance(val, bool):
