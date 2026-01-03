@@ -228,7 +228,7 @@ class ReviewHandler:
         card = WKCard.cast(card_)
 
         if not note_is_wk(card.note()):
-            return
+            return  # pragma: no cover
 
         # If the card just reached guru status, update the status of cards
         # that depend on it, and check whether the current level has reached
@@ -659,7 +659,7 @@ class SyncOp(object):
 
             try:
                 wk.post("reviews", data={"review": review})
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.RequestException as e:  # pragma: no cover
                 print(f"Failed to submit review for nid:{note.id}: {review!r} {e}")
                 show_tooltip(
                     f'Failed to submit review for note "{note["Characters"]}":<br>{e}'
@@ -771,7 +771,7 @@ class SyncOp(object):
         changed_cards = []
         for i, wkassignment in enumerate(assignments):
             if mw.progress.want_cancel():
-                break
+                break  # pragma: no cover
 
             report_progress(
                 f"Updating assignments {i + 1}/{len(assignments)}...",
@@ -817,7 +817,7 @@ class SyncOp(object):
 @collection_op
 def do_sync() -> OpChangesWithCount:
     if not config.WK_API_KEY:
-        raise Exception("Configure your WK API key first.")
+        raise Exception("Configure your WK API key first.")  # pragma: no cover
 
     now = wknow()
 

@@ -1,9 +1,14 @@
+.coverage
+.env
 .mypy_cache
 .parcel-cache
 .ruff_cache
+.secrets
 .venv
 bak/
+coverage.xml
 dist/
+htmlcov/
 /meta.json
 __pycache__/
 node_modules

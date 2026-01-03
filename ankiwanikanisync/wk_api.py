@@ -206,9 +206,10 @@ class WKAPI:
         while not mw.progress.want_cancel():
             if self.limiter.try_acquire(name):
                 return True
-            assert self.limiter.max_delay
-            sleep(self.limiter.max_delay / 1000)
-        raise WKReqCancelledException("The request was cancelled.")
+            else:  # pragma: no cover
+                assert self.limiter.max_delay
+                sleep(self.limiter.max_delay / 1000)
+        raise WKReqCancelledException("The request was cancelled.")  # pragma: no cover
 
     def get_srs(self, srs_id: SRSID) -> WKSRS:
         if srs_id not in self.spaced_repetition_systems:
@@ -318,7 +319,7 @@ class WKAPI:
     ):
         api_key = config.WK_API_KEY
         if not api_key:
-            raise Exception("No API Key!")
+            raise Exception("No API Key!")  # pragma: no cover
 
         headers = {
             "Authorization": f"Bearer {api_key}",

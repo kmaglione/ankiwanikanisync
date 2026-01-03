@@ -151,5 +151,5 @@ def report_progress(txt, val, max):
     mw.taskman.run_on_main(lambda: mw.progress.update(label=txt, value=val, max=max))
 
 
-def show_tooltip(txt, period=3000):
+def show_tooltip(txt, period=3000): # pragma: no cover
     mw.taskman.run_on_main(lambda: tooltip(txt, period=period))

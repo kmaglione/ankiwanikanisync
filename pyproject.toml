@@ -30,6 +30,25 @@ dev = [
     "ruff>=0.14.10",
 ]
 
+[tool.coverage.paths]
+source = [
+    "ankiwanikanisync/",
+    "dist/ankiwanikanisync/",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    'raise NotImplementedError',
+    '@(abc\.)?abstractmethod',
+    '.?# pragma: no ?cover: start(?s:.*?)# pragma: no ?cover: stop',
+    '\A(?s:.*# pragma: no ?cover: file.*)\Z',
+]
+omit = [
+    'ankiwanikanisync/conftest.py',
+    'ankiwanikanisync/promise_hybrid.py',
+    'ankiwanikanisync/sanity.py',
+]
+
 [tool.mypy]
 check_untyped_defs = true
 exclude = [

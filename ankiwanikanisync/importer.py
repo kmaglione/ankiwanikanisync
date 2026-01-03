@@ -127,9 +127,10 @@ class Downloader[ResultsType: Sized, ValType](ABC):
         while not hooks.anki_closing:
             if self.limiter.try_acquire(name):
                 return True
-            assert self.limiter.max_delay
-            sleep(self.limiter.max_delay / 1000)
-        raise ImportCancelledException("The import was cancelled.")
+            else:  # pragma: no cover
+                assert self.limiter.max_delay
+                sleep(self.limiter.max_delay / 1000)
+        raise ImportCancelledException("The import was cancelled.")  # pragma: no cover
 
     @abstractmethod
     def update_results(self, ResultsType) -> Any: ...
@@ -239,7 +240,7 @@ class ContextDownloader(Downloader[dict[NoteId, str], str]):
                 res[parser.patterns[id]] = [
                     {"en": c.en, "ja": c.ja} for c in parser.collos[id]
                 ]
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             print(f"Failed parsing context: {e!r}")
 
         self.results[note_id] = to_json(res)
@@ -537,9 +538,10 @@ class WKImporter(NoteImporter):
         while not mw.progress.want_cancel():
             if self.limiter.try_acquire(name):
                 return True
-            assert self.limiter.max_delay
-            sleep(self.limiter.max_delay / 1000)
-        raise ImportCancelledException("The import was cancelled.")
+            else:  # pragma: no cover
+                assert self.limiter.max_delay
+                sleep(self.limiter.max_delay / 1000)
+        raise ImportCancelledException("The import was cancelled.")  # pragma: no cover
 
     def fields(self) -> int:
         return len(self.model["flds"]) + 1  # Final unnamed field is _tags
@@ -554,7 +556,7 @@ class WKImporter(NoteImporter):
     def foreignNotes(self) -> list[ForeignNote]:
         res = []
         for i, subj in enumerate(self.subjects):
-            if mw.progress.want_cancel():
+            if mw.progress.want_cancel():  # pragma: no cover
                 raise ImportCancelledException("The import was cancelled.")
 
             report_progress(
@@ -721,7 +723,7 @@ class WKImporter(NoteImporter):
                     return res
 
             # If that somehow fails, emit the old method as fallback
-            return f'<i class="radical-{data["slug"]}"></i>'
+            return f'<i class="radical-{data["slug"]}"></i>'  # pragma: no cover
 
         return "Not found"
 
@@ -805,7 +807,7 @@ class WKImporter(NoteImporter):
         ):
             return f'<span class="mora">{res}</span>'
 
-        raise Exception(
+        raise Exception(  # pragma: no cover
             html.escape(f"Invalid pitch output for {key}: {self.pitch_data[key]!r}")
         )
 
@@ -817,7 +819,7 @@ class WKImporter(NoteImporter):
             for elt in elts:
                 if elt["primary"]:
                     return elt
-            raise IndexError()
+            raise IndexError()  # pragma: no cover
 
         res = []
         for sub_id in subject["data"][key]:
@@ -1041,7 +1043,7 @@ def ensure_deck(col: Collection, deck_name: str) -> bool:
 
 def do_update_html() -> None:
     model = wk_col.col.models.by_name(config.NOTE_TYPE_NAME)
-    if not model:
+    if not model:  # pragma: no cover
         show_tooltip("WK note type not found.")
         return
 
@@ -1052,7 +1054,7 @@ def do_update_html() -> None:
     for tmpl in model["tmpls"]:
         if tmpl_data := model_data["templates"].get(tmpl["name"]):
             tmpl.update(tmpl_data)
-        else:
+        else:  # pragma: no cover
             show_tooltip("Unknown template name in note type.")
 
     model["css"] = model_data["css"]
@@ -1105,7 +1107,7 @@ def suspend_hidden_notes(col: Collection, subjects: Sequence[WKSubject]) -> None
 
         if note_ids := wk_col.find_notes("-is:suspended", card_id=str(subject["id"])):
             if len(note_ids) > 1:
-                print("Found more than one note for a subject id!")
+                print("Found more than one note for a subject id!")  # pragma: no cover
 
             col.sched.suspend_notes(note_ids)
 
@@ -1155,11 +1157,9 @@ def ensure_notes(
     study_mats: Mapping[int, WKStudyMaterialData],
 ):
     model = col.models.by_name(config.NOTE_TYPE_NAME)
-    if not model:
-        raise Exception("Can't ensure non-existant model")
+    assert model
     deck_id = col.decks.id(config.DECK_NAME, create=False)
-    if not deck_id:
-        raise Exception("Can't ensure non-existant deck")
+    assert deck_id
 
     col.set_aux_notetype_config(model["id"], "lastDeck", deck_id)
 
