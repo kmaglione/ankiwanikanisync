@@ -11,33 +11,20 @@ import htmlhint from "gulp-htmlhint";
 import preserveWhitespace from "gulp-preserve-typescript-whitespace";
 import prettyError from "gulp-prettyerror";
 import gulpSass from "gulp-sass";
-import shell from "gulp-shell";
 import stylelint from "gulp-stylelint-esm";
 import ts from "gulp-typescript";
 import zip from "gulp-zip-plus";
 import * as dartSass from "sass";
-import { quote } from "shell-quote";
 
-
-function quoted(strings: TemplateStringsArray, ...params: string[]) {
-    const res = []
-    for (const [i, str] of strings.raw.entries()) {
-        res.push(str);
-        if (i < params.length) {
-            res.push(quote([params[i]]));
-        }
-    }
-    return res.join("");
-}
+import { exec } from "./exec.ts";
 
 const sass = gulpSass(dartSass);
 
-const tsProject = ts.createProject("tsconfig.json");
+const tsProject = ts.createProject("tsconfig.addon.json");
 
 const files = {
     types_ts: "ankiwanikanisync/data/files/types.ts",
     types_py: "ankiwanikanisync/types.py",
-    types_base: "ankiwanikanisync/",
     py: [
         "ankiwanikanisync/**/*.py",
         "!ankiwanikanisync/pitch/*.py",
@@ -93,7 +80,7 @@ export function lint_stylelint() {
 }
 
 export function lint_zmypy() {
-    return shell.task(["zmypy"])();
+    return exec`zmypy`;
 }
 
 export async function generate_types() {
@@ -104,20 +91,17 @@ export async function generate_types() {
         return;
     }
 
-    await shell.task([
-        quoted`rm -f ${files.types_py}`,
-        quoted`uv run ts2python -c3.14 -atoplevel -o ${files.types_base} ${files.types_ts}`,
-        quoted`uv run ruff format ${files.types_py}`,
-        quoted`uv run ruff check --fix ${files.types_py}`,
-        quoted`uv run python scripts/munge_types.py ${files.types_py}`,
-        quoted`uv run ruff format ${files.types_py}`,
-    ])();
+    await exec`rm -f ${files.types_py}`;
+    await exec`uv run ts2python -c3.14 -atoplevel -o ${path.dirname(files.types_py)} ${files.types_ts}`;
+    await exec`uv run ruff format ${files.types_py}`;
+    await exec`uv run ruff check --fix ${files.types_py}`;
+    await exec`uv run python scripts/munge_types.py ${files.types_py}`;
+    await exec`uv run ruff format ${files.types_py}`;
 }
 
 export function update_accent_data() {
-    return shell.task([
-        quoted`uv run ./update_accent_data.py accent_data.pickle.xz`,
-    ], { cwd: "./ankiwanikanisync/pitch/" })();
+    const cwd = "./ankiwanikanisync/pitch/";
+    return exec({ cwd })`uv run ./update_accent_data.py accent_data.pickle.xz`;
 }
 
 export function watch_types() {
