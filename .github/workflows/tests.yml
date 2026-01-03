@@ -1,0 +1,123 @@
+name: Tests
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [25.x]
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version-file: "pyproject.toml"
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: latest
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+
+    - name: Install node dependencies
+      run: pnpm install
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Install python dependencies
+      id: install
+      run: uv sync
+
+    - name: Install Qt dependencies
+      id: install_qt
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+             libegl1-mesa-dev   \
+             libx11-6           \
+             libxcb-cursor0     \
+             libxcb-icccm4      \
+             libxcb-keysyms1    \
+             libxcb-shape0      \
+             libxcb-xkb1        \
+             libxcb1            \
+             libxext6           \
+             libxfixes3         \
+             libxkbcommon-x11-0 \
+             libxkbcommon0      \
+             libxrender1        \
+             xvfb
+
+    - name: Lint with Ruff
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: uv run ruff check --output-format github
+
+    - name: Lint with eslint
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: pnpm gulp lint_eslint
+
+    - name: Lint with htmlhint
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: pnpm gulp lint_htmlhint
+
+    - name: Lint with stylelint
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: pnpm gulp lint_stylelint
+
+    - name: Lint with zmypy
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: uv run zmypy
+
+    - name: Build TypeScript
+      id: build_ts
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      run: pnpm gulp build_ts
+
+    - name: Build
+      id: build
+      if: ${{ !cancelled() && steps.build_ts.conclusion == 'success' }}
+      run: pnpm gulp build_quick
+
+    - name: Test with pytest
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.build.conclusion == 'success'  }}
+      id: pytest
+      run: |
+        xvfb-run --auto-servernum \
+          uv run pytest -v        \
+            --cov=dist/           \
+            --cov-report=html     \
+            --cov-report=term-missing
+
+    - name: Upload coverage report
+      if: ${{ !cancelled() && steps.pytest.conclusion == 'success' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: htmlcov/
+
+    - name: Export zip file
+      id: export_zip
+      if: ${{ !cancelled() && steps.build.conclusion == 'success'  }}
+      run: pnpm gulp export_zip
+
+    - name: Upload zip package
+      if: ${{ !cancelled() && steps.export_zip.conclusion == 'success'  }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: package
+        path: ankiwanikanisync.zip
+        compression-level: 0

@@ -1,6 +1,8 @@
 Anki add-on to sync between WaniKani and an Anki deck
 =====================================================
 
+[![Tests](https://github.com/kmaglione/ankiwanikanisync/actions/workflows/tests.yml/badge.svg?event=push)](https://github.com/kmaglione/ankiwanikanisync/actions/workflows/tests.yml)
+
 This add-on is based on [Anki WaniKani Sync][Anki-WaniKaniSync], which is in
 turn based on the WK3: Tokyo Drift deck. It differs significantly from the
 former[^1], however, particularly in terms of sync logic, and in the addition of

@@ -106,11 +106,11 @@ export async function generate_types() {
 
     await shell.task([
         quoted`rm -f ${files.types_py}`,
-        quoted`ts2python -c3.14 -atoplevel -o ${files.types_base} ${files.types_ts}`,
-        quoted`ruff format ${files.types_py}`,
-        quoted`ruff check --fix ${files.types_py}`,
-        quoted`python scripts/munge_types.py ${files.types_py}`,
-        quoted`ruff format ${files.types_py}`,
+        quoted`uv run ts2python -c3.14 -atoplevel -o ${files.types_base} ${files.types_ts}`,
+        quoted`uv run ruff format ${files.types_py}`,
+        quoted`uv run ruff check --fix ${files.types_py}`,
+        quoted`uv run python scripts/munge_types.py ${files.types_py}`,
+        quoted`uv run ruff format ${files.types_py}`,
     ])();
 }
 
