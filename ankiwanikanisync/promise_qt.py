@@ -38,7 +38,7 @@ class QtScheduler(QObject, Scheduler):
             if not event.cancelled:
                 event.callback()
             return True
-        return False
+        return False  # pragma: no cover
 
     @override
     def call_soon(self, callable: Scheduler.Callback, /) -> Scheduler.Cancellable:
