@@ -360,8 +360,7 @@ class WKAPI:
         if full and "object" in data and data["object"] == "collection":
             next_url = data["pages"]["next_url"]
             while next_url:
-                if not self._do_limit(api_key):
-                    return None
+                self._do_limit(api_key)
                 res = self.session.get(next_url, headers=headers, timeout=timeout)
                 res.raise_for_status()
                 new_data = res.json()
