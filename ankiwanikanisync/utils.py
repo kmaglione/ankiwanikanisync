@@ -5,6 +5,7 @@ from typing import (
     Callable,
     Final,
     Generator,
+    Never,
     ParamSpec,
     Sequence,
     TypeVar,
@@ -58,6 +59,10 @@ def maybe_chunked[T](
                 f"Fetching {desc} {i}-{i + len(chunk) - 1}/{len(seq)}...", i, len(seq)
             )
             yield chunk
+
+
+def assert_unreachable(msg: str = "Unreachable") -> Never:
+    assert False, msg
 
 
 @overload

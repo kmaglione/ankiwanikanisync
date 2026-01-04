@@ -38,6 +38,7 @@ source = [
 
 [tool.coverage.report]
 exclude_also = [
+    'assert_unreachable',
     'raise NotImplementedError',
     '@(abc\.)?abstractmethod',
     '.?# pragma: no ?cover: start(?s:.*?)# pragma: no ?cover: stop',

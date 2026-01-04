@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence, cast, get_args
 
 import pytest
+from anki.consts import QUEUE_TYPE_SUSPENDED
 from anki.notes import Note
 from pyfakefs.fake_filesystem import FakeFilesystem
 
@@ -391,6 +392,22 @@ async def test_import_fields(
         ],
     }
 
+    vocab5 = session_mock.add_subject(
+        "vocabulary",
+        characters="七",
+        meanings=[meaning("Seven")],
+        readings=[
+            reading("なな"),
+            reading("しち", False),
+        ],
+    )
+    vocab5_expected = make_expected(vocab5) | {
+        "Reading": f"<reading>{pitchify(('h-l', 'な'), ('l', 'な'))}</reading>, "
+        f"{pitchify(('l-h', 'し'), ('h-l', 'ち'))}",
+        "Reading_Whitelist": f"{pitchify(('h-l', 'な'), ('l', 'な'))}, "
+        f"{pitchify(('l-h', 'し'), ('h-l', 'ち'))}",
+    }
+
     await lazy.sync.do_sync()
 
     if TYPE_CHECKING:
@@ -423,6 +440,7 @@ async def test_import_fields(
     check_expected(vocab2_expected, "vocab2")
     check_expected(vocab3_expected, "vocab3")
     check_expected(vocab4_expected, "vocab4")
+    check_expected(vocab5_expected, "vocab5")
 
     with subtests.test(msg="get_components(kanji2)"):
         comps = [int(n["card_id"]) for n in wk_col.get_components(get_note(vocab1))]
@@ -474,6 +492,94 @@ async def test_import_sanitize(session_mock: SubSession):
     assert note["Meaning_Mnemonic"] == r"\` \\\` \${ \\ "[:-1]
 
     assert json.loads(note["Context_Sentences"]) == [{"en": unsan, "ja": ""}]
+
+
+@pytest.mark.asyncio
+async def test_import_keisei(session_mock: SubSession):
+    def get_keisei[T: WKSubjectDataBase](subj: WKSubject[T]):
+        note = get_note(subj)
+        return json.loads(note["Keisei"])
+
+    kanji1 = session_mock.add_subject(
+        "kanji",
+        characters="字",
+    )
+
+    kanji2 = session_mock.add_subject(
+        "kanji",
+        characters="歌",
+    )
+
+    radical1 = session_mock.add_subject(
+        "radical",
+        characters="酉",
+    )
+
+    await lazy.sync.do_sync()
+
+    assert get_keisei(kanji1) == {
+        "component": "子",
+        "compounds": [
+            {"character": "字", "meaning": "Letter", "reading": "じ"},
+        ],
+        "kanji": ["Child", "し"],
+        "radical": "Child",
+        "readings": ["し", "す"],
+        "semantic": "宀",
+        "type": "compound",
+    }
+
+    assert get_keisei(kanji2) == {
+        "compounds": [
+            {"character": "歌", "reading": "か", "meaning": "Song"},
+        ],
+        "type": "compound",
+        "kanji": ["Non-WK", "-"],
+        "component": "哥",
+        "readings": ["か"],
+        "semantic": "欠",
+    }
+
+    assert get_keisei(radical1) == {
+        "compounds": [
+            {"character": "酒", "reading": "しゅ", "meaning": "Alcohol"},
+            {"character": "醜", "reading": "しゅう", "meaning": "Ugly"},
+        ],
+        "type": "phonetic",
+        "radical": "Alcohol",
+        "kanji": ["Non-WK", "-"],
+        "component": "酉",
+        "readings": ["ゆう", "しゅう", "しゅ"],
+    }
+
+
+@pytest.mark.asyncio
+async def test_import_hidden(session_mock: SubSession, wk_col:WKCollection):
+    kanji1 = session_mock.add_subject(
+        "kanji",
+        characters="字",
+        level=1,
+        hidden_at=iso_reltime(),
+    )
+
+    kanji2 = session_mock.add_subject(
+        "kanji",
+        characters="歌",
+        level=1,
+    )
+
+    await lazy.sync.do_sync()
+
+    assert wk_col.get_note_for_subject(kanji1["id"]) is None
+
+    kanji2["data"]["hidden_at"] = iso_reltime()
+    kanji2["data_updated_at"] = iso_reltime()
+
+    await lazy.sync.do_sync()
+
+    note = get_note(kanji2)
+    assert note.has_tag("Hidden")
+    assert all(c.queue == QUEUE_TYPE_SUSPENDED for c in note.cards())
 
 
 @pytest.mark.asyncio
@@ -598,12 +704,24 @@ async def test_import_radical_image(session_mock: SubSession, wk_col: WKCollecti
         meanings=[meaning("Big")],
     )
 
+    kanji = session_mock.add_subject(
+        "kanji",
+        component_subject_ids=[radical["id"]],
+    )
+
     await lazy.sync.do_sync()
 
     note = get_note(radical)
 
     assert note["DocumentURL"] == "https://www.wanikani.com/radical/Big"
     assert note["Characters"] == f"<wk-radical-svg>{SVG}</wk-radical-svg>"
+    assert json.loads(get_note(kanji)["Comps"]) == [
+        {
+            "characters": f'<a href="{note["DocumentURL"]}">{note["Characters"]}</a>',
+            "meaning": "Big",
+            "reading": "",
+        },
+    ]
 
 
 @pytest.fixture(scope="module", autouse=True)

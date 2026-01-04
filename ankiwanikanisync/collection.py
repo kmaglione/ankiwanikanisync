@@ -380,24 +380,24 @@ class WKCollection(object):
     ) -> OpChangesWithCount:
         report_progress("Updating suspended cards for level...", 0, 0)
 
+        F = SearchNode
+
         immature_subjects = {
             format_id(int(self.get_note(nid)["card_id"]))
             for nid in self.find_notes(
                 # Only radical and kanji subjects can be components, so don't
                 # bother checking vocabulary cards.
-                self.col.group_searches(
-                    SearchNode(tag="Radical"), SearchNode(tag="Kanji"), joiner="OR"
-                ),
+                self.col.group_searches(F(tag="Radical"), F(tag="Kanji"), joiner="OR"),
                 f"(prop:ivl<{config.GURU_INTERVAL} OR -is:review)",
             )
         }
 
-        filters = []
+        filters = [F(negated=F(tag="Hidden"))]
         if levels:
             filters.append(
                 self.col.group_searches(
                     *(
-                        SearchNode(deck=f"{config.DECK_NAME}::Level {level:02}")
+                        F(deck=f"{config.DECK_NAME}::Level {level:02}")
                         for level in levels
                     ),
                     joiner="OR",

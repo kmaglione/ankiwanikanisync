@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 from itertools import chain
 from time import sleep
 from typing import (
+    TYPE_CHECKING,
     Any,
     Final,
     Literal,
@@ -49,7 +50,7 @@ from .types import (
     WKSubjectData,
     WKVocabBase,
 )
-from .utils import query_op, report_progress, show_tooltip
+from .utils import assert_unreachable, query_op, report_progress, show_tooltip
 from .wk_api import (
     is_WKAmalgumData,
     is_WKRadicalData,
@@ -467,6 +468,10 @@ class Keisei:
     def get_reading(self, item: str) -> str:
         if kanji := self.keisei_data["kanji"].get(item):
             return kanji["readings"][0]
+        # pragma: no cover: start
+        if not TYPE_CHECKING:
+            assert_unreachable()
+
         if phonetic := self.keisei_data["phonetic"].get(item):
             return phonetic["readings"][0]
 
@@ -477,6 +482,7 @@ class Keisei:
         return next(
             chain(split(wk["onyomi"]), split(wk["kunyomi"]), split(wk["nanori"]))
         )
+        # pragma: no cover: stop
 
     def get_level(self, item) -> int:
         if wk_kanji := self.keisei_data["wk_kanji"].get(item):
@@ -551,7 +557,7 @@ class WKImporter(NoteImporter):
         assert self.mapping
         for i, field in enumerate(self.mapping):
             if field not in self.FIELDS and field != "_tags":
-                self.mapping[i] = ""
+                self.mapping[i] = ""  # pragma: no cover
 
     def foreignNotes(self) -> list[ForeignNote]:
         res = []
@@ -1101,15 +1107,16 @@ def sort_new_cards(col: Collection) -> None:
 
 
 def suspend_hidden_notes(col: Collection, subjects: Sequence[WKSubject]) -> None:
+    changed_notes = []
     for subject in subjects:
         if not subject["data"]["hidden_at"]:
             continue
 
-        if note_ids := wk_col.find_notes("-is:suspended", card_id=str(subject["id"])):
-            if len(note_ids) > 1:
-                print("Found more than one note for a subject id!")  # pragma: no cover
-
-            col.sched.suspend_notes(note_ids)
+        if note := wk_col.get_note_for_subject(subject["id"]):
+            col.sched.suspend_notes([note.id])
+            note.add_tag("Hidden")
+            changed_notes.append(note)
+    col.update_notes(changed_notes)
 
 
 def assign_subdecks(col, deck_name: str) -> None:
