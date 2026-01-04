@@ -68,7 +68,7 @@ def init_browser_menu():
     browser_menu = BrowserMenu()
 
 
-def init():
+def init():  # pragma: no cover
     init_tools_menu()
     init_browser_menu()
     install_play_all_audio()
