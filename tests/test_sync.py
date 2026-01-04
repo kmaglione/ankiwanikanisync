@@ -25,7 +25,6 @@ from ankiwanikanisync.types import (
 )
 from ankiwanikanisync.wk_api import WKReviewData
 
-from .conftest import aqt
 from .fixtures import SubSession
 from .utils import (
     ApproxDatetime,
@@ -40,6 +39,7 @@ from .utils import (
     make_card_learn,
     make_card_new,
     make_card_review,
+    pending_ops_complete,
     reltime,
     update_note,
 )
@@ -48,10 +48,6 @@ if TYPE_CHECKING:
     from ankiwanikanisync.collection import WKCard, WKCollection, WKNote
 
 cleanup = cleanup_after("function")
-
-
-def pending_ops_complete():
-    return aqt.mw.taskman.pending_ops_completed()
 
 
 def meaning(meaning: str, primary: bool = True) -> WKMeaning:

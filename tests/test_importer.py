@@ -20,9 +20,16 @@ from ankiwanikanisync.types import (
     WKSubjectDataBase,
 )
 
-from .conftest import aqt
 from .fixtures import SubSession
-from .utils import SaveAttr, cleanup_after, get_note, iso_reltime, lazy, open_fixture
+from .utils import (
+    SaveAttr,
+    cleanup_after,
+    get_note,
+    iso_reltime,
+    lazy,
+    open_fixture,
+    pending_ops_complete,
+)
 
 if TYPE_CHECKING:
     from anki.collection import Collection
@@ -469,7 +476,7 @@ async def test_import_fields(
     vocab1_expected["Reading_Mnemonic"] += user_note("C")
     vocab1_expected["Meaning_Whitelist"] += ", B"
 
-    await aqt.mw.taskman.pending_ops_completed()
+    await pending_ops_complete()
     await lazy.sync.do_sync()
 
     check_expected(vocab3_expected, "vocab3 after update")
@@ -554,7 +561,7 @@ async def test_import_keisei(session_mock: SubSession):
 
 
 @pytest.mark.asyncio
-async def test_import_hidden(session_mock: SubSession, wk_col:WKCollection):
+async def test_import_hidden(session_mock: SubSession, wk_col: WKCollection):
     kanji1 = session_mock.add_subject(
         "kanji",
         characters="字",
@@ -583,6 +590,37 @@ async def test_import_hidden(session_mock: SubSession, wk_col:WKCollection):
 
 
 @pytest.mark.asyncio
+async def test_import_partial(
+    save_attr: SaveAttr, session_mock: SubSession, wk_col: WKCollection
+):
+    save_attr(lazy.config, "SYNC_ALL")
+    lazy.config.SYNC_ALL = False
+
+    kanji1 = session_mock.add_subject(
+        "kanji",
+        characters="字",
+    )
+
+    session_mock.add_assignment(subject_id=kanji1["id"])
+
+    kanji2 = session_mock.add_subject(
+        "kanji",
+        characters="歌",
+    )
+
+    await lazy.sync.do_sync()
+
+    assert get_note(kanji1)
+    assert wk_col.get_note_for_subject(kanji2["id"]) is None
+
+    session_mock.add_assignment(subject_id=kanji2["id"])
+
+    await lazy.sync.do_sync()
+
+    assert get_note(kanji2)
+
+
+@pytest.mark.asyncio
 async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSession):
     from ankiwanikanisync.importer import ContextDownloader
 
@@ -601,7 +639,7 @@ async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSes
     )
 
     await lazy.sync.do_sync()
-    await aqt.mw.taskman.pending_ops_completed()
+    await pending_ops_complete()
 
     note = get_note(vocab)
 
@@ -657,7 +695,7 @@ async def test_import_audio(session_mock: SubSession, wk_col: WKCollection):
             "Incomplete note should still have audio incomplete tag"
         )
 
-    await aqt.mw.taskman.pending_ops_completed()
+    await pending_ops_complete()
 
     for audio in audios:
         path = media / audio_filename(audio)
@@ -815,7 +853,7 @@ async def test_update_html(
 ):
     with template_fields_test(fs, col):
         tools_menu["Overwrite Card HTML"].triggered.emit()
-        await aqt.mw.taskman.pending_ops_completed()
+        await pending_ops_complete()
 
 
 def test_update_fields(col: Collection):

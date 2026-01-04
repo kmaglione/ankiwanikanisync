@@ -149,7 +149,7 @@ class BaseSession(SessionMock):
             )
 
         if immed_reviewable := request.qs.get("immediately_available_for_review"):
-            yes = immed_reviewable[0] == "true"
+            reviewable = immed_reviewable[0] == "true"
             results = (
                 res
                 for res in results
@@ -157,21 +157,27 @@ class BaseSession(SessionMock):
                     res["data"]["available_at"]
                     and dt(res["data"]["available_at"]) <= now
                 )
-                == yes
+                == reviewable
             )
 
         if immed_learnable := request.qs.get("immediately_available_for_lessons"):
-            yes = immed_learnable[0] == "true"
+            learnable = immed_learnable[0] == "true"
             results = (
                 res
                 for res in results
                 if bool(res["data"]["unlocked_at"] and not res["data"]["started_at"])
-                == yes
+                == learnable
             )
 
-        if hidden := request.qs.get("hidden"):
-            yes = hidden[0] == "true"
-            results = (res for res in results if res["data"]["hidden"] == yes)
+        if hidden_q := request.qs.get("hidden"):
+            hidden = hidden_q[0] == "true"
+            results = (res for res in results if res["data"]["hidden"] == hidden)
+
+        if unlocked_q := request.qs.get("unlocked"):
+            unlocked = unlocked_q[0] == "true"
+            results = (
+                res for res in results if bool(res["data"]["unlocked_at"]) == unlocked
+            )
 
         for key in (
             "burned",
@@ -179,7 +185,6 @@ class BaseSession(SessionMock):
             "levels",
             "srs_stages",
             "started",
-            "unlocked",
         ):
             if key in request.qs:
                 raise NotImplementedError(f"Unsupported query param: {key}")
@@ -264,10 +269,12 @@ class BaseSession(SessionMock):
             subj_types = subj_types_[0].split(",")
             results = (res for res in results if res["object"] in subj_types)
 
-        if hidden := request.qs.get("hidden"):
-            yes = hidden[0] == "true"
+        if hidden_q := request.qs.get("hidden"):
+            hidden = hidden_q[0] == "true"
             results = (
-                res for res in results if (res["data"]["hidden_at"] is not None) == yes
+                res
+                for res in results
+                if (res["data"]["hidden_at"] is not None) == hidden
             )
 
         if "slugs" in request.qs:

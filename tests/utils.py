@@ -24,6 +24,7 @@ from typing import (
 from unittest import mock
 
 import pytest
+import pytest_asyncio
 from anki.collection import Card, Note
 from anki.consts import (
     CARD_TYPE_LRN,
@@ -414,12 +415,19 @@ def cleanup_collection() -> None:
 
 
 def cleanup_after(scope: Literal["session", "package", "module", "class", "function"]):
-    @pytest.fixture(autouse=True, scope=scope)
-    def fixture():
+    @pytest_asyncio.fixture(autouse=True, scope=scope)
+    async def fixture():
         yield
+        await pending_ops_complete()
         cleanup_collection()
 
     return fixture
+
+
+def pending_ops_complete():
+    from .conftest import aqt
+
+    return aqt.mw.taskman.pending_ops_completed()
 
 
 @overload

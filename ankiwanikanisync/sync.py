@@ -121,7 +121,8 @@ def fetch_subjects(
 ):
     last_sync = config._last_subjects_sync
 
-    subjects = fetch_subjects_internal("Main", subject_ids, last_sync, max_lvl)
+    dt = None if subject_ids else last_sync
+    subjects = fetch_subjects_internal("Main", subject_ids, dt, max_lvl)
     study_mats = fetch_study_mats_internal(last_sync=last_sync)
     study_subj_ids = set(study_mats.keys())
 
