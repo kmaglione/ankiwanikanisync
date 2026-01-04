@@ -168,7 +168,7 @@ def note_is_guru(note: WKNote) -> bool:
 def note_is_wk(note: WKNote) -> bool:
     if note_type := note.note_type():
         return note_type["name"] == config.NOTE_TYPE_NAME
-    return False
+    return False  # pragma: no cover
 
 
 class WKCollection(object):
@@ -256,7 +256,7 @@ class WKCollection(object):
         for i, chunk in chunked(subject_ids, self.CHUNK_SIZE):
             if update_progress:
                 if mw.progress.want_cancel():
-                    break
+                    break  # pragma: no cover
 
                 report_progress(
                     f"Reading notes {i + 1}/{len(subject_ids)}...", i, len(subject_ids)
@@ -289,7 +289,7 @@ class WKCollection(object):
         for i, chunk in chunked(subject_ids, self.CHUNK_SIZE):
             if update_progress:
                 if mw.progress.want_cancel():
-                    break
+                    break  # pragma: no cover
 
                 report_progress(
                     f"Reading notes {i + 1}/{len(subject_ids)}...", i, len(subject_ids)
@@ -369,12 +369,6 @@ class WKCollection(object):
 
         return int(note["Level"]) <= config._current_level + delta
 
-    @collection_op
-    def update_suspended_cards_op(
-        self, levels: None | Iterable[int] = None
-    ) -> OpChangesWithCount:
-        return self.update_suspended_cards(levels=levels)
-
     def update_suspended_cards(
         self, levels: None | Iterable[int] = None
     ) -> OpChangesWithCount:
@@ -452,7 +446,7 @@ class WKCollection(object):
 
         def rec(note: WKNote) -> None:
             if note.id in seen:
-                return
+                return  # pragma: no cover
             seen.add(note.id)
 
             notes = set(map(normalize_note, wk_col.get_components(note)))

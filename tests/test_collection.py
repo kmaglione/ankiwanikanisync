@@ -14,7 +14,7 @@ from ankiwanikanisync.types import (
 )
 
 from .fixtures import SubSession
-from .utils import cleanup_after, get_note, lazy, reltime
+from .utils import cleanup_after, get_note, lazy, make_card_learn, make_card_review, reltime
 
 if TYPE_CHECKING:
     from ankiwanikanisync.collection import WKCollection
@@ -118,3 +118,23 @@ async def test_unlock_notes(session_mock: SubSession, wk_col: WKCollection):
     check_note(kanji2, delta)
     check_note(kanji3, delta)
     check_note(vocab1, delta * 2)
+
+
+@pytest.mark.asyncio
+async def test_is_unlockable(session_mock: SubSession, wk_col: WKCollection):
+    kanji1 = session_mock.add_subject("kanji", level=60)
+
+    kanji2 = session_mock.add_subject("kanji", level=1)
+
+    await lazy.sync.do_sync()
+
+    assert wk_col.is_unlockable(get_note(kanji1))
+
+    note = get_note(kanji2)
+    assert wk_col.is_unlockable(note)
+
+    make_card_learn(note, due=reltime())
+    assert not wk_col.is_unlockable(note)
+
+    make_card_review(note, ivl=1)
+    assert not wk_col.is_unlockable(note)
