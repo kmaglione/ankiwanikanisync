@@ -439,7 +439,8 @@ async def test_promise_CancelledError_becomes_CancellationError():
     assert err.__traceback__
 
 
-def test_promise_future_interface():
+@pytest.mark.asyncio
+async def test_promise_future_interface():
     assert Promise.resolve(None).done()
     assert Promise.reject(None).done()
 
@@ -458,3 +459,22 @@ def test_promise_future_interface():
     assert promise.cancelled()
     with pytest.raises(asyncio.CancelledError):
         promise.exception()
+
+    with pytest.raises(asyncio.CancelledError):
+        promise.result()
+
+    assert Promise.resolve(42).exception() is None
+
+    assert Promise.wrap(promise) is promise
+
+    future = asyncio.get_event_loop().create_future()
+    future.set_exception(ValueError())
+
+    with pytest.raises(ValueError):
+        await Promise.wrap(future)
+
+    future = asyncio.get_event_loop().create_future()
+    Promise.wrap(future).cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await future

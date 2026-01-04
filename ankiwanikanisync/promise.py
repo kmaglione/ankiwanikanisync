@@ -33,7 +33,7 @@ class Scheduler:
         def cancelled(self) -> bool: ...
 
     def call_soon(self, callable: Callback, /) -> Cancellable:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 def call_soon(callback: Scheduler.Callback) -> None:
@@ -69,11 +69,12 @@ class FutureLike[T](Protocol):
     def add_done_callback(
         self,
         callback: Callable[[Self], None],
+        /,
         *,
         context: contextvars.Context | None = None,
     ) -> None: ...
 
-    def cancel(self) -> None: ...
+    def cancel(self, msg: Any | None = ...) -> bool: ...
 
     def get_loop(self) -> asyncio.AbstractEventLoop: ...
 
@@ -205,11 +206,11 @@ class Loop[T]:
 
         call_soon(self.loop)
 
-    def cancel(self):
+    def cancel(self, msg: Any | None = None):
         self._cancelled = True
         if self._pending:
             with contextlib.suppress(Exception):
-                self._pending.cancel()
+                self._pending.cancel(msg)
 
     def loop(self, result: Any = None, *, is_rejection: bool = False) -> None:
         """
@@ -456,7 +457,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
 
     # Promise interface
 
-    def cancel(self):
+    def cancel(self, msg: Any | None = None):
         """
         If the promise has an on_cancel callback, calls that callback and sets
         the Promise's state to Cancelled. Otherwise, rejects the promise with
@@ -498,7 +499,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
 
     @overload
     @staticmethod
-    def wrap[U](func: FutureLike[U], /) -> PromiseLike[U]: ...
+    def wrap[U](func: FutureLike[U], /) -> Promise[U]: ...
 
     @staticmethod
     def wrap[**P, RT, U](
@@ -527,7 +528,10 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
                     except (Exception, asyncio.CancelledError) as e:
                         reject(e)
 
-            return Promise(fn, func.cancel)
+            def cancel():
+                func.cancel()
+
+            return Promise(fn, cancel)
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> Promise:
