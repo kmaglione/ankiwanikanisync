@@ -600,3 +600,24 @@ async def test_maybe_sync_downstream(
             "ivl": 2,
             "due": approx_reltime(days=4),
         })
+
+
+@pytest.mark.asyncio
+async def test_SyncOp_get_subject(session_mock: SubSession):
+    op = lazy.sync.SyncOp()
+
+    kanji1 = session_mock.add_subject("kanji", characters="kanji1")
+    kanji2 = session_mock.add_subject("kanji", characters="kanji2")
+
+    op.fetch_subjects([kanji1["id"]])
+    assert op.subjects[kanji1["id"]] == kanji1
+    assert op.get_subject(kanji2["id"]) == kanji2
+
+    kanji3 = session_mock.add_subject("kanji", characters="kanji3")
+    kanji4 = session_mock.add_subject("kanji", characters="kanji4")
+
+    await lazy.sync.do_sync()
+
+    op.fetch_subjects([kanji3["id"]])
+    assert op.subjects[kanji3["id"]] == kanji3
+    assert op.get_subject(kanji4["id"]) == kanji4
