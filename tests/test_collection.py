@@ -14,7 +14,14 @@ from ankiwanikanisync.types import (
 )
 
 from .fixtures import SubSession
-from .utils import cleanup_after, get_note, lazy, make_card_learn, make_card_review, reltime
+from .utils import (
+    cleanup_after,
+    get_note,
+    lazy,
+    make_card_learn,
+    make_card_review,
+    reltime,
+)
 
 if TYPE_CHECKING:
     from ankiwanikanisync.collection import WKCollection
