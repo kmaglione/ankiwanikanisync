@@ -100,6 +100,7 @@ jobs:
           uv run pytest -v        \
             --cov=dist/           \
             --cov-report=html     \
+            --cov-report=lcov     \
             --cov-report=term-missing
 
     - name: Upload coverage report
@@ -108,6 +109,12 @@ jobs:
       with:
         name: coverage
         path: htmlcov/
+
+    - name: Coveralls
+      if: ${{ !cancelled() && steps.pytest.conclusion == 'success' && !env.NO_COVERALLS }}
+      uses: coverallsapp/github-action@v2
+      with:
+        files: coverage.lcov
 
     - name: Export zip file
       id: export_zip
