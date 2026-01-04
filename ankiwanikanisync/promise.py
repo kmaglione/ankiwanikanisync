@@ -425,7 +425,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             if context:
                 context.run(callback, self)
             else:
-                callback(self)
+                callback(self)  # pragma: no cover
 
         finally_.catch(Promise.report_error)
 

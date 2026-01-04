@@ -1,4 +1,5 @@
 # ruff: noqa: RUF029
+import asyncio
 import gc
 import unittest.mock
 from typing import Any, Awaitable, Never
@@ -24,6 +25,14 @@ async def test_promise_resolve():
 async def test_promise_reject():
     with pytest.raises(ValueError):
         await Promise.reject(ValueError())
+
+    @Promise
+    def promise(resolve, reject):
+        reject(ValueError("12"))
+        reject(ValueError("13"))
+
+    with pytest.raises(ValueError, match="12"):
+        await promise
 
 
 async def test_promise_resolve_callback():
@@ -113,6 +122,8 @@ async def test_promise_all_settled():
         PromiseRejectedOutcome(error),
         PromiseFulfilledOutcome(3),
     ]
+    assert PromiseFulfilledOutcome(1) != PromiseRejectedOutcome(1)
+    assert PromiseRejectedOutcome(1) != PromiseFulfilledOutcome(1)
 
 
 async def test_promise_race_resolved():
@@ -152,10 +163,12 @@ async def test_promise_wrap_promise_reject():
 
 async def test_promise_wrap_cancel():
     promise = async_func(Promise(None))
-    promise.cancel()
+    assert promise.cancel() is True
 
     with pytest.raises(CancellationError):
         await promise
+
+    assert promise.cancel() is False
 
 
 async def test_promise_wrap_cancel_catch_raise():
@@ -424,3 +437,24 @@ async def test_promise_CancelledError_becomes_CancellationError():
     err = await Promise.reject(CancelledError()).catch(lambda err: err)
     assert isinstance(err, CancellationError)
     assert err.__traceback__
+
+
+def test_promise_future_interface():
+    assert Promise.resolve(None).done()
+    assert Promise.reject(None).done()
+
+    with pytest.raises(ValueError):
+        Promise.reject(ValueError(12)).exception()
+
+    promise = Promise(lambda a, b: None, lambda: None)
+    assert not promise.done()
+    assert not promise.cancelled()
+
+    with pytest.raises(asyncio.InvalidStateError):
+        promise.result()
+
+    promise.cancel()
+    assert promise.done()
+    assert promise.cancelled()
+    with pytest.raises(asyncio.CancelledError):
+        promise.exception()
