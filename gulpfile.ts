@@ -8,9 +8,9 @@ import { dest, lastRun, parallel, series, src, watch } from "gulp";
 import changed from "gulp-changed";
 import eslint from "gulp-eslint-new";
 import htmlhint from "gulp-htmlhint";
-import preserveWhitespace from "gulp-preserve-typescript-whitespace";
 import prettyError from "gulp-prettyerror";
 import gulpSass from "gulp-sass";
+import sourcemaps from "gulp-sourcemaps";
 import stylelint from "gulp-stylelint-esm";
 import ts from "gulp-typescript";
 import zip from "gulp-zip-plus";
@@ -48,6 +48,15 @@ const files = {
     media: ["ankiwanikanisync/@(data)/files/**/*.(woff2|png)"],
     html: ["ankiwanikanisync/@(data)/**/*.html"],
     dist: "dist/ankiwanikanisync/",
+    assets_js: [
+        "dist/ankiwanikanisync/data/files/*.js",
+    ],
+    assets_non_js: [
+        "dist/ankiwanikanisync/data/files/*",
+        "!**/!(_wanakana.min).js",
+    ],
+    assets_dir: "dist/ankiwanikanisync/data/files/",
+    assets_dist: "dist/assets",
 };
 
 const watchOpts = {
@@ -174,10 +183,10 @@ export function watch_static() {
 
 export function build_ts() {
     return src(files.ts).pipe(changed(files.dist, { extension: ".js" }))
-                        .pipe(preserveWhitespace.saveWhitespace())
+                        .pipe(sourcemaps.init())
                         .pipe(tsProject())
                         .js
-                        .pipe(preserveWhitespace.restoreWhitespace())
+                        .pipe(sourcemaps.write())
                         .pipe(dest(files.dist));
 }
 
@@ -189,6 +198,22 @@ export function clean() {
     return deleteAsync(`${files.dist}**/*`);
 }
 
+export function export_js_assets() {
+    return exec`nyc instrument ${files.assets_dir} ${files.assets_dist}`;
+}
+
+export function export_non_js_assets() {
+    return src(files.assets_non_js, { encoding: false })
+        .pipe(changed(files.assets_dist))
+        .pipe(dest(files.assets_dist))
+}
+
+export const export_assets = parallel(
+    export_js_assets,
+    export_non_js_assets,
+);
+
+
 export const build = series(
     parallel(
         clean,
@@ -199,7 +224,9 @@ export const build = series(
         build_static,
         build_ts,
         lint,
-    ));
+    ),
+    export_assets,
+);
 
 export const build_quick = series(
     generate_types,
@@ -257,6 +284,14 @@ export function export_zip() {
 
 export const dist = series(build, export_zip)
 
+export function watch_assets_js() {
+    return watch(files.assets_js, watchOpts, export_js_assets);
+}
+
+export function watch_assets_non_js() {
+    return watch(files.assets_non_js, watchOpts, export_non_js_assets);
+}
+
 export function watch_dist() {
     return watch(`${files.dist}**/*`, watchOpts, doInstall);
 }
@@ -274,4 +309,6 @@ export const watch_all = parallel(
     watch_ts,
     watch_dist,
     watch_types,
+    watch_assets_js,
+    watch_assets_non_js,
 );

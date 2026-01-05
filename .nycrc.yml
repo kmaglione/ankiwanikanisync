@@ -1,0 +1,5 @@
+exclude:
+  - "**/_wanakana.min.js"
+
+ts_node:
+  project: "./tsconfig.addon.json"
