@@ -435,6 +435,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
             case Status.Fulfilled:
                 return self._result
             case Status.Rejected:
+                self._handled_rejection = True
                 raise self._result
             case Status.Cancelled:
                 raise asyncio.CancelledError()
@@ -444,6 +445,7 @@ class Promise[T](PromiseLike[T], FutureLike[T]):
     def exception(self) -> Any:
         match self._status:
             case Status.Rejected:
+                self._handled_rejection = True
                 raise self._result
             case Status.Cancelled:
                 raise asyncio.CancelledError()
