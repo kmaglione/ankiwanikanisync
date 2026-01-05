@@ -43,6 +43,7 @@
     "gulp-typescript": "6.0.0-alpha.1",
     "gulp-zip-plus": "^1.0.1",
     "htmlhint": "^1.8.0",
+    "mime": "^4.1.0",
     "nyc": "^17.1.0",
     "sass": "^1.97.1",
     "stylelint": "^16.26.1",
