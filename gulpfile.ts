@@ -142,8 +142,10 @@ export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint, lint_zm
 export function build_scss() {
     return src(files.scss)
         .pipe(changed(files.dist, { extension: ".css" }))
+        .pipe(sourcemaps.init())
         // eslint-disable-next-line @typescript-eslint/unbound-method
         .pipe(sass().on("error", sass.logError))
+        .pipe(sourcemaps.write())
         .pipe(dest(files.dist))
 }
 
