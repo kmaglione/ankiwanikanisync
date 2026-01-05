@@ -6,6 +6,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import partial
+from pathlib import Path
 from typing import (
     IO,
     TYPE_CHECKING,
@@ -511,3 +512,34 @@ class SaveAttr:
     def __exit__(self, exc_type: type, exc_value, traceback) -> None:
         for obj, attr, val in self.saved:
             setattr(obj, attr, val)
+
+
+def get_dist_fixtures() -> Path:
+    import ankiwanikanisync
+
+    dist = Path(ankiwanikanisync.__file__).resolve().parent.parent
+
+    fixtures = dist / "fixtures"
+    fixtures.mkdir(parents=True, exist_ok=True)
+    return fixtures
+
+
+def write_fixtures(mod: str, test: str) -> None:
+    from ankiwanikanisync.collection import wk_col
+
+    res = dict[str, dict[str, dict[str, str | object]]]()
+    for nid in wk_col.find_notes():
+        note = wk_col.get_note(nid)
+        note_type = note["Card_Type"].lower()
+
+        fields = dict[str, str | object]()
+        for k, v in note.items():
+            fields[k] = json.loads(v) if k in wk_col.JSON_FIELDS else v
+
+        res.setdefault(note_type, {})[note["Characters"]] = fields
+
+    fixtures = get_dist_fixtures()
+
+    fn = f"{mod}.{test}.json"
+    with (fixtures / fn).open("w") as f:
+        json.dump(res, f, ensure_ascii=False, indent=4)

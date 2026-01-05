@@ -24,11 +24,13 @@ from .fixtures import SubSession
 from .utils import (
     SaveAttr,
     cleanup_after,
+    get_dist_fixtures,
     get_note,
     iso_reltime,
     lazy,
     open_fixture,
     pending_ops_complete,
+    write_fixtures,
 )
 
 if TYPE_CHECKING:
@@ -483,6 +485,8 @@ async def test_import_fields(
     check_expected(vocab2_expected, "vocab2 after update")
     check_expected(vocab1_expected, "vocab1 after update")
 
+    write_fixtures(__name__, "test_import_fields")
+
 
 @pytest.mark.asyncio
 async def test_import_sanitize(session_mock: SubSession):
@@ -499,6 +503,8 @@ async def test_import_sanitize(session_mock: SubSession):
     assert note["Meaning_Mnemonic"] == r"\` \\\` \${ \\ "[:-1]
 
     assert json.loads(note["Context_Sentences"]) == [{"en": unsan, "ja": ""}]
+
+    write_fixtures(__name__, "test_import_sanitize")
 
 
 @pytest.mark.asyncio
@@ -558,6 +564,8 @@ async def test_import_keisei(session_mock: SubSession):
         "component": "酉",
         "readings": ["ゆう", "しゅう", "しゅ"],
     }
+
+    write_fixtures(__name__, "test_import_keisei")
 
 
 @pytest.mark.asyncio
@@ -657,6 +665,8 @@ async def test_import_context_patterns(save_attr: SaveAttr, session_mock: SubSes
             {"ja": "右下", "en": "lower right"},
         ],
     }
+
+    write_fixtures(__name__, "test_import_context_patterns")
 
 
 @pytest.mark.asyncio
@@ -822,19 +832,30 @@ def template_fields_test(fs: FakeFilesystem, col: Collection):
 
     yield
 
-    model = col.models.by_name(lazy.config.NOTE_TYPE_NAME)
-    assert model
+    def get_templates() -> dict[str, Any]:
+        model = col.models.by_name(lazy.config.NOTE_TYPE_NAME)
+        assert model
 
-    cards = {tmpl["name"]: tmpl for tmpl in model["tmpls"]}
+        return {
+            "css": model["css"],
+            "cards": {tmpl["name"]: tmpl for tmpl in model["tmpls"]},
+        }
+
+    tmpl = get_templates()
+    cards = tmpl["cards"]
 
     for card in ("Meaning", "Reading"):
         assert cards[card]["qfmt"] == f"{card} Front {{{{card_id}}}} :: Common Front"
         assert cards[card]["afmt"] == f"{card} Back :: Common Back"
 
-    assert model["css"] == "Style"
+    assert tmpl["css"] == "Style"
 
     fs.pause()
     do_update_html()
+
+    tmpl = get_templates()
+    with (get_dist_fixtures() / "templates.json").open("w") as f:
+        json.dump(tmpl, f, ensure_ascii=False, indent=4)
 
 
 def test_model_templates(fs: FakeFilesystem, col: Collection):
