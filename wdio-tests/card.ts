@@ -143,6 +143,14 @@ export class Card {
         });
     }
 
+    async openSection(sel: string) {
+        await browser.execute(sel => {
+            const elem = document.querySelector(sel);
+            elem.setAttribute("open", "");
+            elem.scrollIntoView();
+        }, sel);
+    }
+
     async showFront(cardType: CardType, fields: Fields) {
         this.answerField = null;
         this.side = CardSide.Front;
