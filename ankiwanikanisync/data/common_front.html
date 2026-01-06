@@ -12,4 +12,6 @@ __CARD_DATA__
 <script type="module">
 import { setupFront } from "./_wk3_front.js";
 setupFront();
+
+document.body.dispatchEvent(new CustomEvent("WK3FrontSetupComplete"));
 </script>

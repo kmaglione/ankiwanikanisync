@@ -188,7 +188,7 @@ export function build_ts() {
                         .pipe(sourcemaps.init())
                         .pipe(tsProject())
                         .js
-                        .pipe(sourcemaps.write())
+                        .pipe(sourcemaps.write({ destPath: files.dist, sourceRoot: "../../.." }))
                         .pipe(dest(files.dist));
 }
 

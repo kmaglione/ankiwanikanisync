@@ -1,0 +1,96 @@
+import * as fs from "fs/promises";
+import path from "node:path";
+
+import server from "./wdio-tests/server.ts";
+
+declare global {
+    interface Window {
+        __coverage__?: object;
+    }
+}
+
+export const config: WebdriverIO.Config = {
+    runner: 'local',
+    tsConfigPath: './tsconfig.json',
+    
+    specs: [
+        './wdio-tests/**/*.test.ts'
+    ],
+    exclude: [
+    ],
+    maxInstances: 10,
+    autoXvfb: true,
+    capabilities: [{
+        browserName: 'chrome',
+        //'goog:chromeOptions': { args: ['--headless=new', '--no-sandbox'] },
+    }],
+
+    logLevel: 'info',
+
+    // Default timeout for all waitFor* commands.
+    waitforTimeout: 10000,
+    //
+    // Default timeout in milliseconds for request
+    // if browser driver or grid doesn't send response
+    connectionRetryTimeout: 120000,
+    //
+    // Default request retries count
+    connectionRetryCount: 3,
+
+    services: [
+        [
+            "visual",
+            {
+                baselineFolder: path.join(import.meta.dirname, "wdio-tests", "baseline"),
+                screenshotPath: path.join(import.meta.dirname, "tmp"),
+                savePerInstance: true,
+            },
+        ],
+    ],
+
+    framework: 'mocha',
+    
+    reporters: ['spec'],
+
+    mochaOpts: {
+        ui: 'bdd',
+        timeout: 60000
+    },
+
+    /**
+     * Gets executed once before all workers get launched.
+     */
+    onPrepare: async function (_config: WebdriverIO.Config, _capabilities) {
+        // await server.start();
+        // config.baseUrl = server.rootURL;
+    },
+
+    /**
+     * Gets executed before test execution begins. At this point you can access to all global
+     * variables like `browser`. It is the perfect place to define custom commands.
+     */
+    before: async function (_capabilities, _specs: string[], browser: WebdriverIO.Browser) {
+        await browser.sessionSubscribe({ events: ['log.entryAdded'] });
+        browser.on("log.entryAdded", entry => {
+            console[entry.level](`[browser log]: ${entry.text}`);
+        });
+
+        await server.start();
+        await browser.url(`${server.rootURL}index.html`);
+    },
+
+    /**
+     * Gets executed after all tests are done. You still have access to all global variables from
+     * the test.
+     */
+    after: async function (_result: number, _capabilities, _specs: string[]) {
+        const coverage = await browser.execute(() => window.__coverage__);
+
+        const coverageDir = path.resolve(import.meta.dirname, "coverage");
+        await fs.mkdir(coverageDir, { recursive: true });
+
+        const fn = path.join(coverageDir, `coverage-${Math.floor(Date.now() / 2000)}.json`);
+        console.log("writeFile", fn, typeof coverage, typeof JSON.stringify(coverage))
+        await fs.writeFile(fn, JSON.stringify(coverage));
+    },
+}

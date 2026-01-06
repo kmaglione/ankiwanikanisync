@@ -147,4 +147,6 @@ __CARD_DATA__
 <script type="module">
 import { setupBack } from "./_wk3_back.js";
 setupBack();
+
+document.body.dispatchEvent(new CustomEvent("WK3BackSetupComplete"));
 </script>

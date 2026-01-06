@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Card</title>
+    <base href="/assets/">
+    <script>
+        /**
+         * @param {KeyboardEvent} event
+         */
+        function _typeAnsPress(event) {
+            if (event.key === "Enter") {
+                event.target.dataset.submitted = event.target.value;
+                event.preventDefault();
+            }
+        }
+        void _typeAnsPress;
+
+        /**
+         * @param {AnimationEvent} event
+         */
+        document.addEventListener("animationstart", event => {
+            if (event.target.classList.contains("shake")) {
+                event.target.dataset.shook = "true";
+            }
+        });
+    </script>
+</head>
+<body>
+<div class="card"></div>
+</body>
+</html>

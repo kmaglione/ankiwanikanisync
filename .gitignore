@@ -1,12 +1,14 @@
 .coverage
 .env
 .mypy_cache
+.nyc_output
 .parcel-cache
 .ruff_cache
 .secrets
 .venv
 bak/
-coverage.xml
+coverage/
+coverage.*
 dist/
 htmlcov/
 /meta.json
