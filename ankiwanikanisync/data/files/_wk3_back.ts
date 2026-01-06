@@ -297,7 +297,7 @@ export function setupBack() {
     /* SCRIPT: Add Found in Vocabulary Characters. */
     for (const {characters, reading, meaning} of _.Found_in) {
         $("#found-in-vocabulary-container").appendChild(frag(
-            `<div id="found-in-vocabulary-box" lang="ja">
+            `<div class="found-in-vocabulary-box" lang="ja">
                 <div class="found-in-voc">
                     ${characters}
                 </div>

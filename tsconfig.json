@@ -3,7 +3,7 @@
     "module": "nodenext",
     "target": "esnext",
     "lib": ["esnext", "dom", "DOM.Iterable"],
-    "types": ["node", "@wdio/globals/types", "@wdio/mocha-framework"],
+    "types": ["node", "@wdio/globals/types", "@wdio/mocha-framework", "@wdio/visual-service"],
     "allowImportingTsExtensions": true,
     "alwaysStrict": true,
     "noEmit": true,

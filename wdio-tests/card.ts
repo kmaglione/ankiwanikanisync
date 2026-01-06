@@ -74,8 +74,6 @@ export class Card {
     async load(html: string, fields: Fields, answer?: string | null) {
         html = this.interpolate(html, fields, answer);
 
-        const content = `<style>${tmpl["css"]}</style>${html}`;
-
         const side = this.side === CardSide.Back ? "Back" : "Front";
         const event = `WK3${side}SetupComplete`;
 
@@ -91,7 +89,13 @@ export class Card {
             card.appendChild(frag);
 
             await promise;
-        }, content, event);
+        }, html, event);
+    }
+
+    async init() {
+        await browser.execute(css => {
+            document.querySelector(".card").insertAdjacentHTML("beforebegin", `<style>${css}</style>`);
+        }, tmpl["css"]);
     }
 
     async getTypedAns(): Promise<string> {

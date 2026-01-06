@@ -1,6 +1,9 @@
 import * as fs from "fs/promises";
 import path from "node:path";
 
+import type { VisualServiceOptions } from "@wdio/visual-service";
+
+import { card } from "./wdio-tests/card.ts";
 import server from "./wdio-tests/server.ts";
 
 declare global {
@@ -42,9 +45,10 @@ export const config: WebdriverIO.Config = {
             "visual",
             {
                 baselineFolder: path.join(import.meta.dirname, "wdio-tests", "baseline"),
+                createJsonReportFiles: true,
                 screenshotPath: path.join(import.meta.dirname, "tmp"),
                 savePerInstance: true,
-            },
+            } satisfies VisualServiceOptions,
         ],
     ],
 
@@ -77,6 +81,8 @@ export const config: WebdriverIO.Config = {
 
         await server.start();
         await browser.url(`${server.rootURL}index.html`);
+        await card.init();
+        await browser.setWindowSize(800, 800);
     },
 
     /**
