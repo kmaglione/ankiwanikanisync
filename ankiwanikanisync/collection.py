@@ -432,7 +432,7 @@ class WKCollection(object):
 
     @collection_op
     def unlock_notes(self, note_ids: Sequence[NoteId]) -> OpChangesWithCount:
-        notes_by_id = {}
+        notes_by_id = dict[NoteId, WKNote]()
 
         # Normalize all notes with the same ID to the same instance so they
         # can be used as dict/set keys for dependency tracking.
@@ -441,8 +441,8 @@ class WKCollection(object):
                 notes_by_id[note.id] = note
             return notes_by_id[note.id]
 
-        seen = set()
-        deps = {}
+        seen = set[NoteId]()
+        deps = dict[WKNote, set[WKNote]]()
 
         def rec(note: WKNote) -> None:
             if note.id in seen:
