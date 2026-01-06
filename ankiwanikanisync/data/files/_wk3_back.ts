@@ -156,6 +156,7 @@ export function setupBack() {
         setRelated("Kanji Composition", _.Comps);
         break;
       default:
+        /* istanbul ignore next */
         $("#section-box").remove();
     }
 
@@ -272,6 +273,7 @@ export function setupBack() {
     }
 
     /* SCRIPT: Add Radical Combination Characters. */
+    const compsLength = Object.keys(_.Comps).length;
     for (const [i, {characters, meaning}] of _.Comps.entries()) {
         {
             const element = document.createElement("div");
@@ -288,7 +290,7 @@ export function setupBack() {
             $("#combination").appendChild(element);
         }
 
-        if (i + 1 != _.Comps.length) {
+        if (i + 1 != compsLength) {
             $("#combination").appendChild(frag(
                 "<p><div class=combination-plus><b>+<b/></div></p>"));
         }
