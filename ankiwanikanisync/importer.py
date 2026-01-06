@@ -919,7 +919,7 @@ def get_model_data() -> ModelData:
                 }
                 return obj;
             }
-            const _ = deepFreeze({
+            var _ = deepFreeze({
 """
     for field in [*WKImporter.FIELDS, "Card"]:
         if field in wk_col.JSON_FIELDS:
