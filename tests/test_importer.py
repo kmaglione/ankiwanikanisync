@@ -299,6 +299,55 @@ async def test_import_fields(
         ],
     )
 
+    kanji_s1 = session_mock.add_subject(
+        "kanji",
+        characters="人",
+        meanings=[meaning("Person")],
+        readings=[
+            reading("にん", True, "onyomi"),
+            reading("じん", False, "onyomi"),
+            reading("ひと", False, "kunyomi"),
+        ],
+    )
+
+    kanji_s2 = session_mock.add_subject(
+        "kanji",
+        characters="入",
+        meanings=[meaning("Enter")],
+        readings=[
+            reading("にゅう", True, "onyomi"),
+            reading("はい", False, "kunyomi"),
+        ],
+        visually_similar_subject_ids=[kanji_s1["id"]],
+    )
+    kanji_s1["data"]["visually_similar_subject_ids"] = [kanji_s2["id"]]
+
+    kanji_s1_expected = make_expected(kanji_s1) | {
+        "Keisei": {
+            "type": "hieroglyph",
+        },
+        "Reading_Kunyomi": "ひと",
+        "Reading_Mnemonic": "dolor sit amet",
+        "Reading_Onyomi": "<reading>にん</reading>, じん",
+        "Reading_Whitelist": "にん, じん, ひと",
+        "Similar": [
+            {"characters": get_link(kanji_s2), "meaning": "Enter", "reading": "にゅう"},
+        ],
+    }
+
+    kanji_s2_expected = make_expected(kanji_s2) | {
+        "Keisei": {
+            "type": "indicative",
+        },
+        "Reading_Kunyomi": "はい",
+        "Reading_Mnemonic": "dolor sit amet",
+        "Reading_Onyomi": "<reading>にゅう</reading>",
+        "Reading_Whitelist": "にゅう, はい",
+        "Similar": [
+            {"characters": get_link(kanji_s1), "meaning": "Person", "reading": "にん"},
+        ],
+    }
+
     vocab1 = session_mock.add_subject(
         "vocabulary",
         characters="左右",
@@ -445,6 +494,8 @@ async def test_import_fields(
     check_expected(radical2_expected, "radical2")
     check_expected(kanji1_expected, "kanji1")
     check_expected(kanji2_expected, "kanji2")
+    check_expected(kanji_s1_expected, "kanji_s1")
+    check_expected(kanji_s2_expected, "kanji_s2")
     check_expected(vocab1_expected, "vocab1")
     check_expected(vocab2_expected, "vocab2")
     check_expected(vocab3_expected, "vocab3")
