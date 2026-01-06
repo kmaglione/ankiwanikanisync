@@ -1,5 +1,12 @@
 exclude:
   - "**/_wanakana.min.js"
+  - "**/*.d.ts"
+
+include:
+  - "ankiwanikanisync/**/*.ts"
+  - "dist/ankiwanikanisync/**/*.js"
+
+all: true
 
 ts_node:
   project: "./tsconfig.addon.json"

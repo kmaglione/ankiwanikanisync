@@ -1,0 +1,2 @@
+spec:
+  - "mocha-tests/*.test.ts"

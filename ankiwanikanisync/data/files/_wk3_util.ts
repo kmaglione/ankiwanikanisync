@@ -88,7 +88,7 @@ export function assert(condition: any, msg?: string): asserts condition {
 export function assertNever(msg?: string): never {
     throw new Error(msg);
 }
-
+/* c8 ignore start */
 /*
  * For the following:
  *
@@ -114,6 +114,7 @@ export function assertNever(msg?: string): never {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+/* istanbul ignore next */
 function _min(d0: number, d1: number, d2: number, bx: number, ay: number) {
     return d0 < d1 || d2 < d1
         ? d0 > d2
@@ -124,6 +125,7 @@ function _min(d0: number, d1: number, d2: number, bx: number, ay: number) {
             : d1 + 1;
 }
 
+/* istanbul ignore next */
 export function levenshtein(a: string, b: string): number {
     if (a === b) {
         return 0;
@@ -210,3 +212,4 @@ export function levenshtein(a: string, b: string): number {
 
     return dd;
 }
+/* c8 ignore stop */
