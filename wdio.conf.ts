@@ -25,7 +25,8 @@ export const config: WebdriverIO.Config = {
     autoXvfb: true,
     capabilities: [{
         browserName: 'chrome',
-        //'goog:chromeOptions': { args: ['--headless=new', '--no-sandbox'] },
+        // 'goog:chromeOptions': { args: ['--headless=new', '--no-sandbox'] },
+        'goog:chromeOptions': { args: ['--no-sandbox', '--disable-dev-shm-usage'] },
     }],
 
     logLevel: 'info',

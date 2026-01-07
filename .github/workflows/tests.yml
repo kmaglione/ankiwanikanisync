@@ -26,6 +26,36 @@ jobs:
       with:
         version: latest
 
+    - name: Install Qt dependencies
+      id: install_qt
+      run: |
+        sudo apt-get update || true
+        sudo apt-get install -y \
+             libegl1-mesa-dev   \
+             libx11-6           \
+             libxcb-cursor0     \
+             libxcb-icccm4      \
+             libxcb-keysyms1    \
+             libxcb-shape0      \
+             libxcb-xkb1        \
+             libxcb1            \
+             libxext6           \
+             libxfixes3         \
+             libxkbcommon-x11-0 \
+             libxkbcommon0      \
+             libxrender1        \
+             libpango1.0-dev    \
+             libnspr4           \
+             libnss3            \
+             pkg-config         \
+             xvfb
+
+    - name: Install Google Chrome
+      id: install_chrome
+      run: |
+        sudo apt install -y google-chrome-stable
+
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
       with:
@@ -41,26 +71,6 @@ jobs:
     - name: Install python dependencies
       id: install
       run: uv sync
-
-    - name: Install Qt dependencies
-      id: install_qt
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-             libegl1-mesa-dev   \
-             libx11-6           \
-             libxcb-cursor0     \
-             libxcb-icccm4      \
-             libxcb-keysyms1    \
-             libxcb-shape0      \
-             libxcb-xkb1        \
-             libxcb1            \
-             libxext6           \
-             libxfixes3         \
-             libxkbcommon-x11-0 \
-             libxkbcommon0      \
-             libxrender1        \
-             xvfb
 
     - name: Lint with Ruff
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
@@ -103,6 +113,43 @@ jobs:
             --cov-report=lcov     \
             --cov-report=term-missing
 
+    - name: Test with mocha
+      if: ${{ !cancelled() && steps.build.conclusion == 'success'  }}
+      run: pnpm c8 -r lcov -o coverage-mocha mocha
+
+    - name: Export assets
+      id: export_assets
+      if: ${{ !cancelled() && steps.pytest.conclusion == 'success' }}
+      run: pnpm gulp export_assets
+
+    - name: Test with wdio
+      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      run: |
+        xvfb-run --auto-servernum \
+          pnpm wdio run ./wdio.conf.ts
+        mkdir -p .nyc_output
+        pnpm nyc merge coverage .nyc_output/out.json
+        pnpm nyc report --reporter=lcov
+
+    - name: Create wdio visual report
+      id: wdio_visual_report
+      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      continue-on-error: true
+      run: |
+        rm -rf wdiovis
+        pnpm wdio-visual-reporter \
+            --jsonOutput=tmp/screenshots/actual/output.json \
+            --reportFolder=wdiovis \
+            --logLevel=debug
+
+    - name: Upload wdio_visual_report
+      if: ${{ !cancelled() && steps.wdio_visual_report.conclusion == 'success'  }}
+      uses: actions/upload-artifact@v4
+      continue-on-error: true
+      with:
+        name: wdio_visual_report
+        path: wdiovis/report
+
     - name: Upload coverage report
       if: ${{ !cancelled() && steps.pytest.conclusion == 'success' }}
       uses: actions/upload-artifact@v4
@@ -111,10 +158,8 @@ jobs:
         path: htmlcov/
 
     - name: Coveralls
-      if: ${{ !cancelled() && steps.pytest.conclusion == 'success' && !env.NO_COVERALLS }}
+      if: ${{ !cancelled() && steps.build.conclusion == 'success' && !env.NO_COVERALLS }}
       uses: coverallsapp/github-action@v2
-      with:
-        files: coverage.lcov
 
     - name: Export zip file
       id: export_zip
