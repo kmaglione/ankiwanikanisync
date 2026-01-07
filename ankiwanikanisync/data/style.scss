@@ -466,6 +466,13 @@ radical-combination {
     background-color: field;
 }
 
+#box-container,
+#phonetic-semantic-description,
+#phonetic-semantic-container,
+#phonetic-semantic-container > div {
+    width: fit-content;
+}
+
 #typeans {
     line-height: 2em;
     text-align: center;

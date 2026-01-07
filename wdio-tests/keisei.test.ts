@@ -31,7 +31,10 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
                         await card.openSection("#section-phonetic-details");
                     });
                     it("Should have the correct visual", async () => {
-                        await matchElementSnapshot($("#section-phonetic-details"), `keisei-${char}-${cardType}`);
+                        await matchElementSnapshot($("#phonetic-semantic-description"), `keisei-explanation-${char}-${cardType}`);
+                        if (await $("#phonetic-semantic-container").getSize("height") > 0) {
+                            await matchElementSnapshot($("#phonetic-semantic-container"), `keisei-components-${char}-${cardType}`);
+                        }
                     });
                 });
             }
