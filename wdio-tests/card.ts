@@ -20,7 +20,7 @@ interface AnswerStatus {
     shook: boolean;
 }
 
-const TYPEANS_STYLE = "font-family: 'Arial'; font-size: 20px;";
+const TYPEANS_STYLE = "font-size: 20px;";
 
 export class Card {
     TYPEANS = `<input type="text" id="typeans"
@@ -108,8 +108,15 @@ export class Card {
         assert(this.side === CardSide.Front);
         assert(this.answerField != null);
 
-        return browser.execute(() => {
+        return browser.execute(async () => {
             const input = document.querySelector<HTMLInputElement>("#typeans");
+
+            if (input.classList.contains("shake")) {
+                await new Promise(resolve => {
+                    input.addEventListener("animationend", resolve, { once: true });
+                });
+            }
+
             const res =  {
                 value: input.value,
                 submitted: input.dataset.submitted,

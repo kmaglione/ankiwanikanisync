@@ -156,7 +156,7 @@ summary {
     }
 }
 
-*:lang(ja) {
+*:lang(ja), #typeans[lang="ja"] {
     font-family: var(--japanese-font);
 }
 

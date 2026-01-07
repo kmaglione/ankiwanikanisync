@@ -36,6 +36,7 @@ export function setupFront() {
         questionDisplayDiv.classList.add("vocabulary");
         break;
       default:
+        /* istanbul ignore next */
         assertNever();
     }
 
@@ -77,6 +78,11 @@ export function setupFront() {
 
                 const romaji = new Set(map(answers, s => wanakana.toRomaji(s).toLowerCase()));
                 if (romaji.isSubsetOf(meaningWhitelist)) {
+                    return true;
+                }
+
+                const kana = new Set(map(meaningWhitelist, wanakana.toKana));
+                if (answers.isSubsetOf(kana)) {
                     return true;
                 }
 

@@ -57,9 +57,12 @@ def meaning(meaning: str, primary: bool = True) -> WKMeaning:
 
 
 def reading(
-    reading: str, primary: bool = True, type_: WKReadingType | None = None
+    reading: str,
+    primary: bool = True,
+    type_: WKReadingType | None = None,
+    accepted_answer: bool = True,
 ) -> WKReading:
-    res = WKReading(reading=reading, primary=primary, accepted_answer=True)
+    res = WKReading(reading=reading, primary=primary, accepted_answer=accepted_answer)
     if type_:
         res["type"] = type_
     return res
@@ -617,6 +620,42 @@ async def test_import_keisei(session_mock: SubSession):
     }
 
     write_fixtures(__name__, "test_import_keisei")
+
+
+@pytest.mark.asyncio
+async def test_import_input_fixture(session_mock: SubSession):
+    kanji1 = session_mock.add_subject(
+        "kanji",
+        characters="病",
+        meanings=[
+            meaning("Sick"),
+            meaning("Ill", False),
+            meaning("Coma", False),
+        ],
+        readings=[
+            reading("びょう", True, "onyomi"),
+            reading("へい", False, "onyomi"),
+            reading("や", False, "kunyomi", False),
+            reading("やまい", False, "kunyomi", False),
+        ],
+        auxiliary_meanings=[
+            {"meaning": "flu", "type": "whitelist"},
+            {"meaning": "fly", "type": "blacklist"},
+        ],
+    )
+
+    vocab1 = session_mock.add_subject(
+        "vocabulary",
+        characters="病",
+        component_subject_ids=[kanji1["id"]],
+        readings=[reading("びょう")],
+        meanings=[meaning("Sick")],
+    )
+    kanji1["data"]["amalgamation_subject_ids"] = [vocab1["id"]]
+
+    await lazy.sync.do_sync()
+
+    write_fixtures(__name__, "test_import_input_fixture")
 
 
 @pytest.mark.asyncio
