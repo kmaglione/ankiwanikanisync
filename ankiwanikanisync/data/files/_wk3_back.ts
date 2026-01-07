@@ -176,22 +176,25 @@ export function setupBack() {
                     The kanji ${jaTag("kanji", _.Characters)} was created using
                     semantic-phonetic composition.<br>
                     <br>
-                    The phonetic component is 「${jaTag("ja", data.component)}」with the ON
-                    reading(s) 「${jaTag("ja", data.readings.join(CDOT))}」
+                    The phonetic component is
+                    <span lang="ja">「${jaTag("ja", data.component)}」</span> with the ON
+                    reading(s) <span lang="ja">「${jaTag("ja", data.readings.join(CDOT))}」</span>
                     (including rare ones), and the semantic component is
-                    「${jaTag("ja", data.semantic)}」.<br>`;
+                    <span lang="ja">「${jaTag("ja", data.semantic)}」</span>.<br>`;
                 break;
               case "phonetic":
                 if (_.Card_Type === "Kanji") {
                     description.innerHTML = `
                         The kanji ${jaTag("kanji", _.Characters)} is used as a phonetic
                         component in other compounds.<br>
-                        Its ON reading(s) are 「${jaTag("ja", data.readings.join(CDOT))}」.<br>`;
+                        Its ON reading(s) are
+                        <span lang="ja">「${jaTag("ja", data.readings.join(CDOT))}」</span>.<br>`;
                 } else {
                     description.innerHTML = `
                         The radical ${jaTag("radical", _.Characters)} is used as a phonetic
                         component in other compounds.<br>
-                        Its ON reading(s) are 「${jaTag("ja", data.readings.join(CDOT))}」.<br>`;
+                        Its ON reading(s) are
+                        <span lang="ja">「${jaTag("ja", data.readings.join(CDOT))}」</span>.<br>`;
                 }
             }
 
