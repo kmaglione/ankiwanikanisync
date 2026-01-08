@@ -577,9 +577,24 @@ async def test_import_keisei(session_mock: SubSession):
         characters="歌",
     )
 
+    kanji3 = session_mock.add_subject(
+        "kanji",
+        characters="頁",
+    )
+
+    kanji4 = session_mock.add_subject(
+        "kanji",
+        characters="了",
+    )
+
     radical1 = session_mock.add_subject(
         "radical",
         characters="酉",
+    )
+
+    radical2 = session_mock.add_subject(
+        "radical",
+        characters="一",
     )
 
     await lazy.sync.do_sync()
@@ -607,6 +622,10 @@ async def test_import_keisei(session_mock: SubSession):
         "semantic": "欠",
     }
 
+    assert get_keisei(kanji3) == { "type": "unprocessed" }
+
+    assert get_keisei(kanji4) == { "type": "unknown" }
+
     assert get_keisei(radical1) == {
         "compounds": [
             {"character": "酒", "reading": "しゅ", "meaning": "Alcohol"},
@@ -618,6 +637,8 @@ async def test_import_keisei(session_mock: SubSession):
         "component": "酉",
         "readings": ["ゆう", "しゅう", "しゅ"],
     }
+
+    assert get_keisei(radical2) == { "type": "nonradical" }
 
     write_fixtures(__name__, "test_import_keisei")
 

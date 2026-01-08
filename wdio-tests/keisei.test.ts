@@ -7,7 +7,10 @@ import keisei from "../dist/fixtures/tests.test_importer.test_import_keisei.json
 const notes = [
     keisei.kanji.字,
     keisei.kanji.歌,
+    keisei.kanji.了,
+    keisei.kanji.頁,
     keisei.radical.酉,
+    keisei.radical.一,
     imp.radical.大,
     imp.radical.口,
     imp.kanji.美,

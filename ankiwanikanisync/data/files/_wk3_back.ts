@@ -260,9 +260,6 @@ export function setupBack() {
                 Stay tuned for more information in future versions of WK Userscripts
                 Keisei.`;
             break;
-          case null:
-            hide($("#section-phonetic-semantic"));
-            break;
           default:
             description.innerHTML = `
                 The kanji ${jaTag("kanji", _.Characters)} is not considered a
