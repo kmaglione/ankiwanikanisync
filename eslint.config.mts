@@ -1,16 +1,18 @@
 import path from "node:path";
 
 import { includeIgnoreFile } from "@eslint/compat";
+import type { RuleConfig } from "@eslint/core";
 import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import { defineConfig, globalIgnores } from "eslint/config";
+import type { Config } from "eslint/config";
 import html from "eslint-plugin-html";
 import importPlugin from "eslint-plugin-import";
 import globals from "globals";
 import ts from "typescript-eslint";
 
-const noUnusedVars = ["error", {
+const noUnusedVars: RuleConfig = ["error", {
     argsIgnorePattern: "^_",
     caughtErrorsIgnorePattern: "^_",
     varsIgnorePattern: "^_",
@@ -21,7 +23,7 @@ const allGlobals = {
     pycmd: "readonly",
 };
 
-const jsBase = {
+const jsBase: Config = {
     rules: {
         "import/no-unresolved": "off",
         "import/order": [
