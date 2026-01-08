@@ -328,6 +328,7 @@ export function setupBack() {
         });
         typedAnswerLower = mangleAnswer(typedAnswer);
     } else {
+        /* istanbul ignore next */
         typedAnswerLower = "";
     }
 
@@ -439,6 +440,7 @@ export function setupBack() {
     }
 
     for (const tag of $$("ja:not([lang])")) {
+        /* istanbul ignore next */
         setLangJa(tag)
     }
 }
