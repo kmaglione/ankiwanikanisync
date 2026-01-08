@@ -12,6 +12,11 @@ declare global {
     }
 }
 
+const baseline_extra = [];
+if (process.env.AWKS_ENV) {
+    baseline_extra.push(process.env.AWKS_ENV);
+}
+
 export const config: WebdriverIO.Config = {
     runner: 'local',
     tsConfigPath: './tsconfig.json',
@@ -45,9 +50,9 @@ export const config: WebdriverIO.Config = {
         [
             "visual",
             {
-                baselineFolder: path.join(import.meta.dirname, "wdio-tests", "baseline"),
+                baselineFolder: path.join(import.meta.dirname, "wdio-tests", "baseline", ...baseline_extra),
                 createJsonReportFiles: true,
-                screenshotPath: path.join(import.meta.dirname, "tmp"),
+                screenshotPath: path.join(import.meta.dirname, "tmp", "screenshots"),
                 savePerInstance: true,
             } satisfies VisualServiceOptions,
         ],

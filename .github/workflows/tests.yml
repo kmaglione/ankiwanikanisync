@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      AWKS_ENV: github-workflow
+
     strategy:
       matrix:
         node-version: [25.x]
@@ -141,6 +144,16 @@ jobs:
             --jsonOutput=tmp/screenshots/actual/output.json \
             --reportFolder=wdiovis \
             --logLevel=debug
+
+    - name: Upload wdio_screenshots
+      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: wdio_screenshots
+        path: |
+          wdio-tests/baseline/github-workflow
+          tmp/screenshots
+        compression-level: 0
 
     - name: Upload wdio_visual_report
       if: ${{ !cancelled() && steps.wdio_visual_report.conclusion == 'success'  }}
