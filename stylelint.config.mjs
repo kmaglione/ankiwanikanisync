@@ -1,13 +1,13 @@
 /** @type {import("stylelint").Config} */
 export default {
-    "extends": ["stylelint-config-standard-scss"],
-    "rules": {
+    extends: ["stylelint-config-standard-scss"],
+    rules: {
         "keyframe-selector-notation": "keyword",
         "no-descending-specificity": null,
         "no-duplicate-selectors": null,
         "selector-class-pattern": null,
         "selector-type-no-unknown": [true, {
-            "ignoreTypes": [
+            ignoreTypes: [
                 "kanji",
                 "ja",
                 "radical",
@@ -17,5 +17,5 @@ export default {
                 "wk-radical-svg",
             ],
         }],
-    }
+    },
 };

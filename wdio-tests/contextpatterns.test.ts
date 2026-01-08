@@ -1,4 +1,3 @@
-
 import { card } from "./card.ts";
 import type { CardType } from "./card.ts";
 import { matchElementSnapshot } from "./util.ts";
@@ -19,10 +18,10 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
         it("Should have the initial text", async () => {
             const text = await $("#common-word-combinations").getText();
             expect(text).toEqual(
-                "Common Word Combinations\n" +
-                "右のボタン\nright button\n" +
-                "右のグラフ\ngraph on the right\n" +
-                "右のアイコン\nright icon");
+                "Common Word Combinations\n"
+                + "右のボタン\nright button\n"
+                + "右のグラフ\ngraph on the right\n"
+                + "右のアイコン\nright icon");
         });
         it("Should have the correct initial visual", async function () {
             this.retries(4);
@@ -35,10 +34,10 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
 
             const text = await $("#common-word-combinations").getText();
             expect(text).toEqual(
-                "Common Word Combinations\n" +
-                "右上\nupper right\n" +
-                "右ひざ\nright knee\n" +
-                "右下\nlower right");
+                "Common Word Combinations\n"
+                + "右上\nupper right\n"
+                + "右ひざ\nright knee\n"
+                + "右下\nlower right");
         });
         it("Should have the correct visual after selection", async function () {
             this.retries(4);

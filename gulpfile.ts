@@ -69,17 +69,17 @@ export function lint_eslint() {
         ...files.js,
         ...files.ts,
     ], { since: lastRun(lint_eslint) })
-      .pipe(prettyError())
-      .pipe(eslint())
-      .pipe(eslint.format())
-      .pipe(eslint.failAfterError());
+        .pipe(prettyError())
+        .pipe(eslint())
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError());
 }
 
 export function lint_htmlhint() {
     return src(files.html, { since: lastRun(lint_htmlhint) })
-      .pipe(prettyError())
-      .pipe(htmlhint(".htmlhintrc"))
-      .pipe(htmlhint.failAfterError());
+        .pipe(prettyError())
+        .pipe(htmlhint(".htmlhintrc"))
+        .pipe(htmlhint.failAfterError());
 }
 
 export function lint_stylelint() {
@@ -146,7 +146,7 @@ export function build_scss() {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         .pipe(sass().on("error", sass.logError))
         .pipe(sourcemaps.write())
-        .pipe(dest(files.dist))
+        .pipe(dest(files.dist));
 }
 
 export function watch_scss() {
@@ -170,7 +170,7 @@ export function build_tf() {
         ...files.db,
         ...files.py,
     ]).pipe(changed(files.dist))
-      .pipe(dest(files.dist));
+        .pipe(dest(files.dist));
 }
 
 export function watch_static() {
@@ -184,12 +184,13 @@ export function watch_static() {
 }
 
 export function build_ts() {
-    return src(files.ts).pipe(changed(files.dist, { extension: ".js" }))
-                        .pipe(sourcemaps.init())
-                        .pipe(tsProject())
-                        .js
-                        .pipe(sourcemaps.write({ destPath: files.dist, sourceRoot: "../../.." }))
-                        .pipe(dest(files.dist));
+    return src(files.ts)
+        .pipe(changed(files.dist, { extension: ".js" }))
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .js
+        .pipe(sourcemaps.write({ destPath: files.dist, sourceRoot: "../../.." }))
+        .pipe(dest(files.dist));
 }
 
 export function watch_ts() {
@@ -207,14 +208,13 @@ export function export_js_assets() {
 export function export_non_js_assets() {
     return src(files.assets_non_js, { encoding: false })
         .pipe(changed(files.assets_dist))
-        .pipe(dest(files.assets_dist))
+        .pipe(dest(files.assets_dist));
 }
 
 export const export_assets = parallel(
     export_js_assets,
     export_non_js_assets,
 );
-
 
 export const build = series(
     parallel(
@@ -245,16 +245,16 @@ function getInstallPath(): string {
     const home = os.homedir();
     let dir: string;
     switch (os.platform()) {
-        case "darwin":
-            dir = path.join(home, "Library/Application Support/Anki2");
-            break;
-        case "win32":
-            dir = path.join(process.env.APPDATA, "Anki2");
-            break;
-        default:
-            dir = path.join(
-                process.env.XDG_DATA_HOME || path.join(home, ".local/share/"),
-                "Anki2");
+    case "darwin":
+        dir = path.join(home, "Library/Application Support/Anki2");
+        break;
+    case "win32":
+        dir = path.join(process.env.APPDATA, "Anki2");
+        break;
+    default:
+        dir = path.join(
+            process.env.XDG_DATA_HOME || path.join(home, ".local/share/"),
+            "Anki2");
     }
     return path.join(dir, "addons21/ankiwanikanisync");
 }
@@ -284,7 +284,7 @@ export function export_zip() {
         .pipe(dest("./"));
 }
 
-export const dist = series(build, export_zip)
+export const dist = series(build, export_zip);
 
 export function watch_assets_js() {
     return watch(files.assets_js, watchOpts, export_js_assets);

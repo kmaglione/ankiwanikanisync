@@ -1,4 +1,4 @@
-import type { CheckElementMethodOptions, CheckFullPageMethodOptions, CheckScreenMethodOptions, SaveElementMethodOptions, SaveFullPageMethodOptions, SaveScreenMethodOptions } from '@wdio/image-comparison-core';
+import type { CheckElementMethodOptions, CheckFullPageMethodOptions, CheckScreenMethodOptions, SaveElementMethodOptions, SaveFullPageMethodOptions, SaveScreenMethodOptions } from "@wdio/image-comparison-core";
 
 export interface WdioIcsOptions {
     logName?: string;
@@ -26,7 +26,7 @@ export interface WdioCheckFullPageMethodOptions extends Omit<CheckFullPageMethod
 
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, expectedResult?: number, options?: WdioCheckElementMethodOptions): Promise<void>;
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, options?: WdioCheckElementMethodOptions): Promise<void>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, ...args: any[]): Promise<void> {
     for (let i = 0; i < 4; i++) {
         await element.scrollIntoView();

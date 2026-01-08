@@ -2,7 +2,7 @@ import type { ResultPromise } from "execa";
 import * as execa from "gulp-execa";
 
 function quoted(strings: TemplateStringsArray, ...params: string[]) {
-    const res = []
+    const res = [];
     for (const [i, str] of strings.raw.entries()) {
         res.push(str);
         if (i < params.length) {
@@ -23,6 +23,5 @@ export function exec<T = object>(strings: TemplateStringsArray | T, ...params: s
     const options = strings as T;
     return function (strings: TemplateStringsArray, ...params: string[]) {
         return execa.exec(quoted(strings, ...params), options);
-    }
+    };
 }
-

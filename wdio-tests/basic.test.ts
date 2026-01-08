@@ -10,7 +10,7 @@ describe("Basic Reading functionality", () => {
 
         const headings = await card.getHeadings();
         expect(headings).toEqual(["Reading", "Meaning", "Context"]);
-    })
+    });
 });
 
 describe("Basic Meaning functionality", () => {
@@ -20,5 +20,5 @@ describe("Basic Meaning functionality", () => {
 
         const headings = await card.getHeadings();
         expect(headings).toEqual(["Meaning", "Reading", "Context"]);
-    })
+    });
 });

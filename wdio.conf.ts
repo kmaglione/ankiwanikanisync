@@ -18,23 +18,23 @@ if (process.env.AWKS_ENV) {
 }
 
 export const config: WebdriverIO.Config = {
-    runner: 'local',
-    tsConfigPath: './tsconfig.json',
-    
+    runner: "local",
+    tsConfigPath: "./tsconfig.json",
+
     specs: [
-        './wdio-tests/**/*.test.ts'
+        "./wdio-tests/**/*.test.ts",
     ],
     exclude: [
     ],
     maxInstances: 10,
     autoXvfb: true,
     capabilities: [{
-        browserName: 'chrome',
+        "browserName": "chrome",
         // 'goog:chromeOptions': { args: ['--headless=new', '--no-sandbox'] },
-        'goog:chromeOptions': { args: ['--no-sandbox', '--disable-dev-shm-usage'] },
+        "goog:chromeOptions": { args: ["--no-sandbox", "--disable-dev-shm-usage"] },
     }],
 
-    logLevel: 'info',
+    logLevel: "info",
 
     // Default timeout for all waitFor* commands.
     waitforTimeout: 10000,
@@ -58,13 +58,13 @@ export const config: WebdriverIO.Config = {
         ],
     ],
 
-    framework: 'mocha',
-    
-    reporters: ['spec'],
+    framework: "mocha",
+
+    reporters: ["spec"],
 
     mochaOpts: {
-        ui: 'bdd',
-        timeout: 60000
+        ui: "bdd",
+        timeout: 60000,
     },
 
     /**
@@ -80,7 +80,7 @@ export const config: WebdriverIO.Config = {
      * variables like `browser`. It is the perfect place to define custom commands.
      */
     before: async function (_capabilities, _specs: string[], browser: WebdriverIO.Browser) {
-        await browser.sessionSubscribe({ events: ['log.entryAdded'] });
+        await browser.sessionSubscribe({ events: ["log.entryAdded"] });
         browser.on("log.entryAdded", entry => {
             console[entry.level](`[browser log]: ${entry.text}`);
         });
@@ -102,7 +102,7 @@ export const config: WebdriverIO.Config = {
         await fs.mkdir(coverageDir, { recursive: true });
 
         const fn = path.join(coverageDir, `coverage-${Math.floor(Date.now() / 2000)}.json`);
-        console.log("writeFile", fn, typeof coverage, typeof JSON.stringify(coverage))
+        console.log("writeFile", fn, typeof coverage, typeof JSON.stringify(coverage));
         await fs.writeFile(fn, JSON.stringify(coverage));
     },
-}
+};

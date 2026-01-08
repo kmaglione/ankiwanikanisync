@@ -8,4 +8,3 @@ declare module "gulp-prettyerror" {
 
     export default PrettyError;
 }
-

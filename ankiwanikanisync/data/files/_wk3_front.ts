@@ -15,33 +15,33 @@ export function setupFront() {
     questionNameDiv.innerHTML = `${_.Card_Type} <b>${questionName}</b>`;
 
     switch (_.Card) {
-      case "Meaning":
+    case "Meaning":
         questionNameDiv.classList.add("meaning");
         break;
-      case "Reading":
+    case "Reading":
         questionNameDiv.classList.add("reading");
         typeans.setAttribute("lang", "ja");
     }
 
     const questionDisplayDiv = $("#question-display");
     switch (_.Card_Type) {
-      case "Radical":
+    case "Radical":
         questionDisplayDiv.classList.add("radical");
         break;
-      case "Kanji":
+    case "Kanji":
         questionDisplayDiv.classList.add("kanji");
         break;
-      case "Vocabulary":
-      case "Kana Vocabulary":
+    case "Vocabulary":
+    case "Kana Vocabulary":
         questionDisplayDiv.classList.add("vocabulary");
         break;
-      default:
+    default:
         /* istanbul ignore next */
         assertNever();
     }
 
-    if (typeans && (typeans instanceof HTMLInputElement ||
-                    typeans instanceof HTMLTextAreaElement)) {
+    if (typeans && (typeans instanceof HTMLInputElement
+        || typeans instanceof HTMLTextAreaElement)) {
         if (_.Card === "Reading") {
             wanakana.bind(typeans);
         }
@@ -53,20 +53,20 @@ export function setupFront() {
         });
 
         const meaningWhitelist = new Set(split(_.Meaning_Whitelist, ", ")
-                                          .map(s => s.toLowerCase()));
+            .map(s => s.toLowerCase()));
 
         const readingWhitelist = new Set(split(_.Reading_Whitelist, ", ")
-                                          .map(stripHTML));
+            .map(stripHTML));
 
         const readingAll = new Set(split(_.Reading_Onyomi, ", ")
-                                    .concat(split(_.Reading_Kunyomi, ", "))
-                                    .map(stripHTML));
+            .concat(split(_.Reading_Kunyomi, ", "))
+            .map(stripHTML));
 
         const readingWarning = readingAll.difference(readingWhitelist);
 
         let checkWarning = (_answers: Set<string>) => false;
         switch (_.Card) {
-          case "Reading": {
+        case "Reading": {
             checkWarning = answers => {
                 if (Iterator.from(answers).some(wanakana.isMixed)) {
                     return true;
@@ -87,16 +87,16 @@ export function setupFront() {
                 }
 
                 switch (_.Card_Type) {
-                  case "Kanji":
-                  case "Vocabulary":
+                case "Kanji":
+                case "Vocabulary":
                     return answers.isSubsetOf(readingAll)
                         && !answers.isDisjointFrom(readingWarning);
                 }
                 return false;
             };
             break;
-          }
-          case "Meaning": {
+        }
+        case "Meaning": {
             checkWarning = answers => {
                 if (answers.isSubsetOf(meaningWhitelist)) {
                     return false;
@@ -105,7 +105,7 @@ export function setupFront() {
                 const kana = new Set(map(answers, wanakana.toKana));
                 return kana.isSubsetOf(readingAll);
             };
-          }
+        }
         }
 
         typeans.addEventListener("keypress", (event: KeyboardEvent) => {
@@ -116,8 +116,8 @@ export function setupFront() {
 
                 const answers = new Set(split(typeans.value, /[、,]\s*/));
                 if (answers.size
-                        && checkWarning(answers)
-                        && !typeans.classList.contains("shake")) {
+                    && checkWarning(answers)
+                    && !typeans.classList.contains("shake")) {
                     typeans.classList.add("shake");
                     event.preventDefault();
                     event.stopPropagation();

@@ -13,76 +13,76 @@ export interface WKResponsePages {
 }
 
 export interface WKResponse {
-  object: string;
-  url: string;
-  data_updated_at: DateString | null;
+    object: string;
+    url: string;
+    data_updated_at: DateString | null;
 }
 
 export interface WKCollectionResponse extends WKResponse {
-  pages: WKResponsePages;
-  total_count: int;
+    pages: WKResponsePages;
+    total_count: int;
 }
 
 export interface WKMeaning {
-  meaning: string;
-  primary: boolean;
-  accepted_answer: boolean;
+    meaning: string;
+    primary: boolean;
+    accepted_answer: boolean;
 }
 
 export interface WKAuxMeaning {
-  meaning: string;
-  type: "whitelist" | "blacklist";
+    meaning: string;
+    type: "whitelist" | "blacklist";
 }
 
 type WKReadingType = "kunyomi" | "nanori" | "onyomi";
 
 export interface WKReading {
-  reading: string;
-  primary: boolean;
-  accepted_answer: boolean;
-  type?: WKReadingType;
+    reading: string;
+    primary: boolean;
+    accepted_answer: boolean;
+    type?: WKReadingType;
 }
 
 export interface WKContextSentence {
-  en: string;
-  ja: string;
+    en: string;
+    ja: string;
 }
 
 export interface WKAudioMetadata {
-  gender: "male" | "female";
-  source_id: int;
-  pronunciation: string;
-  voice_actor_id: int;
-  voice_actor_name: string;
-  voice_description: string;
+    gender: "male" | "female";
+    source_id: int;
+    pronunciation: string;
+    voice_actor_id: int;
+    voice_actor_name: string;
+    voice_description: string;
 }
 
 export interface WKAudio {
-  url: string;
-  content_type: string;
-  metadata: WKAudioMetadata;
+    url: string;
+    content_type: string;
+    metadata: WKAudioMetadata;
 }
 
 export interface WKSubjectDataBase {
-  auxiliary_meanings: WKAuxMeaning[];
-  characters: string;
-  created_at: DateString;
-  document_url: string;
-  hidden_at: DateString | null;
-  lesson_position: int;
-  level: WKLevel;
-  meaning_mnemonic: string;
-  meanings: WKMeaning[];
-  slug: string;
-  spaced_repetition_system_id: SRSID;
+    auxiliary_meanings: WKAuxMeaning[];
+    characters: string;
+    created_at: DateString;
+    document_url: string;
+    hidden_at: DateString | null;
+    lesson_position: int;
+    level: WKLevel;
+    meaning_mnemonic: string;
+    meanings: WKMeaning[];
+    slug: string;
+    spaced_repetition_system_id: SRSID;
 }
 
 export interface WKReadable {
-  readings: WKReading[];
+    readings: WKReading[];
 }
 
 export interface WKComponentData extends WKSubjectDataBase {
-  amalgamation_subject_ids: SubjectId[];
+    amalgamation_subject_ids: SubjectId[];
 }
 
 export interface WKAssignmentData {
@@ -105,7 +105,7 @@ export interface WKAssignment extends WKResponse {
 }
 
 export interface WKAssignmentsResponse extends WKCollectionResponse {
-    data: WKAssignment[]
+    data: WKAssignment[];
 }
 
 export interface WKStudyMaterialData {
@@ -119,7 +119,7 @@ export interface WKStudyMaterialData {
 }
 
 export interface WKStudyMaterial extends WKResponse {
-    id: int,
+    id: int;
     data: WKStudyMaterialData;
 }
 
@@ -177,11 +177,11 @@ export interface WKSRSStageNonEmpty extends WKSRSStageBase {
     interval_unit: IntervalUnit;
 }
 
-export type WKSpacedRepetitionSystemStage = WKSRSStageNonEmpty | WKSRSStageEmpty
+export type WKSpacedRepetitionSystemStage = WKSRSStageNonEmpty | WKSRSStageEmpty;
 
 export interface WKSpacedRepetitionSystemData {
     burning_stage_position: int;
-    created_at: DateString
+    created_at: DateString;
     description: string;
     name: string;
     passing_stage_position: int;
@@ -195,48 +195,48 @@ export interface WKSpacedRepetitionSystem extends WKResponse {
 }
 
 export interface WKCharacterImageMetadata {
-  inline_styles?: boolean;
+    inline_styles?: boolean;
 }
 
 export interface WKCharacterImage {
-  url: string;
-  content_type: string;
-  metadata: WKCharacterImageMetadata;
+    url: string;
+    content_type: string;
+    metadata: WKCharacterImageMetadata;
 }
 
 export interface WKRadicalData extends WKComponentData {
-  character_images: WKCharacterImage[];
+    character_images: WKCharacterImage[];
 }
 
 export interface WKAmalgumData {
-  component_subject_ids: SubjectId[];
+    component_subject_ids: SubjectId[];
 }
 
 export interface WKKanjiData extends WKAmalgumData, WKComponentData, WKReadable {
-  meaning_hint: string | null;
-  reading_hint: string | null;
-  reading_mnemonic: string;
-  visually_similar_subject_ids: SubjectId[];
+    meaning_hint: string | null;
+    reading_hint: string | null;
+    reading_mnemonic: string;
+    visually_similar_subject_ids: SubjectId[];
 }
 
 export interface WKVocabBase extends WKSubjectDataBase {
-  context_sentences: WKContextSentence[];
-  parts_of_speech: string[];
-  pronunciation_audios: WKAudio[];
+    context_sentences: WKContextSentence[];
+    parts_of_speech: string[];
+    pronunciation_audios: WKAudio[];
 }
 
 export interface WKVocabData extends WKAmalgumData, WKVocabBase, WKReadable {
-  reading_mnemonic: string;
+    reading_mnemonic: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface WKKanaVocabData extends WKVocabBase {}
 
-export type WKSubjectData =
-  | WKKanaVocabData
-  | WKKanjiData
-  | WKRadicalData
-  | WKVocabData;
+export type WKSubjectData
+    = WKKanaVocabData
+        | WKKanjiData
+        | WKRadicalData
+        | WKVocabData;
 
 export interface WKSubject<T = WKSubjectData> extends WKResponse {
     id: int;

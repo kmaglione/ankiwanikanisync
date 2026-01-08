@@ -33,7 +33,7 @@ class Server {
 
         this._server = http.createServer((req, res) => {
             this.handleRequest(req, res).catch(error => {
-                console.error(error)
+                console.error(error);
                 res.writeHead(500);
                 res.end("500 Internal server error");
             });
@@ -116,7 +116,7 @@ async function main(): Promise<number> {
     const server = new Server(zip);
     await server.listen(args.values.host, port);
 
-    console.log(`Listening on ${server.rootURL}`)
+    console.log(`Listening on ${server.rootURL}`);
     return 0;
 }
 

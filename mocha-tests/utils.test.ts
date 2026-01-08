@@ -94,7 +94,6 @@ describe("likelyTypo()", () => {
         expect(likelyTypo("aaaa", "aabb")).toBe(true);
         expect(likelyTypo("aaaa", "abb")).toBe(false);
     });
-
 });
 
 describe("deepFreeze()", () => {

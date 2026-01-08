@@ -8,16 +8,16 @@ function setLangJa(elem: Element) {
 }
 
 const tagTitles: Record<string, string> = {
-    "kanji": "Kanji",
-    "radical": "Radical",
-    "vocabulary": "Vocabulary",
-    "reading": "Reading",
+    kanji: "Kanji",
+    radical: "Radical",
+    vocabulary: "Vocabulary",
+    reading: "Reading",
 };
 
 function jaTag(tag: string, contents: string) {
     return `<${tag} lang="ja" title="${tagTitles[tag] || ""}">${
         contents
-    }</${tag}>`
+    }</${tag}>`;
 }
 
 function hide(elem: HTMLElement, hidden: boolean = true) {
@@ -26,13 +26,13 @@ function hide(elem: HTMLElement, hidden: boolean = true) {
 
 export function setupBack() {
     /* SCRIPT: Slice meanings and insert into the Meaning Section. */
-    $(`#meaning-title`).append(_.Card_Type === "Radical" ? "Name" : "Meaning");
+    $("#meaning-title").append(_.Card_Type === "Radical" ? "Name" : "Meaning");
 
     const [primary, ...alternative] = split(_.Meaning, ",");
 
     {
         const div = $("#meanings");
-        div.insertAdjacentHTML("beforeend", `<p><b>Primary</b> ${primary}</p>`)
+        div.insertAdjacentHTML("beforeend", `<p><b>Primary</b> ${primary}</p>`);
 
         if (alternative.length) {
             div.insertAdjacentHTML("beforeend", `<p><b>Alternative</b> ${alternative.join(", ")}</p>`);
@@ -61,16 +61,16 @@ export function setupBack() {
 
     function addCombinations(name: string) {
         const div = $("#common-word-combinations");
-        for (const {ja, en} of combinations[name]) {
+        for (const { ja, en } of combinations[name]) {
             div.append(frag(`<p class="combination">
                 ${jaTag("ja", ja)}<br>
                 ${en}
-            </p>`))
+            </p>`));
         }
     }
 
     function onButtonClick(event: Event) {
-        for (const elem of $$(".button")){
+        for (const elem of $$(".button")) {
             elem.classList.remove("clicked");
         }
         assert(event.target instanceof Element, "Unexpected element type");
@@ -83,7 +83,7 @@ export function setupBack() {
     }
 
     const names = Object.keys(combinations);
-    for (const name of names){
+    for (const name of names) {
         const element = document.createElement("div");
         element.innerHTML = `
             <button class="button" lang="ja" name="${name}">${
@@ -103,26 +103,26 @@ export function setupBack() {
     if (["Vocabulary", "Kana Vocabulary"].includes(_.Card_Type)) {
         const div = $("#context-sentences");
 
-        for (const {en, ja} of _.Context_Sentences) {
+        for (const { en, ja } of _.Context_Sentences) {
             div.append(frag(`<p>${jaTag("ja", ja)}<br>${en}</p>`));
         }
     }
 
     /* SCRIPT: Disable divisions. */
     switch (_.Card_Type) {
-        case "Radical":
-            hide($("#section-reading"));
-            hide($("#section-context"));
-            hide($("#section-radical-combination"));
-            hide($("#section-found-in-vocabulary"));
-            break;
-        case "Kanji":
-            hide($("#section-context"));
-            break;
-        case "Vocabulary":
-        case "Kana Vocabulary":
-            hide($("#section-radical-combination"));
-            hide($("#section-found-in-vocabulary"));
+    case "Radical":
+        hide($("#section-reading"));
+        hide($("#section-context"));
+        hide($("#section-radical-combination"));
+        hide($("#section-found-in-vocabulary"));
+        break;
+    case "Kanji":
+        hide($("#section-context"));
+        break;
+    case "Vocabulary":
+    case "Kana Vocabulary":
+        hide($("#section-radical-combination"));
+        hide($("#section-found-in-vocabulary"));
     }
 
     /* SCRIPT: Populate Box Characters (Found in Kanji, Visually Similar Kanji and Kanji Composition). */
@@ -130,7 +130,7 @@ export function setupBack() {
         if (related.length !== 0) {
             $("#box-title").textContent = title;
 
-            for (const {characters, reading, meaning} of related) {
+            for (const { characters, reading, meaning } of related) {
                 $("#box-container").appendChild(frag(
                     `<div id="box-character" lang="ja">
                         ${characters}
@@ -145,17 +145,17 @@ export function setupBack() {
         }
     }
     switch (_.Card_Type) {
-      case "Radical":
+    case "Radical":
         setRelated("Found In Kanji", _.Found_in);
         break;
-      case "Kanji":
+    case "Kanji":
         setRelated("Visually Similar Kanji", _.Similar);
         break;
-      case "Vocabulary":
-      case "Kana Vocabulary":
+    case "Vocabulary":
+    case "Kana Vocabulary":
         setRelated("Kanji Composition", _.Comps);
         break;
-      default:
+    default:
         /* istanbul ignore next */
         $("#section-box").remove();
     }
@@ -163,15 +163,15 @@ export function setupBack() {
     /* SCRIPT: Add Phonetic-Semantic Composition Characters. */
     const CDOT = "・";
     switch (_.Card_Type) {
-      case "Kanji":
-      case "Radical": {
+    case "Kanji":
+    case "Radical": {
         const data = _.Keisei;
         const description = $("#phonetic-semantic-description");
         switch (data.type) {
-          case "compound":
-          case "phonetic": {
+        case "compound":
+        case "phonetic": {
             switch (data.type) {
-              case "compound":
+            case "compound":
                 description.innerHTML = `
                     The kanji ${jaTag("kanji", _.Characters)} was created using
                     semantic-phonetic composition.<br>
@@ -182,7 +182,7 @@ export function setupBack() {
                     (including rare ones), and the semantic component is
                     <span lang="ja">「${jaTag("ja", data.semantic)}」</span>.<br>`;
                 break;
-              case "phonetic":
+            case "phonetic":
                 if (_.Card_Type === "Kanji") {
                     description.innerHTML = `
                         The kanji ${jaTag("kanji", _.Characters)} is used as a phonetic
@@ -241,40 +241,40 @@ export function setupBack() {
                     </div>`));
             }
             break;
-          }
-          case "unprocessed":
+        }
+        case "unprocessed":
             description.innerHTML = `
                 The kanji ${jaTag("kanji", _.Characters)} has not been added to the WK
                 Userscripts Keisei DB yet.
                 Please wait for a future version.<br>`;
             break;
-          case "nonradical":
+        case "nonradical":
             description.innerHTML = `
                 The radical ${jaTag("radical", _.Characters)} is not considered a
                 phonetic mark.<br>`;
             break;
-          case "unknown":
+        case "unknown":
             description.innerHTML = `
                 The kanji ${jaTag("kanji", _.Characters)} has an unknown or contested origin,
                 or its phonetic mark is too obscure to be useful.
                 Stay tuned for more information in future versions of WK Userscripts
                 Keisei.`;
             break;
-          default:
+        default:
             description.innerHTML = `
                 The kanji ${jaTag("kanji", _.Characters)} is not considered a
                 semantic-phonetic composition.<br>
                 Note: ${data.type}<br>`;
         }
         break;
-      }
-      default:
+    }
+    default:
         hide($("#section-phonetic-semantic"));
     }
 
     /* SCRIPT: Add Radical Combination Characters. */
     const compsLength = Object.keys(_.Comps).length;
-    for (const [i, {characters, meaning}] of _.Comps.entries()) {
+    for (const [i, { characters, meaning }] of _.Comps.entries()) {
         {
             const element = document.createElement("div");
             element.style.display = "flex";
@@ -297,7 +297,7 @@ export function setupBack() {
     }
 
     /* SCRIPT: Add Found in Vocabulary Characters. */
-    for (const {characters, reading, meaning} of _.Found_in) {
+    for (const { characters, reading, meaning } of _.Found_in) {
         $("#found-in-vocabulary-container").appendChild(frag(
             `<div class="found-in-vocabulary-box" lang="ja">
                 <div class="found-in-voc">
@@ -322,7 +322,7 @@ export function setupBack() {
     if (typeans) {
         typedAnswer = "";
         typeans.innerHTML = typeans.innerHTML.replace(/<br.*/, "");
-        typeans.querySelectorAll(".typeGood, .typeBad").forEach((e) => {
+        typeans.querySelectorAll(".typeGood, .typeBad").forEach(e => {
             if (e.textContent == "-") return;
             typedAnswer += e.textContent;
         });
@@ -338,9 +338,9 @@ export function setupBack() {
     const correctText = $("#correct");
 
     switch (_.Card) {
-      case "Meaning": {
+    case "Meaning": {
         const capitalize = (iter: Iterable<string>): string[] => Array.from(iter,
-            (elem: string): string => elem.replace(/(^| )\w/g, c => c.toUpperCase()));
+                                                                            (elem: string): string => elem.replace(/(^| )\w/g, c => c.toUpperCase()));
 
         correctAnswers = new Set(split(_.Meaning.toLowerCase(), ", "));
         const [meaning, ...alternatives] = capitalize(correctAnswers);
@@ -362,21 +362,21 @@ export function setupBack() {
         }
         $<HTMLDetailsElement>("#section-meaning > details").open = true;
         break;
-      }
-      case "Reading": {
+    }
+    case "Reading": {
         correctAnswers = readingWhitelist;
         const items = Array.from(correctAnswers, x => jaTag("reading", x));
         correctText.innerHTML = items.join(" ");
 
         $("#section-phonetic-semantic").after($("#section-meaning"));
         $<HTMLDetailsElement>("#section-reading > details").open = true;
-      }
+    }
     }
 
     let blacklist = new Set();
     if (_.Card === "Meaning") {
         blacklist = new Set(split(_.Meaning_Blacklist, ", ")
-                                   .map(s => s.toLowerCase()));
+            .map(s => s.toLowerCase()));
     }
 
     function checkTypos(answers: Set<string>,
@@ -396,7 +396,7 @@ export function setupBack() {
                             Did you mean <span class="typo-expected">${escapeHTML(exp)}</span>
                             instead of <span class="typo-ans">${escapeHTML(ans)}</span>?
                         </div>
-                    `)
+                    `);
                 }
             }
         }
@@ -409,7 +409,7 @@ export function setupBack() {
         const answerDiv = document.createElement("div");
         answerDiv.setAttribute("id", "typeans");
         answerDiv.textContent = typedAnswer;
-        answerDiv.classList.add(`typeans-${_.Card}`)
+        answerDiv.classList.add(`typeans-${_.Card}`);
         if (_.Card == "Reading") {
             setLangJa(answerDiv);
         }
@@ -441,6 +441,6 @@ export function setupBack() {
 
     for (const tag of $$("ja:not([lang])")) {
         /* istanbul ignore next */
-        setLangJa(tag)
+        setLangJa(tag);
     }
 }

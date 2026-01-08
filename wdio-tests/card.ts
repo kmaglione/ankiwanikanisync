@@ -15,7 +15,7 @@ enum CardSide {
 }
 
 interface AnswerStatus {
-    value: string,
+    value: string;
     submitted: string | null;
     shook: boolean;
 }
@@ -32,7 +32,7 @@ export class Card {
             <div style="${TYPEANS_STYLE}">
                 <code id="typeans">${val}</code>
             </div>
-        </div>`
+        </div>`;
     }
 
     answerField: string | null;
@@ -60,7 +60,7 @@ export class Card {
                 }
                 if (answer != null) {
                     const class_ = answer == val ? "typeGood" : "typeBad";
-                    return this.typedAns(`<span class="${class_}">${answer}</span>`)
+                    return this.typedAns(`<span class="${class_}">${answer}</span>`);
                 }
                 return this.typedAns(val as string);
             }
@@ -101,7 +101,7 @@ export class Card {
     async getTypedAns(): Promise<string> {
         assert(this.side === CardSide.Front);
         assert(this.answerField != null);
-        return $("#typeans").getValue()
+        return $("#typeans").getValue();
     }
 
     async checkAnswer(): Promise<AnswerStatus> {
@@ -117,7 +117,7 @@ export class Card {
                 });
             }
 
-            const res =  {
+            const res = {
                 value: input.value,
                 submitted: input.dataset.submitted,
                 shook: input.dataset.shook === "true",
