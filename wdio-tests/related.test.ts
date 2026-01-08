@@ -16,11 +16,11 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
             });
 
             it("Should have the correct section heading", async () => {
-                expect(await $("#box-title").getText()).toEqual("Visually Similar Kanji");
+                await expect($("#box-title")).toHaveText("Visually Similar Kanji");
             });
 
             it("Should have the correct text", async () => {
-                expect(await $("#box-container").getText()).toEqual("入\nにゅう\nEnter");
+                await expect($("#box-container")).toHaveText("入\nにゅう\nEnter");
             });
 
             it("Should have the correct visual", async function () {
@@ -38,11 +38,15 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
             });
 
             it("Should have the correct section heading", async () => {
-                expect(await $("#box-title").getText()).toEqual("Kanji Composition");
+                await expect($("#box-title")).toHaveText("Kanji Composition");
             });
 
             it("Should have the correct text", async () => {
-                expect(await $("#box-container").getText()).toEqual("右\nゆう\nRight\n左\nさ\nLeft");
+                const elems = await $$("#box-container > .box-character");
+                await expect(elems).toHaveText([
+                    "右\nゆう\nRight",
+                    "左\nさ\nLeft",
+                ]);
             });
 
             it("Should have the correct visual", async function () {
@@ -64,7 +68,7 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
             });
 
             it("Should have the correct text", async () => {
-                expect(await $("#found-in-vocabulary-container").getText()).toEqual("左右\nさゆう\nLeft And Right");
+                await expect($("#found-in-vocabulary-container")).toHaveText("左右\nさゆう\nLeft And Right");
             });
 
             it("Should have the correct visual", async function () {
@@ -83,11 +87,11 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
                 });
 
                 it("Should have the correct section heading", async () => {
-                    expect(await $("#box-title").getText()).toEqual("Found In Kanji");
+                    await expect($("#box-title")).toHaveText("Found In Kanji");
                 });
 
                 it("Should have the correct text", async () => {
-                    expect(await $("#box-container").getText()).toEqual("右\nゆう\nRight");
+                    await expect($("#box-container")).toHaveText("右\nゆう\nRight");
                 });
 
                 it("Should have the correct visual", async function () {

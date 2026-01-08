@@ -9,19 +9,6 @@ async function checkTypos(cardType: CardType, input: string): Promise<string> {
     return $("#typos").getText();
 }
 
-async function answerClass(): Promise<string> {
-    return browser.execute(() => {
-        const div = document.querySelector<HTMLElement>("#typeans");
-        if (div.classList.contains("correct")) {
-            return "correct";
-        }
-        if (div.classList.contains("incorrect")) {
-            return "incorrect";
-        }
-        return "";
-    });
-}
-
 describe("Answer input in Reading cards", () => {
     before(async () => {
         await card.showFront("Reading", fixture.kanji.病);
@@ -110,17 +97,17 @@ describe("Typo detection for Meaning cards", () => {
     it("Should detect typos for accepted answers", async () => {
         const typos = await checkTypos("Meaning", "fli");
         expect(typos).toEqual("Did you mean flu instead of fli?");
-        expect(await answerClass()).toBe("incorrect");
+        await expect($("#typeans")).toHaveElementClass("incorrect");
     });
     it("Should not typos for blacklisted answers", async () => {
         const typos = await checkTypos("Meaning", "fly");
         expect(typos).toEqual("");
-        expect(await answerClass()).toBe("incorrect");
+        await expect($("#typeans")).toHaveElementClass("incorrect");
     });
     it("Should not report typos for correct answers", async () => {
         const typos = await checkTypos("Meaning", "sick");
         expect(typos).toEqual("");
-        expect(await answerClass()).toBe("correct");
+        await expect($("#typeans")).toHaveElementClass("correct");
     });
 });
 
@@ -128,11 +115,11 @@ describe("Typo detection for Reading cards", () => {
     it("Should detect typos for accepted answers", async () => {
         const typos = await checkTypos("Reading", "byuu");
         expect(typos).toEqual("Did you mean びょう instead of びゅう?");
-        expect(await answerClass()).toBe("incorrect");
+        await expect($("#typeans")).toHaveElementClass("incorrect");
     });
     it("Should not report typos for correct answers", async () => {
         const typos = await checkTypos("Reading", "byou");
         expect(typos).toEqual("");
-        expect(await answerClass()).toBe("correct");
+        await expect($("#typeans")).toHaveElementClass("correct");
     });
 });

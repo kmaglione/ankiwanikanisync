@@ -12,16 +12,16 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
             await card.openSection("#section-context > details");
         });
         it("Should have the correct buttons", async () => {
-            const buttons = await $$("#patterns-of-use button").map(b => b.getText());
-            expect(buttons).toEqual(["右の〜", "右〜"]);
+            const buttons = await $$("#patterns-of-use button");
+            await expect(buttons).toHaveText(["右の〜", "右〜"]);
         });
         it("Should have the initial text", async () => {
-            const text = await $("#common-word-combinations").getText();
-            expect(text).toEqual(
-                "Common Word Combinations\n"
-                + "右のボタン\nright button\n"
-                + "右のグラフ\ngraph on the right\n"
-                + "右のアイコン\nright icon");
+            const elems = await $$("#common-word-combinations > .combination");
+            await expect(elems).toHaveText([
+                "右のボタン\nright button",
+                "右のグラフ\ngraph on the right",
+                "右のアイコン\nright icon",
+            ]);
         });
         it("Should have the correct initial visual", async function () {
             this.retries(4);
@@ -32,12 +32,12 @@ for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
             await $("body").click();
             await browser.pause(500);
 
-            const text = await $("#common-word-combinations").getText();
-            expect(text).toEqual(
-                "Common Word Combinations\n"
-                + "右上\nupper right\n"
-                + "右ひざ\nright knee\n"
-                + "右下\nlower right");
+            const elems = await $$("#common-word-combinations > .combination");
+            await expect(elems).toHaveText([
+                "右上\nupper right",
+                "右ひざ\nright knee",
+                "右下\nlower right",
+            ]);
         });
         it("Should have the correct visual after selection", async function () {
             this.retries(4);

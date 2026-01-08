@@ -132,9 +132,9 @@ export function setupBack() {
 
             for (const { characters, reading, meaning } of related) {
                 $("#box-container").appendChild(frag(
-                    `<div id="box-character" lang="ja">
+                    `<div class="box-character" lang="ja">
                         ${characters}
-                        <div id="box-meaning">
+                        <div class="box-meaning">
                             ${reading}<br>
                             <span lang="en">${meaning}</span>
                         </div>
@@ -203,7 +203,7 @@ export function setupBack() {
                 div.appendChild(frag(
                     `<div id="phonetic-character" lang="ja">
                         ${data.component}
-                        <div id="box-meaning">
+                        <div class="box-meaning">
                             ${data.readings[0]}<br>
                             <span lang="en">Phonetic</span>
                         </div>
@@ -212,7 +212,7 @@ export function setupBack() {
                     div.appendChild(frag(
                         `<div id="radical-character" lang="ja">
                             ${data.component}
-                            <div id="box-meaning">
+                            <div class="box-meaning">
                                 ${data.readings[0]}<br>
                                 <span lang="en">${data.radical}</span>
                             </div>
@@ -220,9 +220,9 @@ export function setupBack() {
                 }
                 if (data.kanji) {
                     div.appendChild(frag(
-                        `<div id="box-character" lang="ja">
+                        `<div class="box-character" lang="ja">
                             ${data.component}
-                            <div id="box-meaning">
+                            <div class="box-meaning">
                                 ${data.kanji[1]}<br>
                                 <span lang="en">${data.kanji[0]}</span>
                             </div>
@@ -232,9 +232,9 @@ export function setupBack() {
             const div = $("#compound-container");
             for (const comp of data.compounds) {
                 div.appendChild(frag(
-                    `<div id="box-character" lang="ja">
+                    `<div class="box-character" lang="ja">
                         ${comp.character}
-                        <div id="box-meaning">
+                        <div class="box-meaning">
                             ${comp.reading}<br>
                             <span lang="en">${comp.meaning}</span>
                         </div>

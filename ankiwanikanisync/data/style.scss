@@ -380,7 +380,7 @@ radical, kanji, vocabulary {
     overflow: hidden;
 }
 
-#box-character {
+.box-character {
     @include character(#f0a, #dd0093, #f6c, #c08);
 
     a, a:link, a:visited {
@@ -388,7 +388,7 @@ radical, kanji, vocabulary {
     }
 }
 
-#box-meaning {
+.box-meaning {
     font-size: .7rem;
     margin: 0 -5rem;
 }

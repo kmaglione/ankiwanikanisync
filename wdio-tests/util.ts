@@ -1,5 +1,15 @@
 import type { CheckElementMethodOptions, CheckFullPageMethodOptions, CheckScreenMethodOptions, SaveElementMethodOptions, SaveFullPageMethodOptions, SaveScreenMethodOptions } from "@wdio/image-comparison-core";
 
+declare module "webdriverio" {
+    interface ChainablePromiseArray {
+        then<U>(
+            res?: ((elem: WebdriverIO.ElementArray) => Promise<U> | U) | null,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            rej?: ((val: any) => Promise<U> | U) | null
+        ): Promise<U>;
+    }
+}
+
 export interface WdioIcsOptions {
     logName?: string;
     name?: string;
