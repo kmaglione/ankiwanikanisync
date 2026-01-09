@@ -7,6 +7,7 @@ Anki add-on to sync between WaniKani and an Anki deck
 ![Mocha](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/mocha.svg)
 ![lint](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/lint.svg)
 [![Coverage](https://coveralls.io/repos/github/kmaglione/ankiwanikanisync/badge.svg)][coveralls]
+[![Covered by Argos Visual Testing](https://argos-ci.com/badge.svg)][Argos]
 
 This add-on is based on [Anki WaniKani Sync][Anki-WaniKaniSync], which is in
 turn based on the WK3: Tokyo Drift deck. It differs significantly from the
@@ -59,6 +60,7 @@ All configuration values are documented within the config JSON.
 [Anki-WaniKaniSync]: https://github.com/BtbN/Anki-WaniKaniSync/
 [tests-workflow]: https://github.com/kmaglione/ankiwanikanisync/actions/workflows/tests.yml
 [coveralls]: https://coveralls.io/github/kmaglione/ankiwanikanisync
+[Argos]: https://app.argos-ci.com/kmaglione/ankiwanikanisync/reference
 
 [^1]: Also in terms of reliability and maintainability, given the addition of
 unit tests and type annotations in JavaScript and Python code.

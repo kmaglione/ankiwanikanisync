@@ -4,7 +4,7 @@ import { Key } from "webdriverio";
 import { assert } from "../ankiwanikanisync/data/files/_wk3_util.ts";
 import tmpl from "../dist/fixtures/templates.json" with { type: "json" };
 
-export type Fields = Record<string, string | number | object>;
+export type Fields = Record<string, string | number | object | null>;
 
 export type CardType = "Meaning" | "Reading";
 export type NoteType = "radical" | "kanji" | "vocabulary" | "kana_vocabulary";
@@ -89,6 +89,8 @@ export class Card {
             card.appendChild(frag);
 
             await promise;
+
+            await document.fonts.ready;
         }, html, event);
 
         await browser.scroll(0, 0);
@@ -150,6 +152,14 @@ export class Card {
                 .filter(h => h.checkVisibility())
                 .map(h => h.textContent.trim());
         });
+    }
+
+    async openSections(sel: string) {
+        await browser.execute(sel => {
+            for (const elem of document.querySelectorAll(sel)) {
+                elem.setAttribute("open", "");
+            }
+        }, sel);
     }
 
     async openSection(sel: string) {

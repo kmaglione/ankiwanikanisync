@@ -135,11 +135,22 @@ jobs:
       if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       id: wdio
       run: |
+        rm -rf screenshots
+        mkdir -p screenshots/argos
         xvfb-run --auto-servernum \
           pnpm wdio run ./wdio.conf.ts
         mkdir -p .nyc_output
         pnpm nyc merge coverage .nyc_output/out.json
         pnpm nyc report --reporter=lcov
+
+    - name: Upload to Argos
+      if: >
+        !cancelled()
+          && !env.NO_ARGOS
+          && steps.install_chrome.conclusion == 'success'
+          && steps.export_assets.conclusion == 'success'
+      continue-on-error: true
+      run: pnpm argos upload --token ${{ secrets.ARGOS_TOKEN }} screenshots
 
     - name: Create wdio visual report
       id: wdio_visual_report
@@ -160,6 +171,7 @@ jobs:
         path: |
           wdio-tests/baseline/github-workflow
           tmp/screenshots
+          screenshots
         compression-level: 0
 
     - name: Upload wdio_visual_report
