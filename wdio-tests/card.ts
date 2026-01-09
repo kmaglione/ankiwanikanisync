@@ -90,6 +90,8 @@ export class Card {
 
             await promise;
         }, html, event);
+
+        await browser.scroll(0, 0);
     }
 
     async init() {
