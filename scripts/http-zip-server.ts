@@ -51,6 +51,7 @@ class Server {
         if (pathname.endsWith("/")) {
             pathname += "index.html";
         }
+        pathname = decodeURIComponent(pathname);
 
         console.log(`Request: ${pathname}`);
 
