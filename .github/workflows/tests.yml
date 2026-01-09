@@ -192,6 +192,15 @@ jobs:
         STEPS: ${{ toJSON(steps) }}
       run: pnpm ./scripts/badges.ts
 
+    - name: Upload version badge svg
+      uses: exuanbo/actions-deploy-gist@v1
+      if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 8de11cd55fbde45736cf02cd9fa67472
+        file_path: ${{ fromJSON(steps.badges.outputs.badges).version.svgFile }}
+        gist_file_name: version.svg
+
     - name: Upload Pytest badge svg
       uses: exuanbo/actions-deploy-gist@v1
       if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}

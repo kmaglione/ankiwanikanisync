@@ -24,11 +24,19 @@ interface Step {
 }
 const steps = JSON.parse(process.env.STEPS) as Record<string, Step>;
 
-interface BadgeOpts {
-    steps: (keyof typeof steps)[];
+interface BaseBadgeOpts {
     icon?: string;
     iconSVG?: string;
     label: string;
+}
+
+interface BadgeOpts extends BaseBadgeOpts {
+    message: string;
+    color: string;
+}
+
+interface StatusBadgeOpts extends BaseBadgeOpts {
+    steps: (keyof typeof steps)[];
 }
 
 interface Badge {
@@ -43,16 +51,11 @@ interface Badge {
 }
 
 async function makeBadge(opts: BadgeOpts): Promise<Badge> {
-    const statuses = opts.steps.map(s => steps[s].outcome);
-
     const badge: Badge = {
         label: opts.label,
         labelColor: "#343b42",
-        message: statuses.includes("failure")
-            ? "failing"
-            : (["skipped", "cancelled"] as Outcome[]).some(s => statuses.includes(s))
-                ? "skipped"
-                : "passing",
+        message: opts.message,
+        color: opts.color,
         svgFile: `badge-${opts.label}.svg`,
     };
 
@@ -61,15 +64,6 @@ async function makeBadge(opts: BadgeOpts): Promise<Badge> {
     }
     if (opts.iconSVG) {
         badge.logoBase64 = opts.iconSVG;
-    }
-
-    if (badge.message === "failing") {
-        badge.isError = true;
-        badge.color = "red";
-    } else if (badge.message === "skipped") {
-        badge.color = "inactive";
-    } else {
-        badge.color = "#2dbb4e";
     }
 
     const format: Format = {
@@ -88,28 +82,60 @@ async function makeBadge(opts: BadgeOpts): Promise<Badge> {
     return badge;
 }
 
+async function makeStatusBadge(opts: StatusBadgeOpts): Promise<Badge> {
+    const statuses = opts.steps.map(s => steps[s].outcome);
+
+    const message = statuses.includes("failure")
+        ? "failing"
+        : (["skipped", "cancelled"] as Outcome[]).some(s => statuses.includes(s))
+            ? "skipped"
+            : "passing";
+
+    let color = "#2dbb4e";
+    if (message === "failing") {
+        color = "red";
+    } else if (message === "skipped") {
+        color = "inactive";
+    }
+
+    return makeBadge({
+        message,
+        color,
+        icon: opts.icon,
+        iconSVG: opts.iconSVG,
+        label: opts.label,
+    });
+}
+
+const package_json = JSON.parse(await fs.readFile("package.json", "utf-8")) as Record<string, any>;
+
 const badges = [
-    await makeBadge({
+    await makeStatusBadge({
         label: "Pytest",
         steps: ["pytest"],
         icon: "pytest",
         iconSVG: ICON_URLS.pytest,
     }),
-    await makeBadge({
+    await makeStatusBadge({
         label: "WDIO",
         steps: ["wdio"],
         icon: "WebdriverIO",
         iconSVG: ICON_URLS.wdio,
     }),
-    await makeBadge({
+    await makeStatusBadge({
         label: "Mocha",
         steps: ["mocha"],
         icon: "Mocha",
         iconSVG: ICON_URLS.mocha,
     }),
-    await makeBadge({
+    await makeStatusBadge({
         label: "lint",
         steps: ["ruff", "eslint", "stylelint", "htmlhint", "zmypy", "build_ts"],
+    }),
+    await makeBadge({
+        label: "version",
+        message: package_json.version as string,
+        color: "informational",
     }),
 ];
 
