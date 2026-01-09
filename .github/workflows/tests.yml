@@ -77,22 +77,27 @@ jobs:
 
     - name: Lint with Ruff
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      id: ruff
       run: uv run ruff check --output-format github
 
     - name: Lint with eslint
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      id: eslint
       run: pnpm gulp lint_eslint
 
     - name: Lint with htmlhint
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      id: htmlhint
       run: pnpm gulp lint_htmlhint
 
     - name: Lint with stylelint
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      id: stylelint
       run: pnpm gulp lint_stylelint
 
     - name: Lint with zmypy
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
+      id: zmypy
       run: uv run zmypy
 
     - name: Build TypeScript
@@ -106,7 +111,7 @@ jobs:
       run: pnpm gulp build_quick
 
     - name: Test with pytest
-      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.build.conclusion == 'success'  }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.build.conclusion == 'success' }}
       id: pytest
       run: |
         xvfb-run --auto-servernum \
@@ -117,7 +122,8 @@ jobs:
             --cov-report=term-missing
 
     - name: Test with mocha
-      if: ${{ !cancelled() && steps.build.conclusion == 'success'  }}
+      if: ${{ !cancelled() && steps.build.conclusion == 'success' }}
+      id: mocha
       run: pnpm c8 -r lcov -o coverage-mocha mocha
 
     - name: Export assets
@@ -127,6 +133,7 @@ jobs:
 
     - name: Test with wdio
       if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      id: wdio
       run: |
         xvfb-run --auto-servernum \
           pnpm wdio run ./wdio.conf.ts
@@ -156,7 +163,7 @@ jobs:
         compression-level: 0
 
     - name: Upload wdio_visual_report
-      if: ${{ !cancelled() && steps.wdio_visual_report.conclusion == 'success'  }}
+      if: ${{ !cancelled() && steps.wdio_visual_report.conclusion == 'success' }}
       uses: actions/upload-artifact@v4
       continue-on-error: true
       with:
@@ -174,13 +181,117 @@ jobs:
       if: ${{ !cancelled() && steps.build.conclusion == 'success' && !env.NO_COVERALLS }}
       uses: coverallsapp/github-action@v2
 
+    - name: Generate badges
+      if: |
+        !cancelled()
+          && env.GITHUB_ACTIONS == 'true'
+          && github.event_name == 'push'
+          && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      id: badges
+      env:
+        STEPS: ${{ toJSON(steps) }}
+      run: pnpm ./scripts/badges.ts
+
+    - name: Upload Pytest badge svg
+      uses: exuanbo/actions-deploy-gist@v1
+      if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 8de11cd55fbde45736cf02cd9fa67472
+        file_path: ${{ fromJSON(steps.badges.outputs.badges).Pytest.svgFile }}
+        gist_file_name: pytest.svg
+
+    - name: Upload Mocha badge svg
+      uses: exuanbo/actions-deploy-gist@v1
+      if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 8de11cd55fbde45736cf02cd9fa67472
+        file_path: ${{ fromJSON(steps.badges.outputs.badges).Mocha.svgFile }}
+        gist_file_name: mocha.svg
+
+    - name: Upload WDIO badge svg
+      uses: exuanbo/actions-deploy-gist@v1
+      if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 8de11cd55fbde45736cf02cd9fa67472
+        file_path: ${{ fromJSON(steps.badges.outputs.badges).WDIO.svgFile }}
+        gist_file_name: wdio.svg
+
+    - name: Upload lint badge svg
+      uses: exuanbo/actions-deploy-gist@v1
+      if: ${{ !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 8de11cd55fbde45736cf02cd9fa67472
+        file_path: ${{ fromJSON(steps.badges.outputs.badges).lint.svgFile }}
+        gist_file_name: lint.svg
+
+    - name: Upload Pytest badge
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      if: ${{ false && !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        auth: ${{ secrets.GIST_TOKEN }}
+        gistID: 8de11cd55fbde45736cf02cd9fa67472
+        filename: pytest.json
+        label: Pytest
+        labelColor: "#343b42"
+        namedLogo: Pytest
+        message: ${{ fromJSON(steps.badges.outputs.badges).Pytest.message }}
+        color: ${{ fromJSON(steps.badges.outputs.badges).Pytest.color }}
+        isError: ${{ fromJSON(steps.badges.outputs.badges).Pytest.isError }}
+
+    - name: Upload Mocha badge
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      if: ${{ false && !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        auth: ${{ secrets.GIST_TOKEN }}
+        gistID: 8de11cd55fbde45736cf02cd9fa67472
+        filename: mocha.json
+        label: Mocha
+        labelColor: "#343b42"
+        namedLogo: Mocha
+        logoColor: white
+        message: ${{ fromJSON(steps.badges.outputs.badges).Mocha.message }}
+        color: ${{ fromJSON(steps.badges.outputs.badges).Mocha.color }}
+        isError: ${{ fromJSON(steps.badges.outputs.badges).Mocha.isError }}
+
+    - name: Upload WDIO badge
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      if: ${{ false && !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        auth: ${{ secrets.GIST_TOKEN }}
+        gistID: 8de11cd55fbde45736cf02cd9fa67472
+        filename: wdio.json
+        label: WDIO
+        labelColor: "#343b42"
+        namedLogo: WebdriverIO
+        logoColor: white
+        message: ${{ fromJSON(steps.badges.outputs.badges).WDIO.message }}
+        color: ${{ fromJSON(steps.badges.outputs.badges).WDIO.color }}
+        isError: ${{ fromJSON(steps.badges.outputs.badges).WDIO.isError }}
+
+    - name: Upload lint badge
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      if: ${{ false && !cancelled() && steps.badges.conclusion == 'success' }}
+      with:
+        auth: ${{ secrets.GIST_TOKEN }}
+        gistID: 8de11cd55fbde45736cf02cd9fa67472
+        filename: lint.svg
+        label: lint
+        labelColor: "#343b42"
+        message: ${{ fromJSON(steps.badges.outputs.badges).lint.message }}
+        color: ${{ fromJSON(steps.badges.outputs.badges).lint.color }}
+        isError: ${{ fromJSON(steps.badges.outputs.badges).lint.isError }}
+
     - name: Export zip file
       id: export_zip
-      if: ${{ !cancelled() && steps.build.conclusion == 'success'  }}
+      if: ${{ !cancelled() && steps.build.conclusion == 'success' }}
       run: pnpm gulp export_zip
 
     - name: Upload zip package
-      if: ${{ !cancelled() && steps.export_zip.conclusion == 'success'  }}
+      if: ${{ !cancelled() && steps.export_zip.conclusion == 'success' }}
       uses: actions/upload-artifact@v4
       with:
         name: package

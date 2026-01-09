@@ -2,6 +2,10 @@ Anki add-on to sync between WaniKani and an Anki deck
 =====================================================
 
 [![Tests](https://github.com/kmaglione/ankiwanikanisync/actions/workflows/tests.yml/badge.svg?event=push)][tests-workflow]
+![Pytest](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/pytest.svg)
+![WDIO](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/wdio.svg)
+![Mocha](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/mocha.svg)
+![lint](https://raw.githubusercontent.com/gist/kmaglione/8de11cd55fbde45736cf02cd9fa67472/raw/lint.svg)
 [![Coverage](https://coveralls.io/repos/github/kmaglione/ankiwanikanisync/badge.svg)][coveralls]
 
 This add-on is based on [Anki WaniKani Sync][Anki-WaniKaniSync], which is in
