@@ -30,8 +30,16 @@ export const config: WebdriverIO.Config = {
     autoXvfb: true,
     capabilities: [{
         "browserName": "chrome",
-        // 'goog:chromeOptions': { args: ['--headless=new', '--no-sandbox'] },
-        "goog:chromeOptions": { args: ["--no-sandbox", "--disable-dev-shm-usage"] },
+        "goog:chromeOptions": {
+            args: [
+                "--disable-dev-shm-usage",
+                // FIXME: This causes some tests to screenshot the wrong
+                // portion of the page.
+                // "--disable-infobars",
+                "--no-sandbox",
+                "--window-size=800,800",
+            ],
+        },
     }],
 
     logLevel: "info",
