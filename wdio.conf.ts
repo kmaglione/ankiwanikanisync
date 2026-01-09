@@ -51,7 +51,9 @@ export const config: WebdriverIO.Config = {
             "visual",
             {
                 baselineFolder: path.join(import.meta.dirname, "wdio-tests", "baseline", ...baseline_extra),
-                createJsonReportFiles: true,
+                compareOptions: {
+                    createJsonReportFiles: true,
+                },
                 screenshotPath: path.join(import.meta.dirname, "tmp", "screenshots"),
                 savePerInstance: true,
             } satisfies VisualServiceOptions,
