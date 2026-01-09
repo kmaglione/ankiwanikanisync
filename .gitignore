@@ -11,7 +11,7 @@ coverage/
 coverage.*
 dist/
 htmlcov/
-screenshots/
+/screenshots/
 tmp/
 /meta.json
 __pycache__/

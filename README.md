@@ -16,25 +16,34 @@ dependency tracking. It also significantly speeds up the initial import of the
 deck from WaniKani by completing the download of audio and context patterns in
 the background after the main import of the deck.
 
-This add-on creates an Anki note for each subject in WaniKani. The add-on
-tracks dependencies between cards and level completion. By default, cards are
-suspended if any of their components have not reached maturity or if they are
-in a level beyond the highest level completed by the user. However, unlike
-WaniKani, radical cards are unlocked one level early, to make sure that all
-kanji for a level can be studied as soon as a level is unlocked. This behavior
-is configurable.
+This add-on creates an Anki note for each subject in WaniKani. The study
+process is very similar to the process on WaniKani:
+
+[![Meaning card](assets/screenshots/card-meaning-thumbnail.png)](assets/screenshots/card-meaning.png)
+[![Reading card](assets/screenshots/card-reading-thumbnail.png)](assets/screenshots/card-reading.png)
+
+The add-on tracks dependencies between cards, as well as level completion. By
+default, cards are suspended if any of their components have not reached
+maturity or if they are in a level beyond the highest level completed by the
+user. However, unlike WaniKani, radical cards are unlocked one level early, to
+make sure that all kanji for a level can be studied as soon as a level is
+unlocked. This behavior is configurable.
 
 If the user wishes to review a subject before it would typically be unlocked
 (for instance, after encountering a word or kanji in the wild, or in another
 learning system), it can be unlocked early (along with all of its
 dependencies) from the Anki card browser, using the "Study WaniKani note"
-context menu item. Each level of dependencies for the unlocked note will be
-unlocked in 10 minute intervals. So, unlocking a vocab note which depends on a
-new kanji, which depends on a new radical, will result in the radical being
-unlocked immediately, followed by the kanji 10 minutes later, followed by the
-vocab 10 minutes after that (20 minutes in total). This means that, depending
-on your learn ahead limit, the unlocked note may not be available for review
-for up to 20 minutes.
+context menu item:
+
+[![Study WaniKani note](assets/screenshots/browser-study-note-thumbnail.png)](assets/screenshots/browser-study-note.png)
+
+Each level of dependencies for the unlocked note will be unlocked in 10 minute
+intervals. So, unlocking a vocab note which depends on a new kanji, which
+depends on a new radical, will result in the radical being unlocked
+immediately, followed by the kanji 10 minutes later, followed by the vocab 10
+minutes after that (20 minutes in total). This means that, depending on your
+learn ahead limit, the unlocked note may not be available for review for up to
+20 minutes.
 
 The add-on supports bidirectional sync of reviews between Anki and WaniKani.
 The sync logic is fairly complex, but, in general, reviews will be synced from
