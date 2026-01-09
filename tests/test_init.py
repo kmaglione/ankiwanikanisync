@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import tomllib
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pytest_mock import MockerFixture
@@ -8,6 +11,21 @@ from .utils import SaveAttr, lazy
 
 if TYPE_CHECKING:
     from ankiwanikanisync.collection import WKCollection
+
+
+def test_version():
+    from ankiwanikanisync import __version__
+
+    root = Path(__file__).parent.parent
+
+    with (root / "package.json").open("r") as f:
+        package_json = json.load(f)
+
+    with (root / "pyproject.toml").open("rb") as bf:
+        pyproject = tomllib.load(bf)
+
+    assert __version__ == package_json["version"]
+    assert __version__ == pyproject["project"]["version"]
 
 
 def test_on_sync(mocker: MockerFixture, save_attr: SaveAttr, wk_col: WKCollection):

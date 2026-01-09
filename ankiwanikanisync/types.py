@@ -6,7 +6,7 @@ from typing import List, Literal, NotRequired, Tuple
 
 from typing_extensions import TypedDict
 
-source_hash__ = "33f3c4c35ed4d206bd90d367e957ec0c"
+source_hash__ = "98d856b38a693b6ab06914e4a6e1b66f"
 
 
 ##### BEGIN OF ts2python generated code

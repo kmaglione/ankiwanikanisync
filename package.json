@@ -1,14 +1,14 @@
 {
   "name": "ankiwanikanisync",
-  "version": "1.0.0",
+  "version": "0.3.0",
   "description": "Anki WaniKani Sync",
-  "homepage": "https://github.com/kmaglione/Anki-WaniKaniSync#readme",
+  "homepage": "https://github.com/kmaglione/ankiwanikanisync",
   "bugs": {
-    "url": "https://github.com/kmaglione/Anki-WaniKaniSync/issues"
+    "url": "https://github.com/kmaglione/ankiwanikanisync/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kmaglione/Anki-WaniKaniSync.git"
+    "url": "git+https://github.com/kmaglione/ankiwanikanisync.git"
   },
   "license": "AGPL",
   "author": "",

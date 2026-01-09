@@ -8,7 +8,7 @@ from .promise_qt import QtScheduler
 
 sys.path.append(str(Path(__file__).parent / "deps"))
 
-__version__ = "0.2"
+__version__ = "0.3.0"
 
 Promise.set_scheduler(QtScheduler())
 
