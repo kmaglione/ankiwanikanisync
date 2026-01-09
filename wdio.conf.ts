@@ -62,6 +62,7 @@ export const config: WebdriverIO.Config = {
                 compareOptions: {
                     createJsonReportFiles: true,
                 },
+                createJsonReportFiles: true,
                 screenshotPath: path.join(import.meta.dirname, "tmp", "screenshots"),
                 savePerInstance: true,
             } satisfies VisualServiceOptions,
