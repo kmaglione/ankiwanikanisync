@@ -22,6 +22,23 @@ interface AnswerStatus {
 
 const TYPEANS_STYLE = "font-size: 20px;";
 
+const q = (str: string) => `"${str}"`;
+
+function xpathQuote(str: string): string {
+    if (!str.includes('"')) {
+        return q(str);
+    }
+
+    const res: string[] = [];
+    for (const [i, substr] of str.split('"').entries()) {
+        if (i > 0) {
+            res.push(`'"'`);
+        }
+        res.push(q(substr));
+    }
+    return `concat(${res.join(", ")})`;
+}
+
 export class Card {
     readonly TYPEANS = `<input type="text" id="typeans"
                        onkeypress="_typeAnsPress(event);"
@@ -181,6 +198,10 @@ export class Card {
             elem.setAttribute("open", "");
             elem.scrollIntoView();
         }, sel);
+    }
+
+    async openNamedSection(name: string) {
+        await this.openSection(`//summary[normalize-space() = ${xpathQuote(name)}]/ancestor::details[1]`);
     }
 
     async showFront(cardType: CardType, fields: Fields) {
