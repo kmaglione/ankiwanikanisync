@@ -31,6 +31,7 @@ jobs:
       id: install_qt
       with:
         tools: >
+             libegl1
              libegl1-mesa-dev
              libx11-6
              libxcb-cursor0
