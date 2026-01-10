@@ -74,7 +74,7 @@ export class Card {
         text = text.replace(/\{\{([#^])(\w+)\}\}(.*?)\{\{\/\2\}\}/sg, (...m: string[]) => {
             const fieldName = m[2];
             const pos = m[1] === "#";
-            if (!!fields[fieldName] == pos) {
+            if (!!fields[fieldName] === pos) {
                 return m[3];
             }
             return "";
@@ -88,7 +88,7 @@ export class Card {
                     return this.TYPEANS;
                 }
                 if (answer != null) {
-                    const class_ = answer == val ? "typeGood" : "typeBad";
+                    const class_ = answer === val ? "typeGood" : "typeBad";
                     return this.#typedAns(`<span class="${class_}">${answer}</span>`);
                 }
                 return this.#typedAns(val as string);

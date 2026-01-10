@@ -290,7 +290,7 @@ export function setupBack() {
             $("#combination").appendChild(element);
         }
 
-        if (i + 1 != compsLength) {
+        if (i + 1 !== compsLength) {
             $("#combination").appendChild(frag(
                 "<p><div class=combination-plus><b>+<b/></div></p>"));
         }
@@ -310,7 +310,7 @@ export function setupBack() {
             </div>`));
     }
 
-    if (_.Found_in.length == 0) {
+    if (_.Found_in.length === 0) {
         hide($("#section-found-in-vocabulary"));
     }
 
@@ -323,7 +323,7 @@ export function setupBack() {
         typedAnswer = "";
         typeans.innerHTML = typeans.innerHTML.replace(/<br.*/, "");
         typeans.querySelectorAll(".typeGood, .typeBad").forEach(e => {
-            if (e.textContent == "-") return;
+            if (e.textContent === "-") return;
             typedAnswer += e.textContent;
         });
         typedAnswerLower = mangleAnswer(typedAnswer);
@@ -411,7 +411,7 @@ export function setupBack() {
         answerDiv.setAttribute("id", "typeans");
         answerDiv.textContent = typedAnswer;
         answerDiv.classList.add(`typeans-${_.Card}`);
-        if (_.Card == "Reading") {
+        if (_.Card === "Reading") {
             setLangJa(answerDiv);
         }
         $("#typeans").replaceWith(answerDiv);
@@ -425,7 +425,7 @@ export function setupBack() {
         } else {
             answerDiv.classList.add("incorrect");
 
-            const mangle = _.Card == "Reading" ? wanakana.toRomaji : (x: string) => x;
+            const mangle = _.Card === "Reading" ? wanakana.toRomaji : (x: string) => x;
             checkTypos(answers, correctAnswers, mangle);
         }
     } else {

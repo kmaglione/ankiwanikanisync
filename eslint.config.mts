@@ -25,6 +25,7 @@ const allGlobals = {
 
 const jsBase: Config = {
     rules: {
+        "eqeqeq": ["error", "always", { null: "ignore" }],
         "import/no-unresolved": "off",
         "import/order": [
             "error",

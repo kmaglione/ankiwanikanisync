@@ -69,7 +69,7 @@ export function likelyTypo(expected: string, typed: string): boolean {
     switch (expected.length) {
     case 0:
     case 1:
-        return expected == typed;
+        return expected === typed;
     case 2:
     case 3:
         return lev < 2;
