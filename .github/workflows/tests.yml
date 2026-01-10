@@ -19,6 +19,36 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Setup Google Chrome PPA
+      run: |
+        sudo mkdir -p /etc/apt/keyrings
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo dd of=/etc/apt/keyrings/google.asc
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo dd of=/etc/apt/trusted.gpg.d/google.asc
+        echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google.asc] http://dl.google.com/linux/chrome/deb/ stable main" | sudo dd of=/etc/apt/sources.list.d/google.list
+
+    - name: Install Qt dependencies
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      id: install_qt
+      with:
+        packages: >
+             libegl1-mesa-dev
+             libx11-6
+             libxcb-cursor0
+             libxcb-icccm4
+             libxcb-keysyms1
+             libxcb-shape0
+             libxcb-xkb1
+             libxcb1
+             libxext6
+             libxfixes3
+             libxkbcommon-x11-0
+             libxkbcommon0
+             libxrender1
+             libnspr4
+             libnss3
+             xvfb
+             google-chrome-stable
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
@@ -28,39 +58,6 @@ jobs:
       uses: pnpm/action-setup@v4
       with:
         version: latest
-
-    - name: Install Qt dependencies
-      id: install_qt
-      run: |
-        sudo apt-get update || true
-        sudo apt-get install -y \
-             libegl1-mesa-dev   \
-             libx11-6           \
-             libxcb-cursor0     \
-             libxcb-icccm4      \
-             libxcb-keysyms1    \
-             libxcb-shape0      \
-             libxcb-xkb1        \
-             libxcb1            \
-             libxext6           \
-             libxfixes3         \
-             libxkbcommon-x11-0 \
-             libxkbcommon0      \
-             libxrender1        \
-             libpango1.0-dev    \
-             libnspr4           \
-             libnss3            \
-             pkg-config         \
-             xvfb
-
-    - name: Install Google Chrome
-      id: install_chrome
-      run: |
-        if ! sudo apt install -y google-chrome-stable
-        then
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y ./google-chrome-stable_current_amd64.deb
-        fi
 
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
@@ -135,7 +132,7 @@ jobs:
       run: pnpm gulp export_assets
 
     - name: Test with wdio
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       id: wdio
       run: |
         rm -rf screenshots tmp/screenshots
@@ -150,14 +147,14 @@ jobs:
       if: >
         !cancelled()
           && !env.NO_ARGOS
-          && steps.install_chrome.conclusion == 'success'
+          && steps.install_qt.conclusion == 'success'
           && steps.export_assets.conclusion == 'success'
       continue-on-error: true
       run: pnpm argos upload --token ${{ secrets.ARGOS_TOKEN }} screenshots
 
     - name: Create wdio visual report
       id: wdio_visual_report
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       continue-on-error: true
       run: |
         rm -rf wdiovis
@@ -167,7 +164,7 @@ jobs:
             --logLevel=debug
 
     - name: Upload wdio_screenshots
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       uses: actions/upload-artifact@v4
       with:
         name: wdio_screenshots
