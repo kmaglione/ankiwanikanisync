@@ -528,6 +528,16 @@ radical-combination {
     content: "”";
 }
 
+.typo-expected:lang(ja)::before,
+.typo-ans:lang(ja)::before {
+    content: "「";
+}
+
+.typo-expected:lang(ja)::after,
+.typo-ans:lang(ja)::after {
+    content: "」";
+}
+
 
 .correct {
     background: var(--correct-color)!important;

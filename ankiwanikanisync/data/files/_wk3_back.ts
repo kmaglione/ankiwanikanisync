@@ -382,6 +382,7 @@ export function setupBack() {
     function checkTypos(answers: Set<string>,
                         expected: Set<string>,
                         mangle = (x: string): string => x) {
+        const lang = _.Card === "Reading" ? ' lang="ja"' : "";
         let found = 0;
         const typos = $("#typos");
         for (const ans of answers) {
@@ -393,8 +394,8 @@ export function setupBack() {
                     found++;
                     typos.insertAdjacentHTML("beforeend", `
                         <div class="typo">
-                            Did you mean <span class="typo-expected">${escapeHTML(exp)}</span>
-                            instead of <span class="typo-ans">${escapeHTML(ans)}</span>?
+                            Did you mean <span class="typo-expected"${lang}>${escapeHTML(exp)}</span>
+                            instead of <span class="typo-ans"${lang}>${escapeHTML(ans)}</span>?
                         </div>
                     `);
                 }
