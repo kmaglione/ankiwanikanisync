@@ -156,8 +156,12 @@ summary {
     }
 }
 
-*:lang(ja), #typeans[lang="ja"] {
+*:lang(ja) {
     font-family: var(--japanese-font);
+}
+
+#typeans[lang="ja"] {
+    font-family: var(--japanese-font) !important;
 }
 
 .hidden {

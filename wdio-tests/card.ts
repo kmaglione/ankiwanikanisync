@@ -20,7 +20,7 @@ interface AnswerStatus {
     shook: boolean;
 }
 
-const TYPEANS_STYLE = "font-size: 20px;";
+const TYPEANS_STYLE = "font-size: 20px; font-family: Arial";
 
 const q = (str: string) => `"${str}"`;
 
