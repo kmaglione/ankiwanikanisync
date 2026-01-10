@@ -56,8 +56,11 @@ jobs:
     - name: Install Google Chrome
       id: install_chrome
       run: |
-        sudo apt install -y google-chrome-stable
-
+        if ! sudo apt install -y google-chrome-stable
+        then
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+        fi
 
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
@@ -135,7 +138,7 @@ jobs:
       if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       id: wdio
       run: |
-        rm -rf screenshots
+        rm -rf screenshots tmp/screenshots
         mkdir -p screenshots/argos
         xvfb-run --auto-servernum \
           pnpm wdio run ./wdio.conf.ts

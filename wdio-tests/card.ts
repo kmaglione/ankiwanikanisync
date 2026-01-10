@@ -84,7 +84,7 @@ export class Card {
 
             const frag = document.createRange().createContextualFragment(c);
 
-            const card = document.querySelector(".card");
+            const card = document.querySelector("#qa");
             card.textContent = "";
             card.appendChild(frag);
 
@@ -142,6 +142,13 @@ export class Card {
         await browser.keys([...val, Key.Enter]);
 
         return this.checkAnswer();
+    }
+
+    async setNightMode(enable: boolean): Promise<void> {
+        await browser.execute(enable => {
+            document.body.classList[enable ? "add" : "remove"]("nightMode");
+        }, enable);
+        await browser.emulate("colorScheme", enable ? "dark" : "light");
     }
 
     async getHeadings(): Promise<string[]> {
