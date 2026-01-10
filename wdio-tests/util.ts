@@ -4,7 +4,6 @@ declare module "webdriverio" {
     interface ChainablePromiseArray {
         then<U>(
             res?: ((elem: WebdriverIO.ElementArray) => Promise<U> | U) | null,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             rej?: ((val: any) => Promise<U> | U) | null
         ): Promise<U>;
     }
@@ -36,7 +35,6 @@ export interface WdioCheckFullPageMethodOptions extends Omit<CheckFullPageMethod
 
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, expectedResult?: number, options?: WdioCheckElementMethodOptions): Promise<void>;
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, options?: WdioCheckElementMethodOptions): Promise<void>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function matchElementSnapshot(element: ChainablePromiseElement, tag: string, ...args: any[]): Promise<void> {
     for (let i = 0; i < 4; i++) {
         await element.scrollIntoView();
