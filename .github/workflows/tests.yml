@@ -19,6 +19,34 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Install Qt dependencies
+      uses: tecolicom/actions-use-apt-tools@v1
+      id: install_qt
+      with:
+        tools: >
+             libegl1-mesa-dev
+             libx11-6
+             libxcb-cursor0
+             libxcb-icccm4
+             libxcb-keysyms1
+             libxcb-shape0
+             libxcb-xkb1
+             libxcb1
+             libxext6
+             libxfixes3
+             libxkbcommon-x11-0
+             libxkbcommon0
+             libxrender1
+             libnspr4
+             libnss3
+             xvfb
+
+    - name: Setup Stable Chrome for Testing
+      uses: browser-actions/setup-chrome@v2
+      with:
+        chrome-version: stable
+        install-dependencies: true
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
@@ -28,39 +56,6 @@ jobs:
       uses: pnpm/action-setup@v4
       with:
         version: latest
-
-    - name: Install Qt dependencies
-      id: install_qt
-      run: |
-        sudo apt-get update || true
-        sudo apt-get install -y \
-             libegl1-mesa-dev   \
-             libx11-6           \
-             libxcb-cursor0     \
-             libxcb-icccm4      \
-             libxcb-keysyms1    \
-             libxcb-shape0      \
-             libxcb-xkb1        \
-             libxcb1            \
-             libxext6           \
-             libxfixes3         \
-             libxkbcommon-x11-0 \
-             libxkbcommon0      \
-             libxrender1        \
-             libpango1.0-dev    \
-             libnspr4           \
-             libnss3            \
-             pkg-config         \
-             xvfb
-
-    - name: Install Google Chrome
-      id: install_chrome
-      run: |
-        if ! sudo apt install -y google-chrome-stable
-        then
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y ./google-chrome-stable_current_amd64.deb
-        fi
 
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
