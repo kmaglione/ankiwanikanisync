@@ -43,6 +43,7 @@ export const config: WebdriverIO.Config = {
     }],
 
     logLevel: "info",
+    maskingPatterns: String(/BIDI.*?\{.{160}(.*)\}/),
 
     // Default timeout for all waitFor* commands.
     waitforTimeout: 10000,
