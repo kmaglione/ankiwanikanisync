@@ -130,7 +130,7 @@ const badges = [
     }),
     await makeStatusBadge({
         label: "lint",
-        steps: ["ruff", "eslint", "stylelint", "htmlhint", "zmypy", "build_ts"],
+        steps: ["lint"],
     }),
     await makeBadge({
         label: "version",

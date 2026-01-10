@@ -75,39 +75,14 @@ jobs:
       id: install
       run: uv sync
 
-    - name: Lint with Ruff
+    - name: Lint
       if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      id: ruff
-      run: uv run ruff check --output-format github
-
-    - name: Lint with eslint
-      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      id: eslint
-      run: pnpm gulp lint_eslint
-
-    - name: Lint with htmlhint
-      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      id: htmlhint
-      run: pnpm gulp lint_htmlhint
-
-    - name: Lint with stylelint
-      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      id: stylelint
-      run: pnpm gulp lint_stylelint
-
-    - name: Lint with zmypy
-      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      id: zmypy
-      run: uv run zmypy
-
-    - name: Build TypeScript
-      id: build_ts
-      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
-      run: pnpm gulp build_ts
+      id: lint
+      run: pnpm gulp lint build_ts
 
     - name: Build
       id: build
-      if: ${{ !cancelled() && steps.build_ts.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install.conclusion == 'success' }}
       run: pnpm gulp build_quick
 
     - name: Test with pytest

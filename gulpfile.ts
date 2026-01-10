@@ -88,8 +88,16 @@ export function lint_stylelint() {
         .pipe(stylelint({}));
 }
 
+export function lint_ruff() {
+    if (process.env.CI) {
+        return exec`uv run ruff check --output-format github`;
+    } else {
+        return exec`uv run ruff check`;
+    }
+}
+
 export function lint_zmypy() {
-    return exec`zmypy`;
+    return exec`uv run zmypy`;
 }
 
 export async function generate_types() {
@@ -133,11 +141,15 @@ export function watch_stylelint() {
     return watch(files.scss, watchOpts, lint_stylelint);
 }
 
+export function watch_ruff() {
+    return watch([...files.py, ...files.py_tests], watchOpts, lint_ruff);
+}
+
 export function watch_zmypy() {
     return watch([...files.py, ...files.py_tests], watchOpts, lint_zmypy);
 }
 
-export const lint = parallel(lint_eslint, lint_htmlhint, lint_stylelint, lint_zmypy);
+export const lint = parallel(lint_eslint, lint_htmlhint, lint_ruff, lint_stylelint, lint_zmypy);
 
 export function build_scss() {
     return src(files.scss)
@@ -301,6 +313,7 @@ export function watch_dist() {
 export const watch_lint = parallel(
     watch_eslint,
     watch_htmlhint,
+    watch_ruff,
     watch_stylelint,
     watch_zmypy,
 );
