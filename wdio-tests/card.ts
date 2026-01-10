@@ -151,6 +151,12 @@ export class Card {
         await browser.emulate("colorScheme", enable ? "dark" : "light");
     }
 
+    async setMobile(enable: boolean): Promise<void> {
+        await browser.execute(enable => {
+            document.body.classList[enable ? "add" : "remove"]("mobile");
+        }, enable);
+    }
+
     async getHeadings(): Promise<string[]> {
         assert(this.side === CardSide.Back);
 

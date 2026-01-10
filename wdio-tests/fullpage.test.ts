@@ -24,53 +24,68 @@ describe("Full page screenshots", () => {
     after(async () => {
         await browser.setWindowSize(800, 800);
         await card.setNightMode(false);
+        await card.setMobile(false);
     });
-    for (const nightMode of [false, true]) {
-        const suffix = nightMode ? "-night-mode" : "";
-        describe(`nightMode=${nightMode}`, () => {
+    for (const mobile of [false, true]) {
+        describe(`mobile=${mobile}`, () => {
             before(async () => {
-                await card.setNightMode(nightMode);
+                await card.setMobile(mobile);
+                if (mobile) {
+                    await browser.setViewport({ width: 550, height: 800 });
+                } else {
+                    await browser.setViewport({ width: 800, height: 600 });
+                }
             });
-            for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
-                describe(`${cardType} cards`, () => {
-                    for (const note of notes) {
-                        const char = note["Characters"];
-                        if (cardType === "Meaning" || note["Card_Type"] !== "Radical") {
-                            describe(`${note["Card_Type"]} ${char}`, function () {
-                                it("Should have the correct front", async () => {
-                                    await card.showFront(cardType, note);
-                                    await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-front${suffix}`);
-                                });
-                                it("Should have the correct initial back", async () => {
-                                    await card.showBack();
-                                    await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-back-initial${suffix}`);
-                                });
-                                it("Should have the correct expanded back", async () => {
-                                    await card.openSections("details");
-                                    await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-back-expanded${suffix}`);
-                                });
-                            });
-                        }
+
+            const mobileSuffix = mobile ? "-mobile" : "";
+            for (const nightMode of [false, true]) {
+                const suffix = (nightMode ? "-night-mode" : "") + mobileSuffix;
+                describe(`nightMode=${nightMode}`, () => {
+                    before(async () => {
+                        await card.setNightMode(nightMode);
+                    });
+                    for (const cardType of ["Meaning", "Reading"] satisfies CardType[]) {
+                        describe(`${cardType} cards`, () => {
+                            for (const note of notes) {
+                                const char = note["Characters"];
+                                if (cardType === "Meaning" || note["Card_Type"] !== "Radical") {
+                                    describe(`${note["Card_Type"]} ${char}`, function () {
+                                        it("Should have the correct front", async () => {
+                                            await card.showFront(cardType, note);
+                                            await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-front${suffix}`);
+                                        });
+                                        it("Should have the correct initial back", async () => {
+                                            await card.showBack();
+                                            await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-back-initial${suffix}`);
+                                        });
+                                        it("Should have the correct expanded back", async () => {
+                                            await card.openSections("details");
+                                            await saveScreenshot(`full-page-${note["Card_Type"]}-${char}-${cardType}-back-expanded${suffix}`);
+                                        });
+                                    });
+                                }
+                            }
+                        });
                     }
+                    describe("Answer styling", () => {
+                        it("Should have the correct front styling", async () => {
+                            await card.showFront("Reading", imp.vocabulary.左右);
+                            await card.typeAnswer("さゆう");
+                            await saveScreenshot(`full-page-answer-front${suffix}`);
+                        });
+                        it("Should have the correct back styling for correct answers", async () => {
+                            await card.showBack();
+                            await saveScreenshot(`full-page-answer-back-correct${suffix}`);
+                        });
+                        it("Should have the correct back styling for typos", async () => {
+                            await card.showFront("Reading", imp.vocabulary.左右);
+                            await card.typeAnswer("さゆー");
+                            await card.showBack();
+                            await saveScreenshot(`full-page-answer-back-typo${suffix}`);
+                        });
+                    });
                 });
             }
-            describe("Answer styling", () => {
-                it("Should have the correct front styling", async () => {
-                    await card.showFront("Reading", imp.vocabulary.左右);
-                    await card.typeAnswer("さゆう");
-                    await saveScreenshot(`full-page-answer-front${suffix}`);
-                });
-                it("Should have the correct back styling for correct answers", async () => {
-                    await card.showBack();
-                    await saveScreenshot(`full-page-answer-back-correct${suffix}`);
-                });
-                it("Should have the correct back styling for typos", async () => {
-                    await card.showFront("Reading", imp.vocabulary.左右);
-                    await card.typeAnswer("さゆー");
-                    await card.showBack();
-                    await saveScreenshot(`full-page-answer-back-typo${suffix}`);
-                });
-            });
         });
     }
 });
