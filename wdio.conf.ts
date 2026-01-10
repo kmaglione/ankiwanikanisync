@@ -79,11 +79,19 @@ export const config: WebdriverIO.Config = {
     },
 
     /**
-     * Gets executed once before all workers get launched.
+     * Gets executed just before initialising the webdriver session and test framework. It allows you
+     * to manipulate configurations depending on the capability or spec.
      */
-    onPrepare: async function (_config: WebdriverIO.Config, _capabilities) {
-        // await server.start();
-        // config.baseUrl = server.rootURL;
+    beforeSession: async function (config, _capabilities, _specs, _cid) {
+        await server.start();
+        config.baseUrl = server.rootURL;
+    },
+
+    /**
+     * Gets executed right after terminating the webdriver session.
+     */
+    afterSession: function (_config, _capabilities, _specs) {
+        server.stop();
     },
 
     /**
@@ -96,10 +104,9 @@ export const config: WebdriverIO.Config = {
             console[entry.level](`[browser log]: ${entry.text}`);
         });
 
-        await server.start();
-        await browser.url(`${server.rootURL}index.html`);
-        await card.init();
         await browser.setWindowSize(800, 800);
+        await browser.url("index.html");
+        await card.init();
     },
 
     /**
