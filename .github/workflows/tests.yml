@@ -19,6 +19,13 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Setup Google Chrome PPA
+      run: |
+        sudo mkdir -p /etc/apt/keyrings
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo dd of=/etc/apt/keyrings/google.asc
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo dd of=/etc/apt/trusted.gpg.d/google.asc
+        echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google.asc] http://dl.google.com/linux/chrome/deb/ stable main" | sudo dd of=/etc/apt/sources.list.d/google.list
+
     - name: Install Qt dependencies
       uses: tecolicom/actions-use-apt-tools@v1
       id: install_qt
@@ -40,12 +47,7 @@ jobs:
              libnspr4
              libnss3
              xvfb
-
-    - name: Setup Stable Chrome for Testing
-      uses: browser-actions/setup-chrome@v2
-      with:
-        chrome-version: stable
-        install-dependencies: true
+             google-chrome-stable
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -130,7 +132,7 @@ jobs:
       run: pnpm gulp export_assets
 
     - name: Test with wdio
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       id: wdio
       run: |
         rm -rf screenshots tmp/screenshots
@@ -145,14 +147,14 @@ jobs:
       if: >
         !cancelled()
           && !env.NO_ARGOS
-          && steps.install_chrome.conclusion == 'success'
+          && steps.install_qt.conclusion == 'success'
           && steps.export_assets.conclusion == 'success'
       continue-on-error: true
       run: pnpm argos upload --token ${{ secrets.ARGOS_TOKEN }} screenshots
 
     - name: Create wdio visual report
       id: wdio_visual_report
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       continue-on-error: true
       run: |
         rm -rf wdiovis
@@ -162,7 +164,7 @@ jobs:
             --logLevel=debug
 
     - name: Upload wdio_screenshots
-      if: ${{ !cancelled() && steps.install_chrome.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
+      if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.export_assets.conclusion == 'success' }}
       uses: actions/upload-artifact@v4
       with:
         name: wdio_screenshots
