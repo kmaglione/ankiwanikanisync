@@ -1,9 +1,6 @@
 declare module "webdriverio" {
     interface ChainablePromiseArray {
-        then<U>(
-            res?: ((elem: WebdriverIO.ElementArray) => Promise<U> | U) | null,
-            rej?: ((val: any) => Promise<U> | U) | null
-        ): Promise<U>;
+        then: PromiseLike<WebdriverIO.ElementArray>["then"];
     }
 }
 
