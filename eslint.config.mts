@@ -25,14 +25,14 @@ const allGlobals = {
 
 const jsBase: Config = {
     rules: {
-        "eqeqeq": ["error", "always", { null: "ignore" }],
+        eqeqeq: ["error", "always", { null: "ignore" }],
         "import/no-unresolved": "off",
         "import/order": [
             "error",
             {
-                "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"]],
-                "alphabetize": { order: "asc" },
-                "named": true,
+                groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+                alphabetize: { order: "asc" },
+                named: true,
                 "newlines-between": "always",
             },
         ],
@@ -72,6 +72,7 @@ export default defineConfig([
                 VariableDeclarator: 1,
             }],
             "@stylistic/indent-binary-ops": ["error", 4],
+            "@stylistic/quote-props": ["error", "as-needed"],
             "@stylistic/quotes": ["error", "double", { avoidEscape: true, allowTemplateLiterals: "avoidEscape" }],
         },
     },

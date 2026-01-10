@@ -29,7 +29,7 @@ export const config: WebdriverIO.Config = {
     maxInstances: 10,
     autoXvfb: true,
     capabilities: [{
-        "browserName": "chrome",
+        browserName: "chrome",
         "goog:chromeOptions": {
             args: [
                 "--disable-dev-shm-usage",
