@@ -23,11 +23,11 @@ interface AnswerStatus {
 const TYPEANS_STYLE = "font-size: 20px;";
 
 export class Card {
-    TYPEANS = `<input type="text" id="typeans"
+    readonly TYPEANS = `<input type="text" id="typeans"
                        onkeypress="_typeAnsPress(event);"
                        style="${TYPEANS_STYLE}">`;
 
-    typedAns(val: string): string {
+    #typedAns(val: string): string {
         return `<div id="input">
             <div style="${TYPEANS_STYLE}">
                 <code id="typeans">${val}</code>
@@ -60,9 +60,9 @@ export class Card {
                 }
                 if (answer != null) {
                     const class_ = answer == val ? "typeGood" : "typeBad";
-                    return this.typedAns(`<span class="${class_}">${answer}</span>`);
+                    return this.#typedAns(`<span class="${class_}">${answer}</span>`);
                 }
-                return this.typedAns(val as string);
+                return this.#typedAns(val as string);
             }
             if (typeof val === "object") {
                 return JSON.stringify(val);
@@ -71,7 +71,7 @@ export class Card {
         });
     }
 
-    async load(html: string, fields: Fields, answer?: string | null) {
+    async #load(html: string, fields: Fields, answer?: string | null) {
         html = this.interpolate(html, fields, answer);
 
         const side = this.side === CardSide.Back ? "Back" : "Front";
@@ -179,7 +179,7 @@ export class Card {
             Card: cardType,
         };
 
-        await this.load(tmpl.cards[cardType]["qfmt"], this.fields);
+        await this.#load(tmpl.cards[cardType]["qfmt"], this.fields);
     }
 
     async showBack() {
@@ -199,7 +199,7 @@ export class Card {
             FrontSide: this.interpolate(tmpls["qfmt"], this.fields, answer),
         };
 
-        await this.load(tmpls["afmt"], fields);
+        await this.#load(tmpls["afmt"], fields);
     }
 }
 

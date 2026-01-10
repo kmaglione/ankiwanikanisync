@@ -24,15 +24,19 @@ const args = parseArgs({
 });
 
 class Server {
-    zip: StreamZip.StreamZipAsync;
-    rootURL: string | null;
-    _server: http.Server;
+    readonly #zip: StreamZip.StreamZipAsync;
+    readonly #server: http.Server;
+    #rootURL: string | null;
+
+    get rootURL(): string | null {
+        return this.#rootURL;
+    }
 
     constructor(zip: StreamZip.StreamZipAsync) {
-        this.zip = zip;
+        this.#zip = zip;
 
-        this._server = http.createServer((req, res) => {
-            this.handleRequest(req, res).catch(error => {
+        this.#server = http.createServer((req, res) => {
+            this.#handleRequest(req, res).catch(error => {
                 console.error(error);
                 res.writeHead(500);
                 res.end("500 Internal server error");
@@ -40,7 +44,7 @@ class Server {
         });
     }
 
-    async handleRequest(req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) {
+    async #handleRequest(req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) {
         if (req.method !== "GET" || !req.url) {
             res.writeHead(405);
             res.end("405 Method not allowed");
@@ -57,7 +61,7 @@ class Server {
 
         let stream;
         try {
-            stream = await this.zip.stream(pathname.substring(1));
+            stream = await this.#zip.stream(pathname.substring(1));
         } catch (_) {
             console.log(` [404] : ${pathname}`);
             res.writeHead(404);
@@ -73,11 +77,11 @@ class Server {
 
     async listen(host: string, port: number) {
         await new Promise(resolve => {
-            this._server.listen(port, host, () => resolve(null));
+            this.#server.listen(port, host, () => resolve(null));
         });
 
-        const actualPort = (this._server.address() as AddressInfo).port;
-        this.rootURL = `http://${args.values.host}:${actualPort}/`;
+        const addr = this.#server.address() as AddressInfo;
+        this.#rootURL = `http://${args.values.host}:${addr.port}/`;
     }
 }
 
