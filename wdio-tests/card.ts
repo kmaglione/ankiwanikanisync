@@ -52,6 +52,18 @@ export class Card {
         </div>`;
     }
 
+    readonly PLAY_IMAGE = `<svg class="playImage" viewBox="0 0 64 64" version="1.1">
+        <circle cx="32" cy="32" r="29"></circle>
+        <path d="M56.502,32.301l-37.502,20.101l0.329,-40.804l37.173,20.703Z"></path>
+    </svg>`;
+
+    #soundLink(n: number): string {
+        const qa = this.side === CardSide.Front ? "q" : "a";
+        return `<a class="replay-button soundLink" href="#" onclick="pycmd('play:${qa}:${n}'); return false;" draggable="false">
+            ${this.PLAY_IMAGE}
+        </a>`;
+    }
+
     answerField: string | null;
 
     side: CardSide = CardSide.Front;
@@ -84,7 +96,8 @@ export class Card {
             if (typeof val === "object") {
                 return JSON.stringify(val);
             }
-            return String(val);
+            let i = 0;
+            return String(val).replace(/\[sound:.*?\]/g, () => this.#soundLink(++i));
         });
     }
 
