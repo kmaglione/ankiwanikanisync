@@ -70,10 +70,14 @@ class BaseSession(SessionMock):
     def __init__(self):
         super().__init__(real_http=False)
 
+        from ankiwanikanisync.importer import Downloader
         from ankiwanikanisync.wk_api import wk
 
         try_acquire = mock.patch.object(wk.limiter, "try_acquire").__enter__()
         try_acquire.return_value = True
+
+        try_acquire2 = mock.patch.object(Downloader.limiter, "try_acquire").__enter__()
+        try_acquire2.return_value = True
 
         self.audio_lock = threading.Lock()
 
