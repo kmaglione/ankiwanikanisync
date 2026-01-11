@@ -62,6 +62,7 @@
     "htmlhint": "^1.8.0",
     "mime": "^4.1.0",
     "mocha": "^11.7.5",
+    "mocha-ctrf-json-reporter": "^0.0.10",
     "node-stream-zip": "^1.15.0",
     "nyc": "^17.1.0",
     "sass": "^1.97.2",
@@ -73,6 +74,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.52.0",
     "typescript2python": "^2.0.8",
+    "wdio-ctrf-json-reporter": "^0.0.16",
     "webdriverio": "^9.23.0"
   }
 }

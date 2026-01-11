@@ -9,6 +9,7 @@
 bak/
 coverage/
 coverage.*
+ctrf/
 dist/
 htmlcov/
 /screenshots/

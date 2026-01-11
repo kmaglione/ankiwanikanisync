@@ -152,6 +152,9 @@ importers:
       mocha:
         specifier: ^11.7.5
         version: 11.7.5
+      mocha-ctrf-json-reporter:
+        specifier: ^0.0.10
+        version: 0.0.10
       node-stream-zip:
         specifier: ^1.15.0
         version: 1.15.0
@@ -185,6 +188,9 @@ importers:
       typescript2python:
         specifier: ^2.0.8
         version: 2.0.8
+      wdio-ctrf-json-reporter:
+        specifier: ^0.0.16
+        version: 0.0.16
       webdriverio:
         specifier: ^9.23.0
         version: 9.23.0(puppeteer-core@21.11.0)
@@ -1705,6 +1711,9 @@ packages:
   '@types/node@20.19.28':
     resolution: {integrity: sha512-VyKBr25BuFDzBFCK5sUM6ZXiWfqgCTwTAOK8qzGV/m9FCirXYDlmczJ+d5dXBAQALGCdRRdbteKYfJ84NGEusw==}
 
+  '@types/node@22.19.5':
+    resolution: {integrity: sha512-HfF8+mYcHPcPypui3w3mvzuIErlNOh2OAG+BCeBZCEwyiD5ls2SiCwEyT47OELtf7M3nHxBdu0FsmzdKxkN52Q==}
+
   '@types/node@25.0.6':
     resolution: {integrity: sha512-NNu0sjyNxpoiW3YuVFfNz7mxSQ+S4X2G28uqg2s+CzoqoQjLPsWSbsFFyztIAqt2vb8kfEAsJNepMGPTxFDx3Q==}
 
@@ -1957,6 +1966,10 @@ packages:
     resolution: {integrity: sha512-kBWIqBDbCAJuxENl4t1qiCf8mivHN++cNdgsmlkP8nG7KJ8ebCseqsBHTrvx/YAqRPZIBD50cN6xsB6MZTmUfg==}
     engines: {node: '>=18.20.0'}
 
+  '@wdio/logger@8.38.0':
+    resolution: {integrity: sha512-kcHL86RmNbcQP+Gq/vQUGlArfU6IIcbbnNp32rRIraitomZow+iEoc519rdQmSVusDozMS5DZthkgDdxK+vz6Q==}
+    engines: {node: ^16.13 || >=18}
+
   '@wdio/logger@9.18.0':
     resolution: {integrity: sha512-HdzDrRs+ywAqbXGKqe1i/bLtCv47plz4TvsHFH3j729OooT5VH38ctFn5aLXgECmiAKDkmH/A6kOq2Zh5DIxww==}
     engines: {node: '>=18.20.0'}
@@ -1972,6 +1985,10 @@ packages:
     resolution: {integrity: sha512-FLTF0VL6+o5BSTCO7yLSXocm3kUnu31zYwzdsz4n9s5YWt83sCtzGZlZpt7TaTzb3jVUfxuHNQDTb8UMkCu0lQ==}
     engines: {node: '>=18.20.0'}
 
+  '@wdio/reporter@8.43.0':
+    resolution: {integrity: sha512-0ph8SabdMrgDmuLUEwA7yvkrvlCw4/EXttb3CGucjSkuiSbZNLhdTMXpyPoewh2soa253fIpnx79HztOsOzn5Q==}
+    engines: {node: ^16.13 || >=18}
+
   '@wdio/reporter@9.20.0':
     resolution: {integrity: sha512-HjKJzm8o0MCcnwGVGprzaCAyau0OB8mWHwH1ZI/ka+z1nmVBr2tsr7H53SdHsGIhAg/XuZObobqdzeVF63ApeA==}
     engines: {node: '>=18.20.0'}
@@ -1986,6 +2003,10 @@ packages:
   '@wdio/spec-reporter@9.20.0':
     resolution: {integrity: sha512-YHj3kF86RoOVVR+k3eb+e/Fki6Mq1FIrJQ380Cz5SSWbIc9gL8HXG3ydReldY6/80KLFOuHn9ZHvDHrCIXRjiw==}
     engines: {node: '>=18.20.0'}
+
+  '@wdio/types@8.41.0':
+    resolution: {integrity: sha512-t4NaNTvJZci3Xv/yUZPH4eTL0hxrVTf5wdwNnYIBrzMnlRDbNefjQ0P7FM7ZjQCLaH92AEH6t/XanUId7Webug==}
+    engines: {node: ^16.13 || >=18}
 
   '@wdio/types@9.20.0':
     resolution: {integrity: sha512-zMmAtse2UMCSOW76mvK3OejauAdcFGuKopNRH7crI0gwKTZtvV89yXWRziz9cVXpFgfmJCjf9edxKFWdhuF5yw==}
@@ -2478,6 +2499,9 @@ packages:
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
+  charenc@0.0.2:
+    resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+
   cheerio-select@2.1.0:
     resolution: {integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==}
 
@@ -2690,6 +2714,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  crypt@0.0.2:
+    resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
 
   css-color-converter@2.0.0:
     resolution: {integrity: sha512-oLIG2soZz3wcC3aAl/7Us5RS8Hvvc6I8G8LniF/qfMmrm7fIKQ8RIDDRZeKyGL2SrWfNqYspuLShbnjBMVWm8g==}
@@ -4601,6 +4628,9 @@ packages:
   mathml-tag-names@2.1.3:
     resolution: {integrity: sha512-APMBEanjybaPzUrfqU0IMU5I0AswKMH7k8OTLs0vvV4KZpExkTkY87nR/zpbuTPj+gARop7aGUbl11pnDfW6xg==}
 
+  md5@2.3.0:
+    resolution: {integrity: sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==}
+
   mdn-data@2.12.2:
     resolution: {integrity: sha512-IEn+pegP1aManZuckezWCO+XZQDplx1366JoVhTpMpBB1sPey/SbveZQUosKiKiGYjg1wH4pMlNgXbCiYgihQA==}
 
@@ -4690,6 +4720,9 @@ packages:
 
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
+
+  mocha-ctrf-json-reporter@0.0.10:
+    resolution: {integrity: sha512-kp5L582eKouSrYO3YyCpeswMYNRq3HvCdnC8479NnqRgBxB5stABF9PetYQx4R+rlxXWtKdr9WYnlwj36A6JqQ==}
 
   mocha@10.8.2:
     resolution: {integrity: sha512-VZlYo/WE8t1tstuRmqgeyBgCbJc/lEdopaa+axcKzTBJ+UIdlAB9XnmvTCAH4pwR4ElNInaedhEBmZD8iCSVEg==}
@@ -6248,6 +6281,9 @@ packages:
 
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
+
+  wdio-ctrf-json-reporter@0.0.16:
+    resolution: {integrity: sha512-reOVmLd97uRgWLpfYkywmOalOwKO/6wflUq1kzAkeuh+8vTXJGLPU2S9VPtpWxwkUu0UR0roE2Jd2jRrnfMS+A==}
 
   webdriver@9.23.0:
     resolution: {integrity: sha512-XkZOhjoBOY7maKI3BhDF2rNiDne4wBD6Gw6VUnt4X9b7j9NtfzcCrThBlT0hnA8W77bWNtMRCSpw9Ajy08HqKg==}
@@ -7886,6 +7922,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/node@22.19.5':
+    dependencies:
+      undici-types: 6.21.0
+
   '@types/node@25.0.6':
     dependencies:
       undici-types: 7.16.0
@@ -8255,6 +8295,13 @@ snapshots:
       - utf-8-validate
       - webdriverio
 
+  '@wdio/logger@8.38.0':
+    dependencies:
+      chalk: 5.6.2
+      loglevel: 1.9.2
+      loglevel-plugin-prefix: 0.8.4
+      strip-ansi: 7.1.2
+
   '@wdio/logger@9.18.0':
     dependencies:
       chalk: 5.6.2
@@ -8282,6 +8329,14 @@ snapshots:
   '@wdio/repl@9.16.2':
     dependencies:
       '@types/node': 20.19.28
+
+  '@wdio/reporter@8.43.0':
+    dependencies:
+      '@types/node': 22.19.5
+      '@wdio/logger': 8.38.0
+      '@wdio/types': 8.41.0
+      diff: 7.0.0
+      object-inspect: 1.13.4
 
   '@wdio/reporter@9.20.0':
     dependencies:
@@ -8319,6 +8374,10 @@ snapshots:
       chalk: 5.6.2
       easy-table: 1.2.0
       pretty-ms: 9.3.0
+
+  '@wdio/types@8.41.0':
+    dependencies:
+      '@types/node': 22.19.5
 
   '@wdio/types@9.20.0':
     dependencies:
@@ -8857,6 +8916,8 @@ snapshots:
 
   chardet@2.1.1: {}
 
+  charenc@0.0.2: {}
+
   cheerio-select@2.1.0:
     dependencies:
       boolbase: 1.0.0
@@ -9104,6 +9165,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  crypt@0.0.2: {}
 
   css-color-converter@2.0.0:
     dependencies:
@@ -11313,6 +11376,12 @@ snapshots:
 
   mathml-tag-names@2.1.3: {}
 
+  md5@2.3.0:
+    dependencies:
+      charenc: 0.0.2
+      crypt: 0.0.2
+      is-buffer: 1.1.6
+
   mdn-data@2.12.2: {}
 
   mdn-data@2.26.0: {}
@@ -11390,6 +11459,10 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.6.2
+
+  mocha-ctrf-json-reporter@0.0.10:
+    dependencies:
+      md5: 2.3.0
 
   mocha@10.8.2:
     dependencies:
@@ -11965,7 +12038,7 @@ snapshots:
   proxy-agent@6.3.1:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.3.4
+      debug: 4.4.3(supports-color@8.1.1)
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
@@ -13358,6 +13431,10 @@ snapshots:
     dependencies:
       defaults: 1.0.4
     optional: true
+
+  wdio-ctrf-json-reporter@0.0.16:
+    dependencies:
+      '@wdio/reporter': 8.43.0
 
   webdriver@9.23.0:
     dependencies:

@@ -19,6 +19,11 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Add problem matchers
+      run: |
+        echo ::add-matcher::.github/matchers/mypy.json
+        echo ::add-matcher::.github/matchers/stylelint.json
+
     - name: Setup Google Chrome PPA
       run: |
         sudo mkdir -p /etc/apt/keyrings
@@ -92,17 +97,23 @@ jobs:
       if: ${{ !cancelled() && steps.install_qt.conclusion == 'success' && steps.build.conclusion == 'success' }}
       id: pytest
       run: |
-        xvfb-run --auto-servernum \
-          uv run pytest -v        \
-            --cov=dist/           \
-            --cov-report=html     \
-            --cov-report=lcov     \
+        mkdir -p ctrf
+        xvfb-run --auto-servernum   \
+          uv run pytest -v          \
+            --ctrf=ctrf/pytest.json \
+            --cov=dist/             \
+            --cov-report=html       \
+            --cov-report=lcov       \
             --cov-report=term-missing
 
     - name: Test with mocha
       if: ${{ !cancelled() && steps.build.conclusion == 'success' }}
       id: mocha
-      run: pnpm c8 -r lcov -o coverage-mocha mocha
+      run: |
+        pnpm c8 -r lcov -o coverage-mocha \
+            mocha \
+              --reporter mocha-ctrf-json-reporter \
+              --reporter-option output=ctrf/mocha.json
 
     - name: Export assets
       id: export_assets
@@ -120,6 +131,27 @@ jobs:
         mkdir -p .nyc_output
         pnpm nyc merge coverage .nyc_output/out.json
         pnpm nyc report --reporter=lcov
+
+    - name: Publish Test Report
+      uses: ctrf-io/github-test-reporter@v1
+      if: ${{ !env.NO_CTRF }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        report-path: './ctrf/*.json'
+        github-report: true
+        summary-report: true
+        failed-report: true
+        fail-rate-report: true
+        slowest-report: true
+        skipped-report: true
+
+    - name: Upload ctrf reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ctrf
+        path: ctrf
 
     - name: Upload to Argos
       if: >

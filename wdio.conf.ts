@@ -72,7 +72,10 @@ export const config: WebdriverIO.Config = {
 
     framework: "mocha",
 
-    reporters: ["spec"],
+    reporters: [
+        "spec",
+        ["ctrf-json", { outputDir: "./ctrf" }],
+    ],
 
     mochaOpts: {
         ui: "bdd",
