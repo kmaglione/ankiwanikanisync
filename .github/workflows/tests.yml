@@ -70,6 +70,9 @@ jobs:
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
+      with:
+        cache-dependency-glob: |
+          uv.lock
 
     - name: Install python dependencies
       id: install
