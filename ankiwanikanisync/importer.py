@@ -1006,14 +1006,11 @@ def ensure_deck(col: Collection, deck_name: str) -> bool:
     assert model
 
     def create_deck(name: str) -> DeckDict:
-        deck_id = col.decks.id(name, create=True)
-        assert deck_id
-        deck = col.decks.get(deck_id)
-        assert deck
-
+        deck = col.decks.new_deck_legacy(False)
+        deck["name"] = name
         deck["mid"] = model["id"]
         deck["conf"] = deck_preset_id
-        col.decks.save(deck)
+        deck["id"] = col.decks.add_deck_legacy(deck).id
         return deck
 
     deck_preset_id = None
@@ -1032,15 +1029,15 @@ def ensure_deck(col: Collection, deck_name: str) -> bool:
 
         changes += 1
 
-    def ensure_subdeck(name: str) -> int:
-        if not col.decks.id(name, create=False):
+    deck_names = {d.name for d in col.decks.all_names_and_ids()}
+
+    def ensure_subdeck(name: str) -> bool:
+        if res := name not in deck_names:
             create_deck(name)
-            return 1
-        return 0
+        return res
 
     for lvl in range(1, 61):
         changes += ensure_subdeck(f"{deck_name}::Level {lvl:02}")
-
         for kind in ["1 - Radicals", "2 - Kanji", "3 - Vocab"]:
             changes += ensure_subdeck(f"{deck_name}::Level {lvl:02}::{kind}")
 
