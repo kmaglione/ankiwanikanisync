@@ -145,6 +145,7 @@ jobs:
         fail-rate-report: true
         slowest-report: true
         skipped-report: true
+        upload-artifact: true
 
     - name: Upload ctrf reports
       if: always()
