@@ -771,8 +771,8 @@ wheels = [
 
 [[package]]
 name = "pytest-json-ctrf"
-version = "0.3.7"
-source = { git = "https://github.com/kmaglione/pytest-common-test-report-json.git#9fe77e160d7712c0b789f1aabc4892ad7bd31469" }
+version = "0.3.9"
+source = { git = "https://github.com/kmaglione/pytest-common-test-report-json.git#df02acfb5bbd3061c055ecc5e6a20cf85d4f2e9c" }
 dependencies = [
     { name = "pytest" },
 ]

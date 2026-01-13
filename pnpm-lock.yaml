@@ -189,8 +189,8 @@ importers:
         specifier: ^2.0.8
         version: 2.0.8
       wdio-ctrf-json-reporter:
-        specifier: ^0.0.16
-        version: 0.0.16
+        specifier: https://github.com/kmaglione/wdio-ctrf-json-reporter/releases/download/v0.0.17/wdio-ctrf-json-reporter.tgz
+        version: https://github.com/kmaglione/wdio-ctrf-json-reporter/releases/download/v0.0.17/wdio-ctrf-json-reporter.tgz
       webdriverio:
         specifier: ^9.23.0
         version: 9.23.0(puppeteer-core@21.11.0)
@@ -6282,8 +6282,9 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
-  wdio-ctrf-json-reporter@0.0.16:
-    resolution: {integrity: sha512-reOVmLd97uRgWLpfYkywmOalOwKO/6wflUq1kzAkeuh+8vTXJGLPU2S9VPtpWxwkUu0UR0roE2Jd2jRrnfMS+A==}
+  wdio-ctrf-json-reporter@https://github.com/kmaglione/wdio-ctrf-json-reporter/releases/download/v0.0.17/wdio-ctrf-json-reporter.tgz:
+    resolution: {tarball: https://github.com/kmaglione/wdio-ctrf-json-reporter/releases/download/v0.0.17/wdio-ctrf-json-reporter.tgz}
+    version: 0.0.17
 
   webdriver@9.23.0:
     resolution: {integrity: sha512-XkZOhjoBOY7maKI3BhDF2rNiDne4wBD6Gw6VUnt4X9b7j9NtfzcCrThBlT0hnA8W77bWNtMRCSpw9Ajy08HqKg==}
@@ -13432,7 +13433,7 @@ snapshots:
       defaults: 1.0.4
     optional: true
 
-  wdio-ctrf-json-reporter@0.0.16:
+  wdio-ctrf-json-reporter@https://github.com/kmaglione/wdio-ctrf-json-reporter/releases/download/v0.0.17/wdio-ctrf-json-reporter.tgz:
     dependencies:
       '@wdio/reporter': 8.43.0
 

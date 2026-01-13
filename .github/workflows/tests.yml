@@ -146,6 +146,7 @@ jobs:
         slowest-report: true
         skipped-report: true
         upload-artifact: true
+        suite-folded-report: true
 
     - name: Upload ctrf reports
       if: always()
