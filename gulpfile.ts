@@ -88,7 +88,9 @@ export function lint_stylelint() {
         .pipe(stylelint({}));
 }
 
-export function lint_ruff() {
+export async function lint_ruff() {
+    await exec`uv run ruff check --fix`;
+    await exec`git diff`;
     if (process.env.CI) {
         return exec`uv run ruff check --output-format github`;
     } else {
