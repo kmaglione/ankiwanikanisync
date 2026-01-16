@@ -26,7 +26,6 @@ from unittest import mock
 
 import pytest
 import pytest_asyncio
-from allure import step
 from anki.collection import Card, Note
 from anki.consts import (
     CARD_TYPE_LRN,
@@ -36,6 +35,8 @@ from anki.consts import (
     QUEUE_TYPE_NEW,
     QUEUE_TYPE_REV,
 )
+
+from allure import step
 
 if TYPE_CHECKING:
     from anki.collection import Collection
